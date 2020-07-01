@@ -14,20 +14,26 @@ import { GlobalStyle } from '../styles/global-styles';
 
 import { HomePage } from './containers/HomePage/Loadable';
 import { NotFoundPage } from './containers/NotFoundPage/Loadable';
+import { initializeFirebase } from './services/firebase';
+
+initializeFirebase();
 
 export function App() {
   return (
     <BrowserRouter>
       <Helmet
-        titleTemplate="%s - React Boilerplate"
-        defaultTitle="React Boilerplate"
+        titleTemplate="QL CTy Helen Express"
+        defaultTitle="QL CTy Helen Express"
       >
-        <meta name="description" content="A React Boilerplate application" />
+        <meta
+          name="description"
+          content="Quản lý vận hành Công Ty TNHH Vận Chuyển Helen Express"
+        />
       </Helmet>
 
       <Switch>
-        <Route exact path={process.env.PUBLIC_URL + '/'} component={HomePage} />
-        <Route component={NotFoundPage} />
+        <Route path={process.env.PUBLIC_URL + '/'} component={HomePage} />
+        <Route exact component={NotFoundPage} />
       </Switch>
       <GlobalStyle />
     </BrowserRouter>

@@ -1,36 +1,65 @@
 import { createGlobalStyle } from 'styled-components';
-import { StyleConstants } from './StyleConstants';
-/* istanbul ignore next */
+
 export const GlobalStyle = createGlobalStyle`
   html,
   body {
     height: 100%;
     width: 100%;
-    line-height: 1.5;
+  }
+  .ant-btn .anticon svg {
+    margin-bottom: 6px
   }
 
-  body {
-    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
-    padding-top: ${StyleConstants.NAV_BAR_HEIGHT};
-    background-color: ${p => p.theme.background};
+  .ant-btn-link .anticon svg {
+    margin-bottom: 3px!important;
   }
 
-  body.fontLoaded {
-    font-family: 'Inter', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  .ant-avatar .anticon svg {
+    margin-bottom: 6px
   }
+
+  .ant-picker-input svg {
+    margin-bottom: 5px;
+  }
+
+  .data-grid-container .data-grid .cell {
+    vertical-align: middle;
+    padding: 0px 5px;
+    }
   
-  p,
-  label {
-    line-height: 1.5em;
+  .data-grid-container table {
+    width: 100%
   }
 
-  input, select, button {
-    font-family: inherit;
-    font-size: inherit;
+  .data-grid-container .data-grid .cell > input {
+    height: 20px;
   }
 
-  .icon {
-    width: 1.5rem;
-    height: 1.5rem;
+  .ant-select-selection-item-remove svg {
+    margin-bottom: 5px;
+  }
+
+  .ant-select-item-option-state svg {
+    margin-bottom: 5px;
+  }
+
+  .ant-menu-item svg {
+    margin-bottom: 7px;
+  }
+
+  .ant-select-auto-complete svg {
+    margin-bottom: 7px; 
+  }
+
+  .ant-picker-suffix svg {
+    margin-bottom: 5px;
+  }
+
+  .ant-picker-separator svg {
+    margin-bottom: 5px;
+  }
+
+  .ant-statistic-content-prefix svg {
+    margin-bottom: 6px;
   }
 `;

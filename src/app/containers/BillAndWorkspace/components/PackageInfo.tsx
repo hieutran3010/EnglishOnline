@@ -1,0 +1,107 @@
+import React, { memo } from 'react';
+import { Typography, Form, InputNumber, Input } from 'antd';
+
+import { BillValidator } from 'app/models/validators/billValidator';
+import type Vendor from 'app/models/vendor';
+import getDataSource, { FETCHER_KEY } from 'app/collection-datasource';
+
+import VendorSelection from './VendorSelection';
+import IntParcelVendorSelect from './IntParcelVendorSelect';
+import VendorCountriesSelection from './VendorCountriesSelection';
+import { AutoComplete } from 'app/components/collection/AutoComplete';
+
+const { Title } = Typography;
+
+const billDescriptionDataSource = getDataSource(FETCHER_KEY.BILL_DESCRIPTION);
+
+interface Props {
+  billValidator: BillValidator;
+  vendors: Vendor[];
+  isFetchingVendors: boolean;
+  vendorCountries: string[];
+  isFetchingVendorCountries: boolean;
+  onVendorSelectionChanged: (vendorId: string | undefined) => void;
+}
+const PackageInfo = ({
+  billValidator,
+  vendors,
+  isFetchingVendors,
+  vendorCountries,
+  isFetchingVendorCountries,
+  onVendorSelectionChanged,
+}: Props) => {
+  return (
+    <>
+      <Title level={4} type="secondary">
+        Thông tin hàng
+      </Title>
+      <Form.Item
+        name="vendorId"
+        label="Nhà cung cấp"
+        rules={billValidator.vendorId}
+      >
+        <VendorSelection
+          vendors={vendors}
+          loading={isFetchingVendors}
+          onChange={onVendorSelectionChanged}
+        />
+      </Form.Item>
+
+      <Form.Item
+        name="description"
+        label="Loại hàng"
+        rules={billValidator.description}
+      >
+        <AutoComplete
+          fetchDataSource={billDescriptionDataSource}
+          searchPropNames={['name']}
+          displayPath="name"
+          minSearchLength={2}
+          valuePath="name"
+          placeholder="Tìm kiếm"
+        />
+      </Form.Item>
+
+      <Form.Item
+        name="weightInKg"
+        label="Trọng lượng (kg)"
+        rules={billValidator.weightInKg}
+      >
+        <InputNumber precision={2} min={0} />
+      </Form.Item>
+      <Form.Item
+        name="internationalParcelVendor"
+        label="Dịch vụ"
+        rules={billValidator.internationalParcelVendor}
+      >
+        <IntParcelVendorSelect />
+      </Form.Item>
+      <Form.Item
+        name="destinationCountry"
+        label="Nước đến"
+        rules={billValidator.destinationCountry}
+      >
+        <VendorCountriesSelection
+          countries={vendorCountries}
+          loading={isFetchingVendorCountries}
+        />
+      </Form.Item>
+      <Form.Item
+        name="airlineBillId"
+        label="Bill hãng bay"
+        rules={billValidator.airlineBillId}
+      >
+        <Input />
+      </Form.Item>
+      <Form.Item
+        name="childBillId"
+        label="Bill con"
+        rules={billValidator.childBillId}
+      >
+        <Input />
+      </Form.Item>
+    </>
+  );
+};
+
+export default memo(PackageInfo);
