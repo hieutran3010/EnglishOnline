@@ -146,12 +146,7 @@ export const VendorQuotation = memo(() => {
             rules={vendorValidator.fuelChargePercent}
             initialValue={0}
           >
-            <InputNumber
-              precision={3}
-              min={0}
-              autoFocus
-              disabled={isEditingVendor}
-            />
+            <InputNumber min={0} autoFocus disabled={isEditingVendor} />
           </Form.Item>
 
           <Form.Item

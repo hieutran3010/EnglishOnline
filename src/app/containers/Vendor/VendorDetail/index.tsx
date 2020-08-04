@@ -69,8 +69,11 @@ export const VendorDetailPage = memo((props: Props) => {
     currentUserRole,
   )
     ? [
+        <Button type="primary" onClick={onNavigateToQuotation}>
+          Cập nhật Zone
+        </Button>,
         <Button type="primary" onClick={onNavigateToQuotationDetail}>
-          Cập nhật
+          Cập nhật Giá
         </Button>,
       ]
     : [];
