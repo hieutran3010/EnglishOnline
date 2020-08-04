@@ -125,6 +125,7 @@ export default class Bill extends ModelBase {
       this.salePrice = 0;
       this.customerPaymentType = PAYMENT_TYPE.CASH;
       this.vendorPaymentType = PAYMENT_TYPE.CASH;
+      this.isPrintedVatBill = false;
     }
   }
 }
