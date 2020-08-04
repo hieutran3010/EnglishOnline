@@ -67,7 +67,6 @@ const getCustomerValidator = (id?: string): ZoneValidator => ({
   name: [{ required: true, message: 'Chưa nhập Tên khách hàng' }],
   phone: [
     { required: true, message: 'Chưa nhập Số điện thoại' },
-    { pattern: new RegExp('^[0-9]*$'), message: 'Số điện thoại không đúng!' },
     {
       validator: isValidPhone(id),
       validateTrigger: 'onFinish',
