@@ -7,7 +7,6 @@
 import React, { memo, useMemo, useCallback, useState, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import moment from 'moment';
-import { isEmpty } from 'lodash';
 import {
   DatePicker,
   Button,
