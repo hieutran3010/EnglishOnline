@@ -4,11 +4,15 @@ import forEach from 'lodash/fp/forEach';
 import isEmpty from 'lodash/fp/isEmpty';
 import orderBy from 'lodash/fp/orderBy';
 import join from 'lodash/fp/join';
+import find from 'lodash/fp/find';
+
 import { Space, InputNumber, Tooltip, Button, Divider } from 'antd';
 import { toast } from 'react-toastify';
 
 import Vendor from 'app/models/vendor';
-import type VendorQuotation from 'app/models/vendorQuotation';
+import VendorQuotation, {
+  VendorQuotationPrice,
+} from 'app/models/vendorQuotation';
 import type Zone from 'app/models/zone';
 
 const initAnEmptyWeightRow = (weightRowColumnCount: number) => {
@@ -108,11 +112,15 @@ const QuotationSheet = React.forwardRef(
             col: 0,
           });
 
-          for (let col = 0; col < vendorQuotation.zonePrices.length; col++) {
-            const zonePrice = vendorQuotation.zonePrices[col];
+          for (let col = 0; col < orderedZones.length; col++) {
+            const zone = orderedZones[col];
+            const zonePrice = find(
+              (zp: VendorQuotationPrice) => zp.zoneId === zone.id,
+            )(vendorQuotation.zonePrices);
+
             const actualCol = col + 1; // since the first row is weight
             weightRow.push({
-              value: zonePrice.priceInUsd,
+              value: zonePrice ? zonePrice.priceInUsd : 0,
               disableEvents: isReadOnly,
               row: actualRow,
               col: actualCol,
