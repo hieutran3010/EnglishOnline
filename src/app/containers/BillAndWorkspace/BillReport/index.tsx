@@ -280,26 +280,7 @@ export const BillReport = memo((props: Props) => {
 
   const filterValidator = useMemo(() => {
     return {
-      dateRange: [
-        { required: true, message: 'Chưa chọn thời điểm Báo cáo' },
-        {
-          validator: (_rule, value) => {
-            if (isEmpty(value)) {
-              return Promise.resolve();
-            }
-
-            const [fromDate, toDate] = value;
-            if (fromDate.month() !== toDate.month()) {
-              return Promise.reject(
-                'Thời điểm báo cáo phải nằm trong cùng 1 tháng',
-              );
-            }
-
-            return Promise.resolve();
-          },
-          validateTrigger: 'onFinish',
-        },
-      ],
+      dateRange: [{ required: true, message: 'Chưa chọn thời điểm Báo cáo' }],
     };
   }, []);
 
