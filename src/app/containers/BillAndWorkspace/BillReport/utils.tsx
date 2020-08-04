@@ -1,7 +1,6 @@
 import React from 'react';
 import { QueryCriteria } from 'app/collection-datasource/types';
 import { GRAPHQL_QUERY_OPERATOR } from 'app/collection-datasource/graphql/constants';
-import { BILL_STATUS } from 'app/models/bill';
 import isEmpty from 'lodash/fp/isEmpty';
 import { ColumnDefinition } from 'app/components/collection/DataGrid';
 import { authStorage } from 'app/services/auth';
@@ -14,12 +13,6 @@ const getDefaultReportQueryCriteria = (dateRange: any[]): QueryCriteria[] => {
       field: 'IsArchived',
       operator: GRAPHQL_QUERY_OPERATOR.EQUALS,
       value: false,
-    },
-    {
-      field: 'Status',
-      operator: GRAPHQL_QUERY_OPERATOR.EQUALS,
-      value: BILL_STATUS.DONE,
-      isExplicitFilter: true,
     },
   ];
 

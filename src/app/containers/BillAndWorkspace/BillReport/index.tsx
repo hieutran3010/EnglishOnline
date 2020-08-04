@@ -306,7 +306,7 @@ export const BillReport = memo((props: Props) => {
   return (
     <RootContainer
       title="Báo Cáo"
-      subTitle="Chỉ thống kê những Bill đã chốt và không bị hủy"
+      subTitle="Chỉ thống kê những Bill không bị hủy"
       tags={
         <Form form={filterForm} layout="inline" onFinish={onSubmitReport}>
           <Form.Item name="dateRange" rules={filterValidator.dateRange}>
@@ -424,7 +424,7 @@ export const BillReport = memo((props: Props) => {
         <BillList
           billDataSource={billDataSource}
           isReset={isReset}
-          excludeFields={['isArchived', 'status']}
+          excludeFields={['isArchived']}
           extendCols={getAdminCols()}
         />
       )}
