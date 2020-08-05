@@ -7,7 +7,6 @@
 import React, { memo, useMemo, useCallback, useState, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import moment from 'moment';
-import { isEmpty } from 'lodash';
 import {
   DatePicker,
   Button,
@@ -280,33 +279,14 @@ export const BillReport = memo((props: Props) => {
 
   const filterValidator = useMemo(() => {
     return {
-      dateRange: [
-        { required: true, message: 'Chưa chọn thời điểm Báo cáo' },
-        {
-          validator: (_rule, value) => {
-            if (isEmpty(value)) {
-              return Promise.resolve();
-            }
-
-            const [fromDate, toDate] = value;
-            if (fromDate.month() !== toDate.month()) {
-              return Promise.reject(
-                'Thời điểm báo cáo phải nằm trong cùng 1 tháng',
-              );
-            }
-
-            return Promise.resolve();
-          },
-          validateTrigger: 'onFinish',
-        },
-      ],
+      dateRange: [{ required: true, message: 'Chưa chọn thời điểm Báo cáo' }],
     };
   }, []);
 
   return (
     <RootContainer
       title="Báo Cáo"
-      subTitle="Chỉ thống kê những Bill đã chốt và không bị hủy"
+      subTitle="Chỉ thống kê những Bill không bị hủy"
       tags={
         <Form form={filterForm} layout="inline" onFinish={onSubmitReport}>
           <Form.Item name="dateRange" rules={filterValidator.dateRange}>
@@ -424,7 +404,7 @@ export const BillReport = memo((props: Props) => {
         <BillList
           billDataSource={billDataSource}
           isReset={isReset}
-          excludeFields={['isArchived', 'status']}
+          excludeFields={['isArchived']}
           extendCols={getAdminCols()}
         />
       )}
