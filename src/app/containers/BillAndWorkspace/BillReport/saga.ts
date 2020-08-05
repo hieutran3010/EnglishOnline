@@ -116,7 +116,12 @@ export function* checkExportSessionTask(action: PayloadAction<string>) {
 export function* downloadBillsTask() {
   const exportSession = (yield select(selectExportSession)) as ExportSession;
   if (exportSession && exportSession.filePath) {
-    yield call(exportFetcher.downloadBillReport, exportSession.filePath);
+    try {
+      yield call(exportFetcher.downloadBillReport, exportSession.filePath);
+      yield put(actions.requestBillExportCompleted(''));
+    } catch (error) {
+      yield call(toast.error, 'Chưa tải được, vui lòng thử lại');
+    }
   }
 }
 
