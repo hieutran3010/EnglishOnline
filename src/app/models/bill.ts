@@ -136,6 +136,7 @@ export class VendorStatistic {
   totalPurchase!: number;
   totalDebt!: number;
   totalPayment!: number;
+  totalBill!: number;
 }
 
 export class CustomerStatistic {
@@ -144,4 +145,5 @@ export class CustomerStatistic {
   totalSalePrice!: number;
   totalDebt!: number;
   totalPayment!: number;
+  totalBill!: number;
 }

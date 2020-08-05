@@ -139,6 +139,7 @@ export default class BillFetcher extends GraphQLFetcherBase<Bill> {
               totalPurchase
               totalDebt
               totalPayment
+              totalBill
           }
         }
       }`,
@@ -157,6 +158,7 @@ export default class BillFetcher extends GraphQLFetcherBase<Bill> {
               totalSalePrice
               totalDebt
               totalPayment
+              totalBill
           }
         }
       }`,
