@@ -23,6 +23,11 @@ const columns = [
     ...getLocalColumnSearchProps('vendorName'),
   },
   {
+    title: 'Tổng Số Bill',
+    dataIndex: 'totalBill',
+    key: 'totalBill',
+  },
+  {
     title: 'Tổng Giá Mua',
     dataIndex: 'totalPurchase',
     key: 'totalPurchase',
@@ -73,7 +78,7 @@ const VendorGroupingTable = ({
           <BillList
             billDataSource={billDataSource}
             isReset={isClear}
-            excludeFields={['isArchived', 'status']}
+            excludeFields={['isArchived']}
             extendCols={getAdminCols()}
           />
         );
