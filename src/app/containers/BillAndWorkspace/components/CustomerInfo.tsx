@@ -53,11 +53,11 @@ const CustomerInfo = React.forwardRef(
           >
             <AutoComplete
               fetchDataSource={customerDataSource}
-              searchPropNames={['name', 'phone']}
+              searchPropNames={['name']}
               displayPath="name"
               minSearchLength={2}
               valuePath="name"
-              placeholder="Nhập Tên, Số điện thoại để tìm"
+              placeholder="Nhập Tên khách gởi để tìm"
               excludeValue={receiverId}
               excludePath="id"
               onSelected={onSenderSelectionChanged}
@@ -68,7 +68,18 @@ const CustomerInfo = React.forwardRef(
             label="Số ĐT"
             rules={billValidator.senderPhone}
           >
-            <Input />
+            {/* <Input /> */}
+            <AutoComplete
+              fetchDataSource={customerDataSource}
+              searchPropNames={['phone']}
+              displayPath="phone"
+              minSearchLength={2}
+              valuePath="phone"
+              placeholder="Nhập số điện thoại khách gởi để tìm"
+              excludeValue={receiverId}
+              excludePath="id"
+              onSelected={onSenderSelectionChanged}
+            />
           </Form.Item>
           <Form.Item
             name="senderAddress"
@@ -101,11 +112,11 @@ const CustomerInfo = React.forwardRef(
           >
             <AutoComplete
               fetchDataSource={customerDataSource}
-              searchPropNames={['name', 'phone', 'address']}
+              searchPropNames={['name']}
               displayPath="name"
               minSearchLength={2}
               valuePath="name"
-              placeholder="Nhập Tên, Số điện thoại, Địa chỉ để tìm"
+              placeholder="Nhập Tên để tìm"
               excludeValue={senderId}
               onSelected={onReceiverSelectionChanged}
               excludePath="id"
@@ -116,14 +127,36 @@ const CustomerInfo = React.forwardRef(
             label="Số ĐT"
             rules={billValidator.receiverPhone}
           >
-            <Input />
+            {/* <Input /> */}
+            <AutoComplete
+              fetchDataSource={customerDataSource}
+              searchPropNames={['phone']}
+              displayPath="phone"
+              minSearchLength={2}
+              valuePath="phone"
+              placeholder="Nhập Số điện thoại để tìm"
+              excludeValue={senderId}
+              onSelected={onReceiverSelectionChanged}
+              excludePath="id"
+            />
           </Form.Item>
           <Form.Item
             name="receiverAddress"
             label="Địa chỉ"
             rules={billValidator.receiverAddress}
           >
-            <Input />
+            {/* <Input /> */}
+            <AutoComplete
+              fetchDataSource={customerDataSource}
+              searchPropNames={['address']}
+              displayPath="address"
+              minSearchLength={2}
+              valuePath="address"
+              placeholder="Nhập địa chỉ để tìm"
+              excludeValue={senderId}
+              onSelected={onReceiverSelectionChanged}
+              excludePath="id"
+            />
           </Form.Item>
           {(!receiverId || isEmpty(receiverId)) && (
             <Form.Item

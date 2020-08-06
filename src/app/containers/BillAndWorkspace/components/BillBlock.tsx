@@ -1,6 +1,6 @@
 import React, { memo, useCallback } from 'react';
 import type Bill from 'app/models/bill';
-import { Card } from 'antd';
+import { Card, Descriptions } from 'antd';
 import { EyeOutlined } from '@ant-design/icons';
 import BillStatusTag from './BillStatusTag';
 
@@ -26,7 +26,17 @@ const BillBlock = ({ bill, onEdit }: Props) => {
           '0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)',
       }}
     >
-      <span style={{ fontWeight: 600 }}>{bill.airlineBillId}</span>
+      <Descriptions size="small" column={1}>
+        <Descriptions.Item label="Bill hãng bay">
+          {bill.airlineBillId || '<Chưa có>'}
+        </Descriptions.Item>
+        <Descriptions.Item label="Khách gởi">
+          {bill.senderName} - {bill.senderPhone}
+        </Descriptions.Item>
+        <Descriptions.Item label="Người nhận">
+          {bill.receiverName} - {bill.receiverAddress}
+        </Descriptions.Item>
+      </Descriptions>
     </Card>
   );
 };

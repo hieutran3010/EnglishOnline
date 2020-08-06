@@ -1,4 +1,7 @@
 import React, { memo, useEffect } from 'react';
+import { Typography, Divider } from 'antd';
+
+const { Text } = Typography;
 
 interface Props {
   numberOfBills: number;
@@ -27,7 +30,10 @@ const VatPrintedChecking = ({
     <>
       {numberOfBills > 0 && (
         <>
-          <span>Có {numberOfBills} bill cần đánh dấu xuất VAT.</span>
+          <Divider type="vertical" />
+          <Text type="warning">
+            Có {numberOfBills} bill cần đánh dấu xuất VAT
+          </Text>
         </>
       )}
     </>

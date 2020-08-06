@@ -4,29 +4,28 @@ import { MenuUnfoldOutlined, MenuFoldOutlined } from '@ant-design/icons';
 import MobileMenu from './MobileMenu';
 import { MenuItem } from './index.d';
 import { StyledLogoWrapper } from './styles/StyledTopNavigation';
+import { ScreenMode } from './types';
 
 const { Header } = Layout;
 interface TopNavigation {
   isCollapsed: boolean;
   onCollapse: () => void;
-  enableMobileMode: boolean;
   menus: MenuItem[];
   logo: any;
   logoSmall: any;
-  forceCollapse?: boolean;
+  screenMode: ScreenMode;
   renderLeftComponent?: () => React.Component;
   renderRightComponent?: () => React.Component;
 }
 const TopNavigation = ({
   isCollapsed,
   onCollapse,
-  enableMobileMode,
   menus,
   logoSmall,
   logo,
-  forceCollapse,
   renderLeftComponent,
   renderRightComponent,
+  screenMode,
 }: TopNavigation) => {
   return (
     <Header
@@ -46,14 +45,14 @@ const TopNavigation = ({
     >
       <StyledLogoWrapper className="logo">
         <img
-          src={isCollapsed || forceCollapse ? logoSmall : logo}
+          src={isCollapsed ? logoSmall : logo}
           height="40px"
           style={{ marginLeft: 20 }}
           alt=""
         />
       </StyledLogoWrapper>
 
-      {!enableMobileMode && !forceCollapse ? (
+      {screenMode === ScreenMode.FULL ? (
         React.createElement(
           isCollapsed ? MenuUnfoldOutlined : MenuFoldOutlined,
           {

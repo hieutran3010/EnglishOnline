@@ -1,22 +1,32 @@
-import React, { useState, useCallback, memo } from 'react';
+import React, { memo, useMemo } from 'react';
 import { Layout } from 'antd';
-import { LeftNavigation, TopNavigation } from 'app/components/AppNavigation';
+import {
+  LeftNavigation,
+  TopNavigation,
+  ScreenMode,
+} from 'app/components/AppNavigation';
 import { MenuItem } from 'app/components/AppNavigation/index.d';
 const { Content } = Layout;
 
-const getMarginLeft = (enableMobileMode: boolean, collapsed: boolean) => {
-  if (enableMobileMode) {
+export const getMarginLeft = (screenMode: ScreenMode, collapsed: boolean) => {
+  if (screenMode === ScreenMode.MOBILE) {
     return 20;
   }
-  return collapsed ? 100 : 220;
+
+  if (screenMode === ScreenMode.FULL) {
+    return collapsed ? 100 : 220;
+  }
+
+  return 100;
 };
 
 interface AppLayout {
   menus: MenuItem[];
   logo: any;
   logoSmall: any;
-  enableMobileMode: boolean;
-  forceCollapse?: boolean;
+  screenMode: ScreenMode;
+  isCollapsed: boolean;
+  onCollapsed: () => void;
   renderTopLeftComponent?: () => React.Component;
   renderTopRightComponent?: () => React.Component;
 }
@@ -24,49 +34,44 @@ const AppLayout = ({
   menus,
   logo,
   logoSmall,
-  enableMobileMode,
-  forceCollapse,
+  screenMode,
+  isCollapsed,
   renderTopLeftComponent,
   renderTopRightComponent,
+  onCollapsed,
   ...restProps
 }: AppLayout | any) => {
-  const [collapsed, setCollapsed] = useState(false);
+  const _isCollapsed = useMemo(() => {
+    if (screenMode !== ScreenMode.FULL) {
+      return true;
+    }
 
-  const onCollapse = useCallback(() => {
-    setCollapsed(!collapsed);
-  }, [collapsed]);
+    return isCollapsed;
+  }, [isCollapsed, screenMode]);
 
   const { children } = restProps;
 
   return (
     <Layout style={{ minHeight: '100vh' }}>
       <TopNavigation
-        enableMobileMode={enableMobileMode}
-        isCollapsed={collapsed}
-        onCollapse={onCollapse}
+        isCollapsed={_isCollapsed}
+        onCollapse={onCollapsed}
         menus={menus}
         logo={logo}
         logoSmall={logoSmall}
-        forceCollapse={forceCollapse}
         renderLeftComponent={renderTopLeftComponent}
         renderRightComponent={renderTopRightComponent}
+        screenMode={screenMode}
       />
 
       <Layout style={{ marginTop: 64 }}>
-        {!enableMobileMode && (
-          <LeftNavigation
-            isCollapsed={collapsed}
-            menus={menus}
-            forceCollapse={forceCollapse}
-          />
+        {screenMode !== ScreenMode.MOBILE && (
+          <LeftNavigation isCollapsed={_isCollapsed} menus={menus} />
         )}
         <Content
           className="site-layout-background"
           style={{
-            marginLeft: getMarginLeft(
-              enableMobileMode,
-              collapsed || forceCollapse,
-            ),
+            marginLeft: getMarginLeft(screenMode, _isCollapsed),
             marginTop: 74,
             marginBottom: 20,
             marginRight: 20,

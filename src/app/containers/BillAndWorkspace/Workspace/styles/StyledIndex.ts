@@ -1,20 +1,45 @@
 import styled from 'styled-components/macro';
+import { Role } from 'app/models/user';
+import { getMarginLeft } from 'app/components/Layout/AppLayout';
+
+export const StyledMainToolbar = styled.div`
+  position: absolute;
+  z-index: 1;
+  background-color: white;
+  width: 100%;
+  padding: 10px;
+  border-radius: 5px;
+  box-shadow: rgba(0, 0, 0, 0.1) 0px 1px 3px 0px,
+    rgba(0, 0, 0, 0.06) 0px 1px 2px 0px;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+`;
 
 export const StyledContainer = styled.div`
   display: flex;
+  position: fixed;
+  right: 20px;
+  left: ${(props: any) =>
+    `${getMarginLeft(props.screenMode, props.collapsedMenu)}px`};
+  bottom: 0;
+  top: ${(props: any) => (props.role === Role.SALE ? '74px' : '128px')};
 `;
 
 export const StyledLeftContainer = styled.div`
   width: 250px;
-  margin-right: 10px;
+  margin-right: 20px;
 
   display: flex;
   flex-direction: column;
+  margin-top: 7px;
 `;
 
 export const StyledRightContainer = styled.div`
-  width: 100px;
   flex: 1;
+  overflow: auto;
+  margin-bottom: 10px;
 `;
 
 export const StyledDateAndAssigneeContainer = styled.div`

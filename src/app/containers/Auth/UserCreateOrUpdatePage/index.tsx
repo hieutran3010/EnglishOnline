@@ -7,13 +7,13 @@
 import React, { memo, useMemo, useCallback, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { Form, Input, Button, Space, Alert, Checkbox } from 'antd';
-import { EyeTwoTone, EyeInvisibleOutlined } from '@ant-design/icons';
 import isEmpty from 'lodash/fp/isEmpty';
 import isArray from 'lodash/fp/isArray';
 import { useParams } from 'react-router-dom';
 
 import { useInjectReducer, useInjectSaga } from 'utils/redux-injectors';
 import { RootContainer, ContentContainer } from 'app/components/Layout';
+import { PasswordInput } from 'app/components/Input';
 import getUserValidator from 'app/models/validators/userValidator';
 
 import { actions, reducer, sliceKey } from './slice';
@@ -93,12 +93,7 @@ export const UserCreateOrUpdatePage = memo(() => {
               label="Mật khẩu"
               rules={userValidator.password}
             >
-              <Input.Password
-                disabled={isSubmitting}
-                iconRender={visible =>
-                  visible ? <EyeTwoTone /> : <EyeInvisibleOutlined />
-                }
-              />
+              <PasswordInput disabled={isSubmitting} />
             </Form.Item>
           )}
           <Form.Item name="displayName" label="Tên" rules={userValidator.name}>

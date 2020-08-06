@@ -8,8 +8,13 @@ import React, { memo, useCallback, useMemo, useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { Form, Input, Button, Alert, Space } from 'antd';
 import { UserOutlined, LockOutlined } from '@ant-design/icons';
+import isEmpty from 'lodash/fp/isEmpty';
+import { toast } from 'react-toastify';
 
 import { useInjectReducer, useInjectSaga } from 'utils/redux-injectors';
+import { getLoginValidator } from 'app/models/validators/userValidator';
+import { PasswordInput } from 'app/components/Input';
+
 import { actions, reducer, sliceKey } from './slice';
 import {
   selectIsBeingLogin,
@@ -21,9 +26,6 @@ import {
   StyledLogInContainer,
   StyledLoginFormContainer,
 } from './styles/StyledIndex';
-import { isEmpty } from 'lodash/fp';
-import { getLoginValidator } from 'app/models/validators/userValidator';
-import { toast } from 'react-toastify';
 
 const logo = require('assets/logo.png');
 
@@ -96,10 +98,9 @@ export const Login = memo(() => {
               />
             </Form.Item>
             <Form.Item name="password" rules={loginValidator.password}>
-              <Input
-                prefix={<LockOutlined className="site-form-item-icon" />}
-                type="password"
+              <PasswordInput
                 placeholder="Mật khẩu"
+                prefix={<LockOutlined className="site-form-item-icon" />}
                 disabled={isBeingLogin}
               />
             </Form.Item>
