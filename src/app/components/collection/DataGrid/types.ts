@@ -9,4 +9,5 @@ export interface ColumnDefinition {
   key: string;
   width?: number;
   render?: (data?: any) => ReactElement;
+  sorter?: any;
 }

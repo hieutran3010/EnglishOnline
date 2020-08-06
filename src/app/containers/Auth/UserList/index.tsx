@@ -8,6 +8,7 @@ import React, { memo, useCallback, useMemo, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { useHistory } from 'react-router-dom';
 import { Button, Table, Checkbox } from 'antd';
+import toString from 'lodash/fp/toString';
 
 import { useInjectReducer, useInjectSaga } from 'utils/redux-injectors';
 import { RootContainer } from 'app/components/Layout';
@@ -52,18 +53,22 @@ export const UserList = memo(() => {
         dataIndex: 'email',
         key: 'email',
         ...getLocalColumnSearchProps('email'),
+        sorter: (a, b) => a.email.length - b.email.length,
       },
       {
         title: 'Tên',
         dataIndex: 'displayName',
         key: 'displayName',
         ...getLocalColumnSearchProps('countries'),
+        sorter: (a, b) => a.displayName.length - b.displayName.length,
       },
       {
         title: 'Số ĐT',
         dataIndex: 'phoneNumber',
         key: 'phoneNumber',
         ...getLocalColumnSearchProps('phoneNumber'),
+        sorter: (a, b) =>
+          toString(a.phoneNumber).length - toString(b.phoneNumber).length,
       },
       {
         title: 'Quyền',
@@ -75,7 +80,7 @@ export const UserList = memo(() => {
           }
           return <></>;
         },
-        ...getLocalColumnSearchProps('roles'),
+        sorter: (a, b) => a.roles[0].length - b.roles[0].length,
       },
       {
         title: 'Đã Xác Thực?',
@@ -84,6 +89,8 @@ export const UserList = memo(() => {
         render: data => {
           return <Checkbox checked={data} disabled />;
         },
+        sorter: (a, b) =>
+          toString(a.emailVerified).length - toString(b.emailVerified).length,
       },
       {
         title: 'Đã khóa?',
@@ -92,6 +99,8 @@ export const UserList = memo(() => {
         render: data => {
           return <Checkbox checked={data} disabled />;
         },
+        sorter: (a, b) =>
+          toString(a.disabled).length - toString(b.disabled).length,
       },
       {
         title: '',
@@ -118,7 +127,6 @@ export const UserList = memo(() => {
         size="small"
         dataSource={users}
         columns={userColumns}
-        locale={{ emptyText: 'Nhà cung cấp này chưa được nhập Zone nào :(' }}
         loading={isFetchingUsers}
         pagination={false}
         rowKey={(record: any) => record.id}
