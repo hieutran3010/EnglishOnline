@@ -16,7 +16,7 @@ const VatPrintedChecking = ({
     if (onCheckNumberOfVatBill) {
       counter = setInterval(() => {
         onCheckNumberOfVatBill();
-      }, 180000);
+      }, 60000);
     }
 
     return function cleanUp() {

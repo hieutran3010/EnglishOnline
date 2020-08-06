@@ -4,7 +4,7 @@
  *
  */
 
-import React, { memo, useMemo, useCallback, useState, useEffect } from 'react';
+import React, { memo, useMemo, useCallback, useEffect } from 'react';
 import { Button, Form, DatePicker, Input } from 'antd';
 import isEmpty from 'lodash/fp/isEmpty';
 import { useDispatch, useSelector } from 'react-redux';
@@ -33,8 +33,6 @@ export const BillAdvanceSearch = memo(() => {
   const dispatch = useDispatch();
 
   const user = authStorage.getUser();
-
-  const [isBeingClear, setIsBeingClear] = useState(true);
 
   const needToReload = useSelector(selectNeedToReload);
 
@@ -130,10 +128,8 @@ export const BillAdvanceSearch = memo(() => {
 
       billDataSource.query = getQuery(submittedFilters);
       if (!isEmpty(submittedFilters)) {
-        setIsBeingClear(false);
         billDataSource.onReloadData();
       } else {
-        setIsBeingClear(true);
       }
     },
     [billDataSource, getQuery],
@@ -181,7 +177,6 @@ export const BillAdvanceSearch = memo(() => {
           </Form.Item>
         </Form>
         <BillList
-          isReset={isBeingClear}
           onArchiveBill={onArchiveBill}
           billDataSource={billDataSource}
           onPrintedVatBill={onCheckPrintedVat}
