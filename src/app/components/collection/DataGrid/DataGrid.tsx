@@ -92,34 +92,44 @@ export default function DataGrid({
   /**
    * Fetch total count by QueryCriteria
    */
-  const fetchTotalCount = useCallback(async () => {
-    const queryCriteria = getQueryCriteria(antTableFilter);
+  const fetchTotalCount = useCallback(
+    async (tableFilter?: Record<string, React.Key[] | null>) => {
+      const queryCriteria = getQueryCriteria(tableFilter || antTableFilter);
 
-    const totalItem = await dataSource.countAsync(queryCriteria);
-    setTotal(totalItem);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [antTableFilter]);
+      const totalItem = await dataSource.countAsync(queryCriteria);
+      setTotal(totalItem);
+    },
+    [antTableFilter, dataSource, getQueryCriteria],
+  );
 
   /**
    * Fetch data by query criteria
    */
-  const fetchData = useCallback(async () => {
-    setLoading(true);
+  const fetchData = useCallback(
+    async (
+      tableFilter?: Record<string, React.Key[] | null>,
+      inputOrder?: OrderOption,
+      inputPagination?: TablePaginationConfig,
+    ) => {
+      setLoading(true);
 
-    const queryParams: QueryParams = {
-      pageSize: pagination.pageSize,
-      page: pagination.current,
-      criteria: getQueryCriteria(antTableFilter),
-      ...order,
-    };
+      const paging = inputPagination || pagination;
 
-    const data = await dataSource.queryManyAsync(queryParams);
+      const queryParams: QueryParams = {
+        pageSize: paging.pageSize,
+        page: paging.current,
+        criteria: getQueryCriteria(tableFilter || antTableFilter),
+        ...(inputOrder || order),
+      };
 
-    setLoading(false);
+      const data = await dataSource.queryManyAsync(queryParams);
 
-    setItems(data);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pagination, antTableFilter, order]);
+      setLoading(false);
+
+      setItems(data);
+    },
+    [pagination, getQueryCriteria, antTableFilter, order, dataSource],
+  );
 
   /**
    * Auto register reloading data when placeholder requesting and dispose it when component is unmounted
@@ -180,16 +190,18 @@ export default function DataGrid({
         setAntTableFilter(filters);
       }
 
+      let currentOrder: OrderOption | undefined = undefined;
       if (sorter) {
         const { field, order } = sorter;
-        setOrder({
+        currentOrder = {
           orderByField: field,
           isDescending: order === 'descend',
-        });
+        };
+        setOrder(currentOrder);
       }
 
-      fetchTotalCount();
-      fetchData();
+      fetchTotalCount(filters);
+      fetchData(filters, currentOrder, pager);
     },
     [antTableFilter, fetchData, fetchTotalCount, pagination],
   );

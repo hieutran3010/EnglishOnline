@@ -104,7 +104,7 @@ export default class GraphQLDataSource<TModel> implements IDataSource {
       graphqlQueries.push(this.query);
     }
 
-    return graphqlQueries.join(isSearchOr ? '||' : '&&');
+    return graphqlQueries.join(isSearchOr ? ' || ' : ' && ');
   };
 
   /**

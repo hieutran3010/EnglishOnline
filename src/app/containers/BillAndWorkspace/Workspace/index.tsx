@@ -94,6 +94,10 @@ export const Workspace = memo(() => {
       dispatch(actions.fetchBillParams());
     }
 
+    if (role === Role.ACCOUNTANT || role === Role.ADMIN) {
+      dispatch(actions.fetchNumberOfUncheckedVatBill());
+    }
+
     dispatch(actions.fetchMyBills());
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
