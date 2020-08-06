@@ -107,15 +107,15 @@ const BillView = ({ bill, onArchiveBill, onPrintedVat }: Props) => {
           <Title level={4} type="secondary">
             Khách gởi
           </Title>
-          <Descriptions size="small" bordered layout="horizontal">
-            <Descriptions.Item label="Tên" span={3}>
-              {bill.senderName}
+          <Descriptions size="small" bordered layout="horizontal" column={1}>
+            <Descriptions.Item label="Tên">
+              {bill.senderName}&nbsp;
             </Descriptions.Item>
-            <Descriptions.Item label="Số ĐT" span={3}>
-              {bill.senderPhone}
+            <Descriptions.Item label="Số ĐT">
+              {bill.senderPhone}&nbsp;
             </Descriptions.Item>
-            <Descriptions.Item label="Địa chỉ" span={3}>
-              {bill.senderAddress}
+            <Descriptions.Item label="Địa chỉ">
+              {bill.senderAddress}&nbsp;
             </Descriptions.Item>
           </Descriptions>
         </StyledSenderContainer>
@@ -124,15 +124,15 @@ const BillView = ({ bill, onArchiveBill, onPrintedVat }: Props) => {
           <Title level={4} type="secondary">
             Khách nhận
           </Title>
-          <Descriptions size="small" bordered layout="horizontal">
-            <Descriptions.Item label="Tên" span={3}>
-              {bill.receiverName}
+          <Descriptions size="small" bordered layout="horizontal" column={1}>
+            <Descriptions.Item label="Tên">
+              {bill.receiverName}&nbsp;
             </Descriptions.Item>
-            <Descriptions.Item label="Số ĐT" span={3}>
-              {bill.receiverPhone}
+            <Descriptions.Item label="Số ĐT">
+              {bill.receiverPhone}&nbsp;
             </Descriptions.Item>
-            <Descriptions.Item label="Địa chỉ" span={3}>
-              {bill.receiverAddress}
+            <Descriptions.Item label="Địa chỉ">
+              {bill.receiverAddress}&nbsp;
             </Descriptions.Item>
           </Descriptions>
         </StyledReceiverContainer>

@@ -13,6 +13,7 @@ import { BillReportState } from 'app/containers/BillAndWorkspace/BillReport/type
 import { UserProfileState } from 'app/containers/Auth/UserProfile/types';
 import { CustomerListState } from 'app/containers/Customer/CustomerList/types';
 import { SettingState } from 'app/containers/Setting/types';
+import { HomepageState } from 'app/containers/HomePage/types';
 // [IMPORT NEW CONTAINERSTATE ABOVE] < Needed for generating containers seamlessly
 
 /* 
@@ -20,6 +21,7 @@ import { SettingState } from 'app/containers/Setting/types';
   You have to declare them here manually
 */
 export interface RootState {
+  homepage?: HomepageState;
   vendorCreation?: VendorCreationState;
   vendorQuotation?: VendorQuotationState;
   vendorQuotationDetail?: VendorQuotationDetailState;

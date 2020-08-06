@@ -8,18 +8,13 @@ interface LeftNavigation {
   isCollapsed: boolean;
   menus: MenuItem[];
   appName?: string;
-  forceCollapse?: boolean;
 }
-const LeftNavigation = ({
-  isCollapsed,
-  menus,
-  forceCollapse,
-}: LeftNavigation) => {
+const LeftNavigation = ({ isCollapsed, menus }: LeftNavigation) => {
   return (
     <Sider
       trigger={null}
       collapsible
-      collapsed={isCollapsed || forceCollapse}
+      collapsed={isCollapsed}
       style={{
         overflow: 'auto',
         height: '100vh',

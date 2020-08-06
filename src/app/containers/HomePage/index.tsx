@@ -23,6 +23,9 @@ import { MenuItem } from 'app/components/AppNavigation/index.d';
 import { AppLayout } from 'app/components/Layout';
 import { authService, authStorage } from 'app/services/auth';
 import { Role } from 'app/models/user';
+import { getScreenMode } from 'app/components/AppNavigation';
+import { useInjectReducer } from 'utils/redux-injectors';
+import { useSelector, useDispatch } from 'react-redux';
 
 import { VendorList } from '../Vendor/VendorList/Loadable';
 import { VendorCreation } from '../Vendor/VendorCreation/Loadable';
@@ -43,6 +46,8 @@ import UserNavigation from './UserNavigation';
 import { BillReport } from '../BillAndWorkspace/BillReport/Loadable';
 import { UserProfile } from '../Auth/UserProfile/Loadable';
 import { Setting } from '../Setting/Loadable';
+import { reducer, actions, sliceKey } from './slice';
+import { selectScreenMode, selectCollapsedMenu } from './selectors';
 
 const logo = require('assets/logo.png');
 const logoSmall = require('assets/logo-compact.png');
@@ -95,14 +100,12 @@ const menus: MenuItem[] = [
 
 export function HomePage() {
   const history = useHistory();
+  const dispatch = useDispatch();
 
-  const [enableMobileMode, setEnableMobileMode] = useState(
-    window.innerWidth <= 760,
-  );
+  useInjectReducer({ key: sliceKey, reducer });
 
-  const [forceCollapseMenu, setForceCollapseMenu] = useState(
-    window.innerWidth <= 1440,
-  );
+  const screenMode = useSelector(selectScreenMode);
+  const collapsedMenu = useSelector(selectCollapsedMenu);
 
   const [isVerifiedAuth, setIsVerifiedAuth] = useState(false);
 
@@ -116,8 +119,8 @@ export function HomePage() {
   }, [currentUserRole]);
 
   const onSizeChanged = useCallback(() => {
-    setEnableMobileMode(window.innerWidth <= 760);
-    setForceCollapseMenu(window.innerWidth <= 1440);
+    dispatch(actions.setScreenMode(getScreenMode()));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -156,6 +159,11 @@ export function HomePage() {
     return <UserNavigation />;
   }, []);
 
+  const onCollapsed = useCallback(() => {
+    dispatch(actions.toggleCollapsedMenu());
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const isAuthenticated = authService.isAuthenticated();
   if (!isAuthenticated) {
     return (
@@ -189,13 +197,14 @@ export function HomePage() {
 
   return (
     <AppLayout
-      enableMobileMode={enableMobileMode}
       menus={authorizedMenus}
       logo={logo}
       logoSmall={logoSmall}
-      forceCollapse={forceCollapseMenu}
       renderTopLeftComponent={onRenderTopLeftMenu}
+      screenMode={screenMode}
       renderTopRightComponent={onRenderUser}
+      isCollapsed={collapsedMenu}
+      onCollapsed={onCollapsed}
     >
       <Switch>
         <Route

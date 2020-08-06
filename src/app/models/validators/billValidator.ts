@@ -100,7 +100,6 @@ const getBillValidator = (hasVat: boolean, id?: string): BillValidator => ({
     },
   ],
   airlineBillId: [
-    { required: true, message: 'Chưa nhập Mã Bill hãng bay' },
     {
       validator: isValidAirlineBillId(id),
       validateTrigger: 'onFinish',

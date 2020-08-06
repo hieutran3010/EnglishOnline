@@ -132,9 +132,10 @@ const BillCreation = ({ bill, billParams }: Props) => {
   );
 
   const onSenderSelectionChanged = useCallback((value: Customer) => {
-    const { id, phone, address } = value;
+    const { id, name, phone, address } = value;
 
     billForm.setFieldsValue({
+      senderName: name,
       senderPhone: phone,
       senderAddress: address,
     });
@@ -143,9 +144,10 @@ const BillCreation = ({ bill, billParams }: Props) => {
   }, []);
 
   const onReceiverSelectionChanged = useCallback((value: Customer) => {
-    const { id, phone, address } = value;
+    const { id, name, phone, address } = value;
 
     billForm.setFieldsValue({
+      receiverName: name,
       receiverPhone: phone,
       receiverAddress: address,
     });

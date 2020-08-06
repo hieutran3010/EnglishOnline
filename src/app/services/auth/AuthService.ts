@@ -2,6 +2,7 @@ import { Subject } from 'rxjs';
 import isEmpty from 'lodash/fp/isEmpty';
 import toString from 'lodash/fp/toString';
 import firebase from 'firebase/app';
+import 'firebase/auth';
 
 import User from 'app/models/user';
 import { authStorage } from '.';
