@@ -22,8 +22,24 @@ export function* createUserTask(action: PayloadAction<User>) {
     yield call(toast.success, 'Một người dùng mới đã được thêm');
     yield put(actions.setError(''));
   } catch (error) {
-    const { message } = error;
-    yield put(actions.setError(message));
+    const { response } = error;
+    const errorMsg = response.data;
+    switch (errorMsg) {
+      case 'EXISTED_EMAIL': {
+        yield put(actions.setError('Email đã có người khác sử dụng'));
+        break;
+      }
+      case 'EXISTED_PHONE': {
+        yield put(actions.setError('Số điện thoại đã có người khác sử dụng'));
+        break;
+      }
+      default: {
+        yield put(
+          actions.setError('Chưa lưu được người dùng, vui lòng thử lại'),
+        );
+        break;
+      }
+    }
   }
 
   yield put(actions.setIsSubmitting(false));
