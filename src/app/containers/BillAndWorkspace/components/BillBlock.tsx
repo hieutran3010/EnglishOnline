@@ -1,6 +1,6 @@
 import React, { memo, useCallback } from 'react';
 import type Bill from 'app/models/bill';
-import { Card, Descriptions, Typography, Tooltip } from 'antd';
+import { Card, Typography, Tooltip } from 'antd';
 import { EyeOutlined } from '@ant-design/icons';
 import BillStatusTag from './BillStatusTag';
 
