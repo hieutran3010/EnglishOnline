@@ -108,7 +108,7 @@ export const Workspace = memo(() => {
     if (role === Role.ACCOUNTANT || role === Role.ADMIN) {
       counter = setInterval(() => {
         dispatch(actions.fetchUnassignedBills());
-      }, 10000);
+      }, 30000);
     }
 
     return function cleanUp() {
