@@ -284,6 +284,13 @@ export function* fetchBillParamsTask() {
   }
 }
 
+export function* fetchUnassignedBillsTask() {
+  const query = getUnassignedBillsQuery();
+  const unassignedBills = yield call(billFetcher.queryManyAsync, { query });
+
+  yield put(actions.fetchUnassignedBillsCompleted(unassignedBills));
+}
+
 export function* fetchNumberOfUncheckedVatBillTask() {
   try {
     const result = yield call(
@@ -318,6 +325,7 @@ export function* workspaceSaga() {
     actions.fetchNumberOfUncheckedVatBill.type,
     fetchNumberOfUncheckedVatBillTask,
   );
+  yield takeLatest(actions.fetchUnassignedBills.type, fetchUnassignedBillsTask);
 }
 
 function getMyBillsQuery() {
@@ -340,3 +348,21 @@ function getMyBillsQuery() {
     }
   }
 }
+
+const getUnassignedBillsQuery = () => {
+  const user = authStorage.getUser();
+  switch (user.role) {
+    case Role.LICENSE: {
+      return `LicenseUserId = null and Status = "${BILL_STATUS.LICENSE}"`;
+    }
+    case Role.ACCOUNTANT: {
+      return `AccountantUserId = null and Status = "${BILL_STATUS.ACCOUNTANT}"`;
+    }
+    case Role.ADMIN: {
+      return `LicenseUserId = null || AccountantUserId = null`;
+    }
+    default: {
+      return `Id = null`;
+    }
+  }
+};

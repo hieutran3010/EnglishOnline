@@ -20,6 +20,9 @@ export interface WorkspaceState {
   isFetchingMyBills: boolean;
   myBills: Bill[];
 
+  isFetchingUnassignedBills: boolean;
+  unassignedBills: Bill[];
+
   isDeletingBill: boolean;
   isAssigningAccountant: boolean;
   isCalculatingPurchasePrice: boolean;
