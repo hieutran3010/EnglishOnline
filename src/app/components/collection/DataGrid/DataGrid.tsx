@@ -12,6 +12,7 @@ import get from 'lodash/fp/get';
 import isEmpty from 'lodash/fp/isEmpty';
 import isArray from 'lodash/fp/isArray';
 import head from 'lodash/fp/head';
+
 import { ColumnDefinition } from './types';
 import {
   IDataSource,
@@ -138,12 +139,15 @@ export default function DataGrid({
     let reloadedSubscription;
     if (dataSource) {
       reloadedSubscription = dataSource.onReloaded.subscribe(() => {
-        setAntTableFilter({});
-        setOrder({});
+        // setAntTableFilter({});
+        // setOrder({});
 
-        const pager = { ...pagination };
-        pager.current = 1;
-        setPagination(pager);
+        // const pager = { ...pagination };
+        // pager.current = 1;
+        // setPagination(pager);
+
+        // fetchTotalCount({});
+        // fetchData({}, {}, pager);
 
         fetchTotalCount();
         fetchData();
@@ -179,16 +183,12 @@ export default function DataGrid({
       filters: Record<string, Key[] | null>,
       sorter: any,
     ) => {
-      const pager = { ...pagination };
-      if (currentPagination !== pager) {
-        pager.current = currentPagination.current;
-        pager.pageSize = currentPagination.pageSize;
-        setPagination(pager);
-      }
+      setPagination({
+        current: currentPagination.current,
+        pageSize: currentPagination.pageSize,
+      });
 
-      if (antTableFilter !== filters) {
-        setAntTableFilter(filters);
-      }
+      setAntTableFilter(filters);
 
       let currentOrder: OrderOption | undefined = undefined;
       if (sorter) {
@@ -201,18 +201,19 @@ export default function DataGrid({
       }
 
       fetchTotalCount(filters);
-      fetchData(filters, currentOrder, pager);
+      fetchData(filters, currentOrder, currentPagination);
     },
-    [antTableFilter, fetchData, fetchTotalCount, pagination],
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [],
   );
 
-  const onFormatColumns = useMemo(() => formatColumns(columns), [columns]);
+  const formattedColumns = useMemo(() => formatColumns(columns), [columns]);
 
   return (
     <Table
       {...restProps}
       scroll={{ y: maxHeight }}
-      columns={onFormatColumns}
+      columns={formattedColumns}
       dataSource={items}
       rowKey={(record: any) => record.id}
       loading={loading}

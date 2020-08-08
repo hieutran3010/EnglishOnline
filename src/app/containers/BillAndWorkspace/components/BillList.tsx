@@ -118,6 +118,22 @@ const BillList = ({
         type: COLUMN_TYPES.DATE_TIME,
       },
       {
+        title: 'Khách Gởi',
+        key: 'sender',
+        render: (record: Bill) => (
+          <span>{[record.senderName, record.senderPhone].join(' - ')}</span>
+        ),
+      },
+      {
+        title: 'Người Nhận',
+        key: 'receiver',
+        render: (record: Bill) => (
+          <span>
+            {[record.receiverName, record.receiverAddress].join(' - ')}
+          </span>
+        ),
+      },
+      {
         title: 'Nhà cung cấp',
         dataIndex: 'vendorName',
         key: 'vendorName',

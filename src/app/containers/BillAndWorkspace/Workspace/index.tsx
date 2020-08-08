@@ -4,15 +4,11 @@
  *
  */
 
-import React, { memo, useCallback, useEffect, useMemo, useState } from 'react';
-import { List, Button, Input, Tooltip } from 'antd';
-import { PlusCircleOutlined } from '@ant-design/icons';
+import React, { memo, useCallback, useEffect } from 'react';
+import { Button, Space, Tooltip, Spin } from 'antd';
+import { PlusCircleOutlined, InfoCircleOutlined } from '@ant-design/icons';
 import { useDispatch, useSelector } from 'react-redux';
 import isEmpty from 'lodash/fp/isEmpty';
-import trim from 'lodash/fp/trim';
-import filter from 'lodash/fp/filter';
-import toString from 'lodash/fp/toString';
-import toLower from 'lodash/fp/toLower';
 
 import { useInjectReducer, useInjectSaga } from 'utils/redux-injectors';
 import { ContentContainer } from 'app/components/Layout';
@@ -41,12 +37,14 @@ import {
   selectBill,
   selectBillParams,
   selectNumberOfUncheckedVatBills,
+  selectIsFetchingUnassignedBills,
+  selectUnassignedBills,
 } from './selectors';
-import UnassignedBills from './UnassignedBills';
 import BillBlock from '../components/BillBlock';
 import BillCreation from './BillCreation';
 import BillView from '../components/BillView';
 import VatPrintedChecking from '../components/VatPrintedChecking';
+import WorkingBills from './WorkingBills';
 
 const canEditBill = (role: Role, bill: Bill) => {
   switch (role) {
@@ -79,13 +77,15 @@ export const Workspace = memo(() => {
 
   const isFetchingMyBills = useSelector(selectIsFetchingMyBills);
   const myBills = useSelector(selectMyBills);
+  const isFetchingUnassignedBills = useSelector(
+    selectIsFetchingUnassignedBills,
+  );
+  const unassignedBills = useSelector(selectUnassignedBills);
   const bill = useSelector(selectBill);
   const billParams = useSelector(selectBillParams);
   const numberOfUncheckedVatBills = useSelector(
     selectNumberOfUncheckedVatBills,
   );
-
-  const [myBillsFilterKey, setMyBillsFilterKey] = useState('');
 
   useEffect(() => {
     if (role !== Role.SALE) {
@@ -96,9 +96,26 @@ export const Workspace = memo(() => {
 
     if (role === Role.ACCOUNTANT || role === Role.ADMIN) {
       dispatch(actions.fetchNumberOfUncheckedVatBill());
+      dispatch(actions.fetchUnassignedBills());
     }
 
     dispatch(actions.fetchMyBills());
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    let counter: any = undefined;
+    if (role === Role.ACCOUNTANT || role === Role.ADMIN) {
+      counter = setInterval(() => {
+        dispatch(actions.fetchUnassignedBills());
+      }, 30000);
+    }
+
+    return function cleanUp() {
+      if (counter) {
+        clearInterval(counter);
+      }
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -121,24 +138,6 @@ export const Workspace = memo(() => {
   const renderBillBlock = (bill: any) => {
     return <BillBlock bill={bill} onEdit={onBillSelectionChanged} />;
   };
-
-  const onSearchMyBills = useCallback(value => {
-    setMyBillsFilterKey(trim(value));
-  }, []);
-  const filteredMyBills = useMemo(() => {
-    if (!isEmpty(myBillsFilterKey)) {
-      const lowerFilter = toLower(myBillsFilterKey);
-      return filter(
-        (b: Bill) =>
-          toString(b.airlineBillId).includes(lowerFilter) ||
-          toString(b.childBillId).includes(lowerFilter) ||
-          toLower(b.senderName).includes(lowerFilter) ||
-          toLower(b.senderPhone).includes(lowerFilter),
-      )(myBills);
-    }
-
-    return myBills;
-  }, [myBills, myBillsFilterKey]);
 
   return (
     <>
@@ -173,16 +172,6 @@ export const Workspace = memo(() => {
           <StyledGroupHeader>
             {currentRole === Role.SALE ? 'Bill của tôi' : 'Bill tôi đang xử lý'}
           </StyledGroupHeader>
-          <Tooltip title="Nhập bill hãng bay hoặc bill con hoặc số điện thoại/tên khách gởi sau đó nhấn Enter để tìm">
-            <Input.Search
-              style={{ marginBottom: 5, marginTop: 2 }}
-              placeholder="Tìm bill"
-              onSearch={onSearchMyBills}
-              enterButton
-              size="small"
-              allowClear
-            />
-          </Tooltip>
           <div
             style={{
               height: [Role.ADMIN, Role.ACCOUNTANT].includes(currentRole)
@@ -192,15 +181,22 @@ export const Workspace = memo(() => {
               marginBottom: 10,
             }}
           >
-            <List
-              renderItem={renderBillBlock}
-              loading={isFetchingMyBills}
-              dataSource={filteredMyBills}
+            <WorkingBills
+              renderBillBlock={renderBillBlock}
+              isFetching={isFetchingMyBills}
+              bills={myBills}
             />
           </div>
           {authorizeHelper.canRenderWithRole(
             [Role.ACCOUNTANT],
             <>
+              <Space align="center">
+                <StyledGroupHeader>Bill chờ xử lý</StyledGroupHeader>
+                <Tooltip title="Tự động tải lại sau mỗi 10s">
+                  <InfoCircleOutlined style={{ marginBottom: 5 }} />
+                </Tooltip>
+                {isFetchingUnassignedBills && <Spin size="small" />}
+              </Space>
               <div
                 style={{
                   height: '50%',
@@ -208,8 +204,9 @@ export const Workspace = memo(() => {
                   marginBottom: 10,
                 }}
               >
-                <UnassignedBills
-                  onBillSelectionChanged={onBillSelectionChanged}
+                <WorkingBills
+                  bills={unassignedBills}
+                  renderBillBlock={renderBillBlock}
                 />
               </div>
             </>,

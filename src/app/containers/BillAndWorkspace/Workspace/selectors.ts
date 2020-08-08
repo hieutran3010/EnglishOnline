@@ -89,3 +89,13 @@ export const selectNumberOfUncheckedVatBills = createSelector(
   [selectDomain],
   workspaceState => workspaceState.numberOfUncheckedVatBills,
 );
+
+export const selectIsFetchingUnassignedBills = createSelector(
+  [selectDomain],
+  workspaceState => workspaceState.isFetchingUnassignedBills,
+);
+
+export const selectUnassignedBills = createSelector(
+  [selectDomain],
+  workspaceState => workspaceState.unassignedBills,
+);

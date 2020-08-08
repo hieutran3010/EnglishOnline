@@ -19,7 +19,7 @@ const formatColumns = (columns: ColumnDefinition[]) => {
     if (column.type === COLUMN_TYPES.DATE) {
       formattedColumn = assign({
         render: (text: Date) => (
-          <span>{text ? moment(text).format('DD/MM/YYYY') : ''}</span>
+          <span>{text ? moment(text).format('DD-MM-YYYY') : ''}</span>
         ),
       })(formattedColumn);
     }
@@ -27,7 +27,7 @@ const formatColumns = (columns: ColumnDefinition[]) => {
     if (column.type === COLUMN_TYPES.DATE_TIME) {
       formattedColumn = assign({
         render: (text: Date) => (
-          <span>{text ? moment(text).format('DD/MM/YYYY HH:mm') : ''}</span>
+          <span>{text ? moment(text).format('DD-MM-YYYY HH:mm') : ''}</span>
         ),
       })(formattedColumn);
     }
@@ -35,7 +35,7 @@ const formatColumns = (columns: ColumnDefinition[]) => {
     if (column.type === COLUMN_TYPES.DATE_WITHOUT_YEAR) {
       formattedColumn = assign({
         render: (text: Date) => (
-          <span>{text ? moment(text).format('DD/MM') : ''}</span>
+          <span>{text ? moment(text).format('DD-MM') : ''}</span>
         ),
       })(formattedColumn);
     }
