@@ -160,6 +160,7 @@ const BillCreation = ({ bill, billParams }: Props) => {
     bill.salePrice = toNumber(bill.salePrice);
     bill.senderId = senderId;
     bill.receiverId = receiverId;
+    bill.date = bill.date.format('YYYY-MM-DD HH:mm:ss');
 
     return bill as any;
   }, [billForm, receiverId, senderId]);

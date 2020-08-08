@@ -19,6 +19,8 @@ import 'sanitize.css/sanitize.css';
 import { App } from 'app';
 
 import { HelmetProvider } from 'react-helmet-async';
+import 'moment/locale/vi';
+import locale from 'antd/es/locale/vi_VN';
 
 import { configureAppStore } from 'store/configureStore';
 
@@ -27,6 +29,7 @@ import './locales/i18n';
 import './styles/App.less';
 import 'react-toastify/dist/ReactToastify.css';
 import 'react-datasheet/lib/react-datasheet.css';
+import { ConfigProvider } from 'antd';
 
 const store = configureAppStore();
 const MOUNT_NODE = document.getElementById('root') as HTMLElement;
@@ -38,7 +41,9 @@ const ConnectedApp = ({ Component }: Props) => (
   <Provider store={store}>
     <HelmetProvider>
       {/* <React.StrictMode> */}
-      <Component />
+      <ConfigProvider locale={locale}>
+        <Component />
+      </ConfigProvider>
       <ToastContainer
         position="bottom-center"
         autoClose={5000}
