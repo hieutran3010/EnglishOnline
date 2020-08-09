@@ -2,6 +2,7 @@ import { Rule } from 'antd/lib/form';
 import isEmpty from 'lodash/fp/isEmpty';
 import toUpper from 'lodash/fp/toUpper';
 import toNumber from 'lodash/fp/toNumber';
+import trim from 'lodash/fp/trim';
 
 import BillFetcher from 'app/fetchers/billFetcher';
 
@@ -34,7 +35,7 @@ const isValidAirlineBillId = (id?: string) => async (
   _rule,
   value,
 ): Promise<void> => {
-  if (!value || isEmpty(value)) {
+  if (!value || isEmpty(trim(value))) {
     return Promise.resolve();
   }
 

@@ -12,6 +12,9 @@ import get from 'lodash/fp/get';
 import isEmpty from 'lodash/fp/isEmpty';
 import isArray from 'lodash/fp/isArray';
 import head from 'lodash/fp/head';
+import isEqual from 'lodash/fp/isEqual';
+import all from 'lodash/fp/all';
+import values from 'lodash/fp/values';
 
 import { ColumnDefinition } from './types';
 import {
@@ -120,7 +123,7 @@ export default function DataGrid({
         pageSize: paging.pageSize,
         page: paging.current,
         criteria: getQueryCriteria(tableFilter || antTableFilter),
-        ...(inputOrder || order),
+        order: inputOrder || order,
       };
 
       const data = await dataSource.queryManyAsync(queryParams);
@@ -200,11 +203,16 @@ export default function DataGrid({
         setOrder(currentOrder);
       }
 
-      fetchTotalCount(filters);
+      if (
+        !isEqual(filters, antTableFilter) &&
+        !(isEmpty(antTableFilter) && all(v => v === null)(values(filters)))
+      ) {
+        fetchTotalCount(filters);
+      }
+
       fetchData(filters, currentOrder, currentPagination);
     },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [],
+    [antTableFilter, fetchData, fetchTotalCount],
   );
 
   const formattedColumns = useMemo(() => formatColumns(columns), [columns]);

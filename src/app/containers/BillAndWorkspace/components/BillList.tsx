@@ -116,6 +116,7 @@ const BillList = ({
         dataIndex: 'date',
         key: 'date',
         type: COLUMN_TYPES.DATE_TIME,
+        sorter: true,
       },
       {
         title: 'Khách Gởi',

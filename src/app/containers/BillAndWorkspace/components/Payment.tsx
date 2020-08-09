@@ -12,7 +12,7 @@ import { CurrencyInput } from 'app/components/Input';
 const { Title } = Typography;
 
 const paymentLayout = {
-  labelCol: { span: 6 },
+  labelCol: { span: 7 },
   wrapperCol: { span: 15 },
 };
 
