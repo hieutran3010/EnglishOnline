@@ -13,7 +13,8 @@ export enum PAYMENT_TYPE {
 }
 
 export enum PARCEL_VENDOR {
-  DHL = 'DHL',
+  DHL_VN = 'DHL VN',
+  DHL_SING = 'DHL SING',
   UPS = 'UPS',
   TNT = 'TNT',
   FEDEX = 'FEDEX',
