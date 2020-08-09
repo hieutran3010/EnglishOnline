@@ -35,6 +35,8 @@ export const BillsInMonth = memo(() => {
 
       if (user.role === Role.SALE) {
         query = `${query} and saleUserId = "${user.id}"`;
+      } else if (user.role === Role.LICENSE) {
+        query = `${query} and licenseUserId = "${user.id}"`;
       }
 
       if (!isViewArchivedBills) {
