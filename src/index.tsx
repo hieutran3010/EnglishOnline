@@ -13,6 +13,7 @@ import * as ReactDOM from 'react-dom';
 import { Provider } from 'react-redux';
 import { ToastContainer } from 'react-toastify';
 import * as serviceWorker from 'serviceWorker';
+import * as Sentry from '@sentry/react';
 import 'sanitize.css/sanitize.css';
 
 // Import root app
@@ -30,6 +31,11 @@ import './styles/App.less';
 import 'react-toastify/dist/ReactToastify.css';
 import 'react-datasheet/lib/react-datasheet.css';
 import { ConfigProvider } from 'antd';
+
+Sentry.init({
+  dsn:
+    'https://813ca44d00934cbcb22ec6b90b9ffde8@o305988.ingest.sentry.io/5375081',
+});
 
 const store = configureAppStore();
 const MOUNT_NODE = document.getElementById('root') as HTMLElement;

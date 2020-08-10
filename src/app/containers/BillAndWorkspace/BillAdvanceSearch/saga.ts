@@ -1,9 +1,10 @@
 import { call, put, takeLatest } from 'redux-saga/effects';
-import { actions } from './slice';
+import { toast } from 'react-toastify';
+
 import { PayloadAction } from '@reduxjs/toolkit';
 import BillFetcher from 'app/fetchers/billFetcher';
-import { toast } from 'react-toastify';
 import Bill from 'app/models/bill';
+import { actions } from './slice';
 
 const billFetcher = new BillFetcher();
 
@@ -13,7 +14,6 @@ export function* archiveBillTask(action: PayloadAction<string>) {
     yield call(toast.success, 'Đã hủy Bill!');
     yield put(actions.setNeedToReload(true));
   } catch (error) {
-    //TODO: should log here
     yield call(toast.error, 'Chưa hủy được bill, vui lòng thử lại!');
   }
 }
