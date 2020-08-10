@@ -7,6 +7,7 @@ import toNumber from 'lodash/fp/toNumber';
 import findIndex from 'lodash/fp/findIndex';
 import find from 'lodash/fp/find';
 import orderBy from 'lodash/fp/orderBy';
+import * as Sentry from '@sentry/react';
 
 import { PayloadAction } from '@reduxjs/toolkit';
 import VendorFetcher from 'app/fetchers/vendorFetcher';
@@ -52,6 +53,7 @@ export function* submitDataTask(action: PayloadAction<any[]>) {
     yield put(actions.setSubmitErrorState(false));
   } catch (error) {
     yield put(actions.setSubmitErrorState(true));
+    Sentry.captureException(error);
   }
 
   yield put(actions.setIsSubmittingData(false));

@@ -60,12 +60,10 @@ export function* fetchBillsGroupedByVendorTask(action: PayloadAction<string>) {
   let result: VendorStatistic[] = [];
   try {
     result = yield call(billFetcher.getVendorStatistic, query);
-  } catch (error) {
-    //TODO: should log here
-  }
+  } catch (error) {}
 
   yield put(actions.fetchBillsGroupedByVendorCompleted(result || []));
-} //TODO: should log here
+}
 
 export function* fetchBillsGroupedByCustomerTask(
   action: PayloadAction<string>,
@@ -75,9 +73,7 @@ export function* fetchBillsGroupedByCustomerTask(
   let result: CustomerStatistic[] = [];
   try {
     result = yield call(billFetcher.getCustomerStatistic, query);
-  } catch (error) {
-    //TODO: should log here
-  }
+  } catch (error) {}
 
   yield put(actions.fetchBillsGroupedByCustomerCompleted(result || []));
 }
@@ -93,7 +89,6 @@ export function* requestBillExportTask(
       action.payload.note,
     );
   } catch (error) {
-    //TODO: should log here
     yield call(toast.error, 'Chưa tải được bill, vui lòng thử lại...');
   }
   yield put(actions.requestBillExportCompleted(sessionId));
@@ -106,9 +101,7 @@ export function* checkExportSessionTask(action: PayloadAction<string>) {
     session = yield call(exportSessionFetcher.queryOneAsync, {
       query: `UserId = "${userId}" and ExportType = "${EXPORT_TYPE.BILL_REPORT}"`,
     });
-  } catch (error) {
-    // TODO: should log here
-  }
+  } catch (error) {}
 
   yield put(actions.checkExportSessionCompleted(session));
 }
@@ -130,7 +123,6 @@ export async function getRevenue(query: string): Promise<MathResult> {
   try {
     result = await billFetcher.sumAsync('SalePrice', query);
   } catch (error) {
-    //TODO: should log here
     result = { value: 0 };
   }
 
