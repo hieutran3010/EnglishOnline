@@ -53,8 +53,9 @@ const layout = {
 interface Props {
   bill: Bill;
   billParams: BillParams;
+  onSubmitting?: (isSubmitting: boolean) => void;
 }
-const BillCreation = ({ bill, billParams }: Props) => {
+const BillCreation = ({ bill, billParams, onSubmitting }: Props) => {
   const [hasVat, setHasVat] = useState(false);
   const [senderId, setSenderId] = useState<string | undefined>();
   const [receiverId, setReceiverId] = useState<string | undefined>();
@@ -79,6 +80,13 @@ const BillCreation = ({ bill, billParams }: Props) => {
   const isDeletingBill = useSelector(selectIsDeletingBill);
   const isFinalBill = useSelector(selectIsFinalBill);
   const isAssigningLicense = useSelector(selectIsAssigningLicense);
+
+  const isBusy =
+    isSubmitting ||
+    isFinalBill ||
+    isAssigningAccountant ||
+    isAssigningLicense ||
+    isDeletingBill;
 
   const dispatch = useDispatch();
   const [billForm] = Form.useForm();
@@ -169,9 +177,10 @@ const BillCreation = ({ bill, billParams }: Props) => {
     () => {
       const bill = getBillData();
       dispatch(actions.submitBill(bill));
+      if (onSubmitting) onSubmitting(isBusy);
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [senderId, receiverId],
+    [senderId, receiverId, onSubmitting, isBusy],
   );
 
   const onVatCheckingChanged = useCallback(
@@ -188,17 +197,19 @@ const BillCreation = ({ bill, billParams }: Props) => {
 
   const onAssignToAccountant = useCallback(() => {
     dispatch(actions.assignToAccountant());
+    if (onSubmitting) onSubmitting(isBusy);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [onSubmitting, isBusy]);
 
   const onDeleteBill = useCallback(() => {
     showConfirm(
       'Bạn có chắc muốn xóa Bill này? Không thể phục hồi lại Bill sau khi xóa, xác nhận xóa?',
       () => {
         dispatch(actions.deleteBill());
+        if (onSubmitting) onSubmitting(isBusy);
       },
     );
-  }, [dispatch]);
+  }, [dispatch, isBusy, onSubmitting]);
 
   const onBillFormValuesChanged = useCallback(
     (changedValues, _allValues) => {
@@ -249,14 +260,15 @@ const BillCreation = ({ bill, billParams }: Props) => {
       'Bill sau khi chốt sẽ không thể chỉnh sửa, bạn có muốn tiếp tục?',
       () => {
         dispatch(actions.finalBill());
+        if (onSubmitting) onSubmitting(isBusy);
       },
     );
-  }, [billForm, dispatch]);
+  }, [billForm, dispatch, isBusy, onSubmitting]);
 
   const onAssignToLicense = useCallback(() => {
     dispatch(actions.assignLicense());
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    if (onSubmitting) onSubmitting(isBusy);
+  }, [dispatch, isBusy, onSubmitting]);
 
   const billValidator = useMemo(() => getBillValidator(hasVat, bill.id), [
     hasVat,

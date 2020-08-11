@@ -45,16 +45,6 @@ export const selectUsers = createSelector(
   workspaceState => workspaceState.users,
 );
 
-export const selectIsFetchingMyBills = createSelector(
-  [selectDomain],
-  workspaceState => workspaceState.isFetchingMyBills,
-);
-
-export const selectMyBills = createSelector(
-  [selectDomain],
-  workspaceState => workspaceState.myBills,
-);
-
 export const selectIsAssigningAccountant = createSelector(
   [selectDomain],
   workspaceState => workspaceState.isAssigningAccountant,
@@ -90,12 +80,7 @@ export const selectNumberOfUncheckedVatBills = createSelector(
   workspaceState => workspaceState.numberOfUncheckedVatBills,
 );
 
-export const selectIsFetchingUnassignedBills = createSelector(
+export const selectNeedToReloadWorkingBills = createSelector(
   [selectDomain],
-  workspaceState => workspaceState.isFetchingUnassignedBills,
-);
-
-export const selectUnassignedBills = createSelector(
-  [selectDomain],
-  workspaceState => workspaceState.unassignedBills,
+  workspaceState => workspaceState.needToReloadWorkingBills,
 );

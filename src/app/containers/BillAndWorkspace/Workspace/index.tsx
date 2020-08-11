@@ -4,9 +4,9 @@
  *
  */
 
-import React, { memo, useCallback, useEffect } from 'react';
-import { Button, Space, Tooltip, Spin } from 'antd';
-import { PlusCircleOutlined, InfoCircleOutlined } from '@ant-design/icons';
+import React, { memo, useCallback, useEffect, useState } from 'react';
+import { Button, Tabs } from 'antd';
+import { PlusCircleOutlined } from '@ant-design/icons';
 import { useDispatch, useSelector } from 'react-redux';
 import isEmpty from 'lodash/fp/isEmpty';
 
@@ -27,24 +27,27 @@ import {
   StyledContainer,
   StyledLeftContainer,
   StyledRightContainer,
-  StyledGroupHeader,
   StyledMainToolbar,
 } from './styles/StyledIndex';
 
 import {
-  selectIsFetchingMyBills,
-  selectMyBills,
   selectBill,
   selectBillParams,
   selectNumberOfUncheckedVatBills,
-  selectIsFetchingUnassignedBills,
-  selectUnassignedBills,
+  selectNeedToReloadWorkingBills,
 } from './selectors';
 import BillBlock from '../components/BillBlock';
 import BillCreation from './BillCreation';
 import BillView from '../components/BillView';
 import VatPrintedChecking from '../components/VatPrintedChecking';
-import WorkingBills from './WorkingBills';
+import { MyBills, UnassignedBills } from './WorkingBills';
+
+enum SELECTED_BILL_AREA {
+  MY_BILLS = 0,
+  UNASSIGNED,
+}
+
+const { TabPane } = Tabs;
 
 const canEditBill = (role: Role, bill: Bill) => {
   switch (role) {
@@ -75,17 +78,17 @@ export const Workspace = memo(() => {
   const screenMode = useSelector(selectScreenMode);
   const collapsedMenu = useSelector(selectCollapsedMenu);
 
-  const isFetchingMyBills = useSelector(selectIsFetchingMyBills);
-  const myBills = useSelector(selectMyBills);
-  const isFetchingUnassignedBills = useSelector(
-    selectIsFetchingUnassignedBills,
-  );
-  const unassignedBills = useSelector(selectUnassignedBills);
   const bill = useSelector(selectBill);
   const billParams = useSelector(selectBillParams);
   const numberOfUncheckedVatBills = useSelector(
     selectNumberOfUncheckedVatBills,
   );
+  const needToReloadWorkingBills = useSelector(selectNeedToReloadWorkingBills);
+
+  const [isBusy, setIsBusy] = useState(false);
+  const [currentBillArea, setCurrentBillArea] = useState<
+    SELECTED_BILL_AREA | undefined
+  >();
 
   useEffect(() => {
     if (role !== Role.SALE) {
@@ -96,36 +99,26 @@ export const Workspace = memo(() => {
 
     if (role === Role.ACCOUNTANT || role === Role.ADMIN) {
       dispatch(actions.fetchNumberOfUncheckedVatBill());
-      dispatch(actions.fetchUnassignedBills());
     }
-
-    dispatch(actions.fetchMyBills());
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  useEffect(() => {
-    let counter: any = undefined;
-    if (role === Role.ACCOUNTANT || role === Role.ADMIN) {
-      counter = setInterval(() => {
-        dispatch(actions.fetchUnassignedBills());
-      }, 30000);
-    }
-
-    return function cleanUp() {
-      if (counter) {
-        clearInterval(counter);
+  const onBillSelectionChanged = useCallback(
+    (billsArea: SELECTED_BILL_AREA) => (bill: Bill) => {
+      if (!isEmpty(bill.vendorId)) {
+        dispatch(actions.fetchVendorCountries(bill.vendorId));
       }
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
-  const onBillSelectionChanged = useCallback((bill: Bill) => {
-    dispatch(actions.submitBillSuccess(new Bill(bill)));
+      dispatch(actions.submitBillSuccess(new Bill(bill)));
+      setCurrentBillArea(billsArea);
+    },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    [],
+  );
 
   const initNewBill = useCallback(() => {
     dispatch(actions.initNewBill());
+    setCurrentBillArea(undefined);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -135,87 +128,120 @@ export const Workspace = memo(() => {
 
   const canEdit = canEditBill(role, bill);
 
-  const renderBillBlock = (bill: any) => {
-    return <BillBlock bill={bill} onEdit={onBillSelectionChanged} />;
+  const renderMyBillBlock = (item: any) => {
+    return (
+      <BillBlock
+        bill={item}
+        onEdit={onBillSelectionChanged(SELECTED_BILL_AREA.MY_BILLS)}
+        selectedBillId={bill.id}
+      />
+    );
   };
+
+  const renderUnassignedBillBlock = (item: any) => {
+    return (
+      <BillBlock
+        bill={item}
+        onEdit={onBillSelectionChanged(SELECTED_BILL_AREA.UNASSIGNED)}
+        selectedBillId={bill.id}
+      />
+    );
+  };
+
+  const onBillSubmitting = useCallback((isSubmitting: boolean) => {
+    setIsBusy(isSubmitting);
+  }, []);
+
+  const onDataReloaded = useCallback(() => {
+    dispatch(actions.setNeedToReloadWorkingBills(false));
+  }, [dispatch]);
 
   return (
     <>
-      {authorizeHelper.willRenderIfNot(
-        [Role.SALE],
-        <StyledMainToolbar>
-          {authorizeHelper.canRenderWithRole(
-            [Role.ACCOUNTANT, Role.LICENSE],
-            <Button
-              type="dashed"
-              icon={<PlusCircleOutlined />}
-              size="small"
-              onClick={initNewBill}
-              style={{ border: 0 }}
-            >
-              Tạo Bill Mới
-            </Button>,
-          )}
-          {authorizeHelper.canRenderWithRole(
-            [Role.ACCOUNTANT],
-            <div style={{ marginBottom: 2 }}>
-              <VatPrintedChecking
-                numberOfBills={numberOfUncheckedVatBills}
-                onCheckNumberOfVatBill={onCheckNumberOfVatBill}
-              />
-            </div>,
-          )}
-        </StyledMainToolbar>,
-      )}
       <StyledContainer role={currentRole} {...{ screenMode, collapsedMenu }}>
         <StyledLeftContainer>
-          <StyledGroupHeader>
-            {currentRole === Role.SALE ? 'Bill của tôi' : 'Bill tôi đang xử lý'}
-          </StyledGroupHeader>
-          <div
-            style={{
-              height: [Role.ADMIN, Role.ACCOUNTANT].includes(currentRole)
-                ? '50%'
-                : '100%',
-              overflow: 'auto',
-              marginBottom: 10,
-            }}
-          >
-            <WorkingBills
-              renderBillBlock={renderBillBlock}
-              isFetching={isFetchingMyBills}
-              bills={myBills}
-            />
-          </div>
-          {authorizeHelper.canRenderWithRole(
-            [Role.ACCOUNTANT],
-            <>
-              <Space align="center">
-                <StyledGroupHeader>Bill chờ xử lý</StyledGroupHeader>
-                <Tooltip title="Tự động tải lại sau mỗi 10s">
-                  <InfoCircleOutlined style={{ marginBottom: 5 }} />
-                </Tooltip>
-                {isFetchingUnassignedBills && <Spin size="small" />}
-              </Space>
-              <div
-                style={{
-                  height: '50%',
-                  overflow: 'auto',
-                  marginBottom: 10,
-                }}
+          <Tabs defaultActiveKey="1" size="small">
+            <TabPane
+              tab={
+                <span>
+                  {/* <Badge count={25} /> */}
+                  {currentRole === Role.SALE
+                    ? 'Bill của tôi'
+                    : 'Bill tôi đang xử lý'}
+                </span>
+              }
+              key="1"
+              disabled={isBusy}
+            >
+              <MyBills
+                renderBillBlock={renderMyBillBlock}
+                needToReload={
+                  needToReloadWorkingBills === true &&
+                  currentBillArea !== undefined
+                }
+                onReloaded={onDataReloaded}
+              />
+            </TabPane>
+            {authorizeHelper.canRenderWithRole(
+              [Role.ACCOUNTANT],
+              <TabPane
+                tab={
+                  <span>
+                    {/* <Badge count={25} /> */}
+                    Bill chờ xử lý
+                  </span>
+                }
+                key="2"
+                disabled={isBusy}
               >
-                <WorkingBills
-                  bills={unassignedBills}
-                  renderBillBlock={renderBillBlock}
+                <UnassignedBills
+                  renderBillBlock={renderUnassignedBillBlock}
+                  needToReload={
+                    needToReloadWorkingBills === true &&
+                    currentBillArea === SELECTED_BILL_AREA.UNASSIGNED
+                  }
+                  onReloaded={onDataReloaded}
                 />
-              </div>
-            </>,
-          )}
+              </TabPane>,
+            )}
+          </Tabs>
         </StyledLeftContainer>
         <StyledRightContainer>
-          <StyledGroupHeader>Thông tin bill</StyledGroupHeader>
+          {authorizeHelper.willRenderIfNot(
+            [Role.SALE],
+            <StyledMainToolbar>
+              {authorizeHelper.canRenderWithRole(
+                [Role.ACCOUNTANT, Role.LICENSE],
+                <Button
+                  type="dashed"
+                  icon={<PlusCircleOutlined />}
+                  size="small"
+                  onClick={initNewBill}
+                  style={{ border: 0 }}
+                >
+                  Tạo Bill Mới
+                </Button>,
+              )}
+              {authorizeHelper.canRenderWithRole(
+                [Role.ACCOUNTANT],
+                <div style={{ marginBottom: 2 }}>
+                  <VatPrintedChecking
+                    numberOfBills={numberOfUncheckedVatBills}
+                    onCheckNumberOfVatBill={onCheckNumberOfVatBill}
+                  />
+                </div>,
+              )}
+            </StyledMainToolbar>,
+          )}
+          {currentRole !== Role.SALE && <div style={{ marginTop: 54 }}></div>}
           <ContentContainer>
-            {canEdit && <BillCreation bill={bill} billParams={billParams} />}
+            {canEdit && (
+              <BillCreation
+                bill={bill}
+                billParams={billParams}
+                onSubmitting={onBillSubmitting}
+              />
+            )}
             {!canEdit && <BillView bill={bill} />}
           </ContentContainer>
         </StyledRightContainer>

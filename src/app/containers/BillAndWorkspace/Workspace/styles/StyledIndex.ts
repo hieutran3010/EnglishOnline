@@ -1,12 +1,10 @@
 import styled from 'styled-components/macro';
-import { Role } from 'app/models/user';
 import { getMarginLeft } from 'app/components/Layout/AppLayout';
 
 export const StyledMainToolbar = styled.div`
   position: absolute;
   z-index: 1;
   background-color: white;
-  width: 100%;
   padding: 10px;
   border-radius: 5px;
   box-shadow: rgba(0, 0, 0, 0.1) 0px 1px 3px 0px,
@@ -15,6 +13,8 @@ export const StyledMainToolbar = styled.div`
   flex-direction: row;
   align-items: center;
   justify-content: center;
+  right: 0;
+  left: 320px;
 `;
 
 export const StyledContainer = styled.div`
@@ -24,16 +24,25 @@ export const StyledContainer = styled.div`
   left: ${(props: any) =>
     `${getMarginLeft(props.screenMode, props.collapsedMenu)}px`};
   bottom: 0;
-  top: ${(props: any) => (props.role === Role.SALE ? '74px' : '128px')};
+  top: 74px;
 `;
 
 export const StyledLeftContainer = styled.div`
-  width: 250px;
+  width: 300px;
   margin-right: 20px;
 
   display: flex;
   flex-direction: column;
   margin-top: 7px;
+  margin-bottom: 10px;
+
+  .ant-tabs {
+    height: 100%;
+  }
+
+  .ant-tabs-content {
+    height: 100%;
+  }
 `;
 
 export const StyledRightContainer = styled.div`

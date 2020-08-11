@@ -62,4 +62,8 @@ export const GlobalStyle = createGlobalStyle`
   .ant-statistic-content-prefix svg {
     margin-bottom: 6px;
   }
+
+  .ant-pagination-item-link svg {
+    margin-bottom: 5px;
+  }
 `;

@@ -1,15 +1,12 @@
-import findIndex from 'lodash/fp/findIndex';
-import remove from 'lodash/fp/remove';
 import { PayloadAction } from '@reduxjs/toolkit';
 
 import { createSlice } from 'utils/@reduxjs/toolkit';
 import type Vendor from 'app/models/vendor';
-import User, { Role } from 'app/models/user';
+import User from 'app/models/user';
 import Bill from 'app/models/bill';
 
 import { ContainerState } from './types';
 import { BillParams } from 'app/models/appParam';
-import { authStorage } from 'app/services/auth';
 
 // The initial state of the Workspace container
 export const initialState: ContainerState = {
@@ -25,9 +22,6 @@ export const initialState: ContainerState = {
   isFetchingResponsibilityUsers: false,
   users: [],
 
-  isFetchingMyBills: false,
-  myBills: [],
-
   isDeletingBill: false,
   isAssigningAccountant: false,
   isCalculatingPurchasePrice: false,
@@ -36,8 +30,7 @@ export const initialState: ContainerState = {
   billParams: new BillParams(),
   numberOfUncheckedVatBills: 0,
 
-  isFetchingUnassignedBills: false,
-  unassignedBills: [],
+  needToReloadWorkingBills: false,
 };
 
 const workspaceSlice = createSlice({
@@ -81,33 +74,6 @@ const workspaceSlice = createSlice({
     },
     assignToAccountant(state) {},
 
-    setIsFetchingMyBills(state, action: PayloadAction<boolean>) {
-      state.isFetchingMyBills = action.payload;
-    },
-    fetchMyBills(state) {},
-    fetchMyBillsCompleted(state, action: PayloadAction<Bill[]>) {
-      state.myBills = action.payload;
-    },
-
-    addToMyBill(state, action: PayloadAction<Bill>) {
-      const bill = action.payload;
-      if (canAddOrUpdateOnMyBills(bill)) {
-        state.myBills.splice(0, 0, bill);
-      }
-    },
-    updateToMyBill(state, action: PayloadAction<Bill>) {
-      const bill = action.payload;
-      if (canAddOrUpdateOnMyBills(bill)) {
-        const billIndex = findIndex((b: Bill) => b.id === bill.id)(
-          state.myBills,
-        );
-        state.myBills.splice(billIndex, 1, bill);
-      }
-    },
-    deleteFromMyBill(state, action: PayloadAction<string>) {
-      const billId = action.payload;
-      state.myBills = remove((b: Bill) => b.id === billId)(state.myBills);
-    },
     initNewBill(state) {
       state.bill = new Bill();
     },
@@ -141,27 +107,11 @@ const workspaceSlice = createSlice({
     ) {
       state.numberOfUncheckedVatBills = action.payload;
     },
-    fetchUnassignedBills(state) {
-      state.isFetchingUnassignedBills = true;
-    },
-    fetchUnassignedBillsCompleted(state, action: PayloadAction<Bill[]>) {
-      state.unassignedBills = action.payload;
-      state.isFetchingUnassignedBills = false;
+
+    setNeedToReloadWorkingBills(state, action: PayloadAction<boolean>) {
+      state.needToReloadWorkingBills = action.payload;
     },
   },
 });
-
-const canAddOrUpdateOnMyBills = (bill: Bill): boolean => {
-  const user = authStorage.getUser();
-  if (user.role === Role.ACCOUNTANT) {
-    return bill.accountantUserId === user.id;
-  } else if (user.role === Role.LICENSE) {
-    return bill.licenseUserId === user.id;
-  } else if (user.role === Role.ADMIN) {
-    return bill.licenseUserId === user.id || bill.accountantUserId === user.id;
-  }
-
-  return false;
-};
 
 export const { actions, reducer, name: sliceKey } = workspaceSlice;

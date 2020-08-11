@@ -90,21 +90,24 @@ export default class GraphQLDataSource<TModel> implements IDataSource {
     let graphQLQueryCriteria = this.convertToGraphQLQueryCriteria(
       queryCriteria,
     );
-    const graphqlQueries: string[] = [];
+    let graphqlQueries: string[] = [];
     const graphqlQueryItem = parseQueryCriteriaToGraphQLDoorQuery(
       graphQLQueryCriteria,
       isSearchOr,
     );
 
     if (!isEmpty(graphqlQueryItem)) {
-      graphqlQueries.push(graphqlQueryItem);
+      graphqlQueries.push(`${graphqlQueryItem}`);
     }
 
     if (this.query && !isEmpty(this.query) && !isNil(this.query)) {
       graphqlQueries.push(this.query);
     }
 
-    return graphqlQueries.join(isSearchOr ? ' || ' : ' && ');
+    if (graphqlQueries.length > 1) {
+      graphqlQueries = map(query => `(${query})`)(graphqlQueries);
+    }
+    return graphqlQueries.join(' && ');
   };
 
   /**

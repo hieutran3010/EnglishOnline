@@ -17,12 +17,6 @@ export interface WorkspaceState {
   isFetchingResponsibilityUsers: boolean;
   users: User[];
 
-  isFetchingMyBills: boolean;
-  myBills: Bill[];
-
-  isFetchingUnassignedBills: boolean;
-  unassignedBills: Bill[];
-
   isDeletingBill: boolean;
   isAssigningAccountant: boolean;
   isCalculatingPurchasePrice: boolean;
@@ -31,6 +25,7 @@ export interface WorkspaceState {
 
   billParams: BillParams;
   numberOfUncheckedVatBills: number;
+  needToReloadWorkingBills: boolean;
 }
 
 export type ContainerState = WorkspaceState;

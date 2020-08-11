@@ -1,64 +1,98 @@
-import React, {
-  memo,
-  useCallback,
-  useMemo,
-  useState,
-  ReactElement,
-} from 'react';
-import { Tooltip, Input, List } from 'antd';
-import trim from 'lodash/fp/trim';
-import Bill from 'app/models/bill';
-import toLower from 'lodash/fp/toLower';
-import isEmpty from 'lodash/fp/isEmpty';
-import filter from 'lodash/fp/filter';
-import toString from 'lodash/fp/toString';
+import React, { memo, useMemo, ReactElement, useEffect } from 'react';
+import Bill, { BILL_STATUS } from 'app/models/bill';
+import { List } from 'app/components/collection/List';
+import getDataSource, { FETCHER_KEY } from 'app/collection-datasource';
+import User, { Role } from 'app/models/user';
+import { authStorage } from 'app/services/auth';
+
+function getMyBillsQuery(user: User) {
+  switch (user.role) {
+    case Role.LICENSE: {
+      return `Status != "${BILL_STATUS.DONE}" and LicenseUserId = "${user.id}"`;
+    }
+    case Role.ACCOUNTANT: {
+      return `Status != "${BILL_STATUS.DONE}" and AccountantUserId = "${user.id}"`;
+    }
+    case Role.ADMIN: {
+      return `Status != "${BILL_STATUS.DONE}" and (AccountantUserId = "${user.id}" || LicenseUserId = "${user.id}")`;
+    }
+    case Role.SALE: {
+      return `Status != "${BILL_STATUS.DONE}" and SaleUserId = "${user.id}"`;
+    }
+    default: {
+      return ``;
+    }
+  }
+}
+
+const getUnassignedBillsQuery = (user: User) => {
+  switch (user.role) {
+    case Role.LICENSE: {
+      return `LicenseUserId = null and Status = "${BILL_STATUS.LICENSE}"`;
+    }
+    case Role.ACCOUNTANT: {
+      return `AccountantUserId = null and Status = "${BILL_STATUS.ACCOUNTANT}"`;
+    }
+    case Role.ADMIN: {
+      return `LicenseUserId = null || AccountantUserId = null`;
+    }
+    default: {
+      return `Id = null`;
+    }
+  }
+};
 
 interface Props {
-  bills: Bill[];
-  isFetching?: boolean;
   renderBillBlock: (bill: Bill) => ReactElement;
+  needToReload?: boolean;
+  onReloaded?: () => void;
+  onGetQuery?: (user: User) => string;
 }
-const WorkingBills = ({ bills, isFetching, renderBillBlock }: Props) => {
-  const [myBillsFilterKey, setMyBillsFilterKey] = useState('');
+const WorkingBills = ({
+  renderBillBlock,
+  needToReload,
+  onReloaded,
+  onGetQuery,
+}: Props) => {
+  const user = authStorage.getUser();
 
-  const onSearchMyBills = useCallback(value => {
-    setMyBillsFilterKey(trim(value));
-  }, []);
+  const billDataSource = useMemo(() => {
+    const dataSource = getDataSource(FETCHER_KEY.BILL);
+    dataSource.orderByFields = 'date desc';
+    dataSource.query = onGetQuery ? onGetQuery(user) : '';
 
-  const filteredMyBills = useMemo(() => {
-    if (!isEmpty(myBillsFilterKey)) {
-      const lowerFilter = toLower(myBillsFilterKey);
-      return filter(
-        (b: Bill) =>
-          toString(b.airlineBillId).includes(lowerFilter) ||
-          toString(b.childBillId).includes(lowerFilter) ||
-          toLower(b.senderName).includes(lowerFilter) ||
-          toLower(b.senderPhone).includes(lowerFilter),
-      )(bills);
+    return dataSource;
+  }, [user, onGetQuery]);
+
+  useEffect(() => {
+    if (needToReload === true) {
+      billDataSource.onReloadData();
+      if (onReloaded) onReloaded();
     }
-
-    return bills;
-  }, [bills, myBillsFilterKey]);
+  }, [billDataSource, needToReload, onReloaded]);
 
   return (
-    <>
-      <Tooltip title="Nhập bill hãng bay hoặc bill con hoặc số điện thoại/tên khách gởi sau đó nhấn Enter để tìm">
-        <Input.Search
-          style={{ marginBottom: 5, marginTop: 2 }}
-          placeholder="Tìm bill"
-          onSearch={onSearchMyBills}
-          enterButton
-          size="small"
-          allowClear
-        />
-      </Tooltip>
-      <List
-        renderItem={renderBillBlock}
-        loading={isFetching}
-        dataSource={filteredMyBills}
-      />
-    </>
+    <List
+      renderItem={renderBillBlock}
+      graphQLDataSource={billDataSource}
+      searchPlaceholder="Tìm bill"
+      searchHint="Nhập bill hãng bay hoặc bill con hoặc số điện thoại/tên khách gởi sau đó nhấn Enter để tìm"
+      searchFields={[
+        'airlineBillId',
+        'childBillId',
+        'senderName',
+        'senderPhone',
+      ]}
+    />
   );
 };
+
+export const MyBills = memo((props: Props) => {
+  return <WorkingBills {...props} onGetQuery={getMyBillsQuery} />;
+});
+
+export const UnassignedBills = memo((props: Props) => {
+  return <WorkingBills {...props} onGetQuery={getUnassignedBillsQuery} />;
+});
 
 export default memo(WorkingBills);

@@ -1,11 +1,13 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import isEmpty from 'lodash/fp/isEmpty';
 import getOr from 'lodash/fp/getOr';
-import { List, Spin } from 'antd';
-import InfiniteScroll from 'react-infinite-scroller';
-import { WrappedListStyle } from './styles/StyledIndex';
-import { IDataSource } from '../types';
+import map from 'lodash/fp/map';
+import { List, Input, Pagination, Space, Select, Tooltip } from 'antd';
 import { ListProps } from 'antd/lib/list';
+import { IDataSource, QueryCriteria, QueryOperator } from '../types';
+import { Container } from './styles/StyledIndex';
+
+const { Option } = Select;
 
 const getItemValue = (item, field) => {
   if (typeof item === 'string') {
@@ -17,90 +19,78 @@ const getItemValue = (item, field) => {
   return getOr('', field)(item);
 };
 
-interface ListPagination {
-  pageSize: number;
-  page: number;
-}
 interface Props {
   graphQLDataSource: IDataSource;
   pageSize?: number;
   displayPath?: string;
   onSelectionChanged?: (item: any) => void;
-  onStartFetchingData?: () => void;
-  onFinishFetchingData?: () => void;
-  manualShowLoading?: boolean;
+  searchPlaceholder?: string;
+  searchHint?: string;
+  searchFields?: string[];
 }
 export default function DefaultList({
   graphQLDataSource,
   pageSize,
   displayPath,
   onSelectionChanged,
-  onStartFetchingData,
-  onFinishFetchingData,
-  manualShowLoading,
+  searchPlaceholder,
+  searchHint,
+  searchFields,
   ...restProps
 }: Props & ListProps<any>) {
   const [items, setItems] = useState<any[]>([]);
   const [total, setTotal] = useState(0);
-  const [hasMore, setHasMore] = useState(true);
   const [loading, setLoading] = useState(false);
-  const [pagination, setPagination] = useState<ListPagination>({
-    pageSize: pageSize || 10,
-    page: 1,
-  });
+  const [currentPageSize, setCurrentPageSize] = useState(pageSize || 10);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [filters, setFilters] = useState<QueryCriteria[]>([]);
 
-  const fetchTotal = useCallback(async () => {
-    const totalItem = await graphQLDataSource.countAsync([]);
+  const fetchTotal = useCallback(async (currentFilters?: QueryCriteria[]) => {
+    const totalItem = await graphQLDataSource.countAsync(
+      currentFilters ?? filters,
+    );
     setTotal(totalItem);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const fetchData = useCallback(async () => {
-    if (manualShowLoading === true) {
+  const fetchData = useCallback(
+    async (
+      pageSize?: number,
+      page?: number,
+      currentFilters?: QueryCriteria[],
+    ) => {
       setLoading(true);
-    }
 
-    if (onStartFetchingData) {
-      onStartFetchingData();
-    }
+      const data = await graphQLDataSource.queryManyAsync(
+        {
+          pageSize: pageSize ?? currentPageSize,
+          page: page ?? currentPage,
+          criteria: currentFilters ?? filters,
+        },
+        true,
+      );
 
-    const data = await graphQLDataSource.queryManyAsync({
-      pageSize: pagination.pageSize,
-      page: pagination.page,
-    });
+      setItems(data);
 
-    if (!isEmpty(data)) {
-      const newData = items.concat(data);
-      setItems(newData);
-    } else {
-      setItems([]);
-    }
-
-    if (onFinishFetchingData) {
-      onFinishFetchingData();
-    }
-    setLoading(false);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [items, pagination]);
-
-  const onResetData = useCallback(() => {
-    setPagination({ ...pagination, page: 1 });
-    fetchData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pagination]);
+      setLoading(false);
+    },
+    [currentPage, currentPageSize, filters, graphQLDataSource],
+  );
 
   useEffect(() => {
     let reloadedSubscription;
     if (graphQLDataSource) {
-      reloadedSubscription = graphQLDataSource.onReloaded.subscribe(
-        onResetData,
-      );
+      reloadedSubscription = graphQLDataSource.onReloaded.subscribe(() => {
+        fetchTotal();
+        fetchData();
+      });
     }
     return function cleanUp() {
-      if (reloadedSubscription) reloadedSubscription.unsubscribe();
+      if (reloadedSubscription) {
+        reloadedSubscription.unsubscribe();
+      }
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [fetchData, fetchTotal, graphQLDataSource]);
 
   useEffect(() => {
     fetchTotal();
@@ -114,9 +104,55 @@ export default function DefaultList({
 
   const onItemClicked = useCallback(
     item => () => {
-      if (onSelectionChanged) onSelectionChanged(item);
+      if (onSelectionChanged) {
+        onSelectionChanged(item);
+      }
     },
     [onSelectionChanged],
+  );
+
+  const onPageChanged = useCallback(
+    (page: number, pageSize?: number | undefined) => {
+      setCurrentPage(page);
+      fetchData(pageSize, page);
+    },
+    [fetchData],
+  );
+
+  const onPageSizeChanged = useCallback(
+    (size: number) => {
+      setCurrentPageSize(size);
+      fetchData(size, currentPage);
+    },
+    [currentPage, fetchData],
+  );
+
+  const onSearchChanged = useCallback(
+    (searchKey: string) => {
+      if (isEmpty(searchKey)) {
+        setFilters([]);
+        fetchTotal([]);
+        fetchData(pageSize, currentPage, []);
+        return;
+      }
+
+      const criteria = map(
+        (searchField: string): QueryCriteria => {
+          return {
+            field: searchField,
+            operator: QueryOperator.C,
+            value: searchKey,
+          };
+        },
+      )(searchFields);
+
+      setFilters(criteria);
+      setCurrentPage(1);
+
+      fetchTotal(criteria);
+      fetchData(pageSize, 1, criteria);
+    },
+    [currentPage, fetchData, fetchTotal, pageSize, searchFields],
   );
 
   const defaultItemRender = item => (
@@ -125,40 +161,57 @@ export default function DefaultList({
     </List.Item>
   );
 
-  const handleInfiniteOnLoad = useCallback(() => {
-    if (items.length === total) {
-      setHasMore(false);
-      setLoading(false);
-      return;
-    }
-
-    setPagination({ ...pagination, page: pagination.page + 1 });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [items.length, total]);
-
   const { renderItem } = restProps;
   return (
-    <InfiniteScroll
-      initialLoad={false}
-      pageStart={0}
-      loadMore={handleInfiniteOnLoad}
-      hasMore={!loading && hasMore}
-      useWindow={false}
-    >
-      <WrappedListStyle>
-        <List
-          dataSource={items}
-          renderItem={renderItem || defaultItemRender}
-          loadMore={loading && !manualShowLoading && <Spin size="small" />}
-          {...restProps}
+    <Container>
+      {!isEmpty(searchFields) && (
+        <Tooltip title={searchHint}>
+          <Input.Search
+            enterButton
+            disabled={loading}
+            size="small"
+            placeholder={searchPlaceholder}
+            onSearch={onSearchChanged}
+            allowClear
+          />
+        </Tooltip>
+      )}
+      <List
+        style={{
+          flex: '1 1 auto',
+          overflow: 'auto',
+          height: 0,
+          marginTop: 5,
+          marginBottom: 5,
+        }}
+        size="small"
+        dataSource={items}
+        renderItem={renderItem || defaultItemRender}
+        loading={loading}
+        {...restProps}
+      />
+      <Space align="center">
+        <Pagination
+          size="small"
+          total={total}
+          simple
+          disabled={loading}
+          pageSize={currentPageSize}
+          current={currentPage}
+          onChange={onPageChanged}
+        />
+        <Select
+          size="small"
+          onChange={onPageSizeChanged}
+          value={currentPageSize}
         >
-          {/* {loading && hasMore && (
-            <LoadingContainer>
-              <Spin />
-            </LoadingContainer>
-          )} */}
-        </List>
-      </WrappedListStyle>
-    </InfiniteScroll>
+          <Option value={10}>10/trang</Option>
+          <Option value={20}>20/trang</Option>
+          <Option value={30}>30/trang</Option>
+          <Option value={40}>40/trang</Option>
+          <Option value={50}>50/trang</Option>
+        </Select>
+      </Space>
+    </Container>
   );
 }

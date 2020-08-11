@@ -9,7 +9,6 @@ import set from 'lodash/fp/set';
 import assign from 'lodash/fp/assign';
 import omit from 'lodash/fp/omit';
 
-import { authStorage } from 'app/services/auth';
 import VendorFetcher from 'app/fetchers/vendorFetcher';
 import ZoneFetcher from 'app/fetchers/zoneFetcher';
 import BillFetcher from 'app/fetchers/billFetcher';
@@ -18,7 +17,6 @@ import CustomerFetcher from 'app/fetchers/customerFetcher';
 import type Zone from 'app/models/zone';
 import type Vendor from 'app/models/vendor';
 import Bill, { BILL_STATUS } from 'app/models/bill';
-import { Role } from 'app/models/user';
 import {
   PurchasePriceCountingParams,
   PurchasePriceCountingResult,
@@ -117,14 +115,13 @@ export function* submitBillTask(action: PayloadAction<Bill | any>) {
         currentBill.id,
         resultBill,
       );
-      yield put(actions.updateToMyBill(new Bill(resultBill)));
     } else {
       resultBill = yield call(billFetcher.addAsync, resultBill);
-      yield put(actions.addToMyBill(new Bill(resultBill)));
     }
 
     toast.success('Đã lưu Bill');
     yield put(actions.submitBillSuccess(new Bill(resultBill)));
+    yield put(actions.setNeedToReloadWorkingBills(true));
   } catch (error) {
     toast.error('Chưa lưu được Bill, vui lòng thử lại!');
   }
@@ -154,28 +151,13 @@ export function* assignToAccountantTask() {
     yield call(billFetcher.assignToAccountant, bill.id);
     let submitBill = new Bill(set('status', BILL_STATUS.ACCOUNTANT)(bill));
     yield put(actions.submitBillSuccess(submitBill));
-    yield put(actions.updateToMyBill(submitBill));
     toast.success('Đã chuyển Bill cho Kế Toán');
+    yield put(actions.setNeedToReloadWorkingBills(true));
   } catch (error) {
     //TODO: should log here
   }
 
   yield put(actions.setIsAssigningAccountant(false));
-}
-
-export function* fetchMyBillsTask() {
-  yield put(actions.setIsFetchingMyBills(true));
-
-  const query = getMyBillsQuery();
-  if (!isEmpty(query)) {
-    const myBills = yield call(billFetcher.queryManyAsync, {
-      query,
-    });
-
-    yield put(actions.fetchMyBillsCompleted(myBills));
-  }
-
-  yield put(actions.setIsFetchingMyBills(false));
 }
 
 export function* deleteBillTask() {
@@ -186,8 +168,8 @@ export function* deleteBillTask() {
   try {
     yield call(billFetcher.deleteAsync, bill.id);
     toast.success('Đã xóa Bill!');
-    yield put(actions.deleteFromMyBill(bill.id));
     yield put(actions.submitBillSuccess(new Bill()));
+    yield put(actions.setNeedToReloadWorkingBills(true));
   } catch (error) {
     //TODO: should log here
     toast.error('Chưa xóa được Bill, vui lòng thử lại!');
@@ -241,10 +223,10 @@ export function* finalBillTask() {
 
   const bill = (yield select(selectBill)) as Bill;
   yield call(billFetcher.finalBill, bill.id);
-  yield put(actions.deleteFromMyBill(bill.id));
   toast.success('Đã chốt bill!');
   yield put(actions.submitBillSuccess(new Bill()));
   yield put(actions.setIsFinalBill(false));
+  yield put(actions.setNeedToReloadWorkingBills(true));
 }
 
 export function* assignLicenseTask() {
@@ -259,11 +241,11 @@ export function* assignLicenseTask() {
   );
 
   resultBill = new Bill(resultBill);
-  yield put(actions.updateToMyBill(resultBill));
   toast.success('Đã chuyển Bill cho Chứng Từ!');
   yield put(actions.submitBillSuccess(resultBill));
 
   yield put(actions.setIsAssigningLicense(false));
+  yield put(actions.setNeedToReloadWorkingBills(true));
 }
 
 export function* fetchBillParamsTask() {
@@ -282,13 +264,6 @@ export function* fetchBillParamsTask() {
 
     yield put(actions.fetchBillParamsCompleted(billParams));
   }
-}
-
-export function* fetchUnassignedBillsTask() {
-  const query = getUnassignedBillsQuery();
-  const unassignedBills = yield call(billFetcher.queryManyAsync, { query });
-
-  yield put(actions.fetchUnassignedBillsCompleted(unassignedBills));
 }
 
 export function* fetchNumberOfUncheckedVatBillTask() {
@@ -312,7 +287,6 @@ export function* workspaceSaga() {
     fetchResponsibilityUsersTask,
   );
   yield takeLatest(actions.assignToAccountant.type, assignToAccountantTask);
-  yield takeLatest(actions.fetchMyBills.type, fetchMyBillsTask);
   yield takeLatest(actions.deleteBill.type, deleteBillTask);
   yield takeLatest(
     actions.calculatePurchasePrice.type,
@@ -325,44 +299,4 @@ export function* workspaceSaga() {
     actions.fetchNumberOfUncheckedVatBill.type,
     fetchNumberOfUncheckedVatBillTask,
   );
-  yield takeLatest(actions.fetchUnassignedBills.type, fetchUnassignedBillsTask);
 }
-
-function getMyBillsQuery() {
-  const user = authStorage.getUser();
-  switch (user.role) {
-    case Role.LICENSE: {
-      return `Status != "${BILL_STATUS.DONE}" and LicenseUserId = "${user.id}"`;
-    }
-    case Role.ACCOUNTANT: {
-      return `Status != "${BILL_STATUS.DONE}" and AccountantUserId = "${user.id}"`;
-    }
-    case Role.ADMIN: {
-      return `Status != "${BILL_STATUS.DONE}" and (AccountantUserId = "${user.id}" || LicenseUserId = "${user.id}")`;
-    }
-    case Role.SALE: {
-      return `Status != "${BILL_STATUS.DONE}" and SaleUserId = "${user.id}"`;
-    }
-    default: {
-      return ``;
-    }
-  }
-}
-
-const getUnassignedBillsQuery = () => {
-  const user = authStorage.getUser();
-  switch (user.role) {
-    case Role.LICENSE: {
-      return `LicenseUserId = null and Status = "${BILL_STATUS.LICENSE}"`;
-    }
-    case Role.ACCOUNTANT: {
-      return `AccountantUserId = null and Status = "${BILL_STATUS.ACCOUNTANT}"`;
-    }
-    case Role.ADMIN: {
-      return `LicenseUserId = null || AccountantUserId = null`;
-    }
-    default: {
-      return `Id = null`;
-    }
-  }
-};
