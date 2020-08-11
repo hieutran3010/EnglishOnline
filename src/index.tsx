@@ -35,6 +35,7 @@ import { ConfigProvider } from 'antd';
 Sentry.init({
   dsn:
     'https://813ca44d00934cbcb22ec6b90b9ffde8@o305988.ingest.sentry.io/5375081',
+  ignoreErrors: ['ResizeObserver loop limit exceeded'],
 });
 
 const store = configureAppStore();
