@@ -115,7 +115,7 @@ const BillList = ({
         title: 'Ngày',
         dataIndex: 'date',
         key: 'date',
-        type: COLUMN_TYPES.DATE_TIME,
+        type: COLUMN_TYPES.DATE,
         sorter: true,
       },
       {
