@@ -99,7 +99,7 @@ export function cookSheetData(
 
         const zonePrice = new VendorQuotationPrice();
         zonePrice.zoneId = id;
-        zonePrice.priceInUsd = price;
+        zonePrice.priceInUsd = price || 0;
 
         zonePrices.push(zonePrice);
       })(orderedZones);
