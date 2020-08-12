@@ -33,9 +33,11 @@ import 'react-datasheet/lib/react-datasheet.css';
 import { ConfigProvider } from 'antd';
 
 Sentry.init({
-  dsn:
-    'https://813ca44d00934cbcb22ec6b90b9ffde8@o305988.ingest.sentry.io/5375081',
-  ignoreErrors: ['ResizeObserver loop limit exceeded'],
+  dsn: process.env.REACT_APP_SENTRY_DSN,
+  ignoreErrors: [
+    'ResizeObserver loop limit exceeded',
+    'Non-Error promise rejection captured with keys: errorFields, outOfDate, values',
+  ],
 });
 
 const store = configureAppStore();
