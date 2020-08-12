@@ -34,6 +34,7 @@ export const BillUpdating = memo((props: Props) => {
   return (
     <RootContainer
       title={`Cập nhật bill ${bill.airlineBillId ?? '<chưa có bill hãng bay>'}`}
+      canBack
     >
       <ContentContainer loading={isFetchingBill}>
         <BillCreateOrUpdate inputBill={bill} canDelete={false} />
