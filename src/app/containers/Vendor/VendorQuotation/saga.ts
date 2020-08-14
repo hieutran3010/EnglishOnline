@@ -108,7 +108,10 @@ export function* updateVendorTask(action: PayloadAction<Vendor>) {
 
   const currentVendor = yield select(selectVendor);
   const updatedModel = flow(
-    set('otherFeeInUsd', updatePatch.otherFeeInUsd),
+    set(
+      'otherFeeInUsd',
+      updatePatch.otherFeeInUsd || currentVendor.otherFeeInUsd,
+    ),
     set('fuelChargePercent', updatePatch.fuelChargePercent),
   )(currentVendor) as Vendor;
 

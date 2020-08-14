@@ -4,7 +4,13 @@
  *
  */
 
-import React, { memo, useEffect, useCallback } from 'react';
+import React, {
+  memo,
+  useEffect,
+  useCallback,
+  useMemo,
+  ReactElement,
+} from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { useParams, useHistory } from 'react-router-dom';
 import { Button, Descriptions, Typography } from 'antd';
@@ -49,34 +55,45 @@ export const VendorDetailPage = memo((props: Props) => {
   }, [history, vendorId]);
 
   const currentUserRole = authStorage.getRole();
-  const updateInfoActions = [Role.ADMIN, Role.LICENSE].includes(currentUserRole)
-    ? [
-        <Button type="primary" onClick={onNavigateToBasicInfoPage}>
-          Cập nhật
-        </Button>,
-      ]
-    : [];
+  const updateInfoActions =
+    currentUserRole !== Role.SALE
+      ? [
+          <Button type="primary" onClick={onNavigateToBasicInfoPage}>
+            Cập nhật
+          </Button>,
+        ]
+      : [];
 
-  const updateFeeActions = [Role.ADMIN, Role.LICENSE].includes(currentUserRole)
-    ? [
-        <Button type="primary" onClick={onNavigateToQuotation}>
-          Cập nhật
-        </Button>,
-      ]
-    : [];
+  const updateFeeActions =
+    currentUserRole !== Role.SALE
+      ? [
+          <Button type="primary" onClick={onNavigateToQuotation}>
+            Cập nhật
+          </Button>,
+        ]
+      : [];
 
-  const updateQuotationActions = [Role.ADMIN, Role.LICENSE].includes(
-    currentUserRole,
-  )
-    ? [
+  const updateQuotationActions = useMemo(() => {
+    const actions: ReactElement[] = [];
+
+    if (currentUserRole !== Role.SALE) {
+      actions.push(
         <Button type="primary" onClick={onNavigateToQuotation}>
           Cập nhật Zone
         </Button>,
+      );
+    }
+
+    if (currentUserRole === Role.ADMIN) {
+      actions.push(
         <Button type="primary" onClick={onNavigateToQuotationDetail}>
           Cập nhật Giá
         </Button>,
-      ]
-    : [];
+      );
+    }
+
+    return actions;
+  }, [currentUserRole, onNavigateToQuotation, onNavigateToQuotationDetail]);
 
   return (
     <>
@@ -122,11 +139,14 @@ export const VendorDetailPage = memo((props: Props) => {
         </ContentContainer>
       </RootContainer>
 
-      <RootContainer title="Báo Giá" rightComponents={updateQuotationActions}>
-        <ContentContainer loading={isFetchingVendor}>
-          <QuotationSheet vendor={vendor} isReadOnly />
-        </ContentContainer>
-      </RootContainer>
+      {authorizeHelper.canRenderWithRole(
+        [Role.SALE, Role.ACCOUNTANT],
+        <RootContainer title="Báo Giá" rightComponents={updateQuotationActions}>
+          <ContentContainer loading={isFetchingVendor}>
+            <QuotationSheet vendor={vendor} isReadOnly />
+          </ContentContainer>
+        </RootContainer>,
+      )}
     </>
   );
 });

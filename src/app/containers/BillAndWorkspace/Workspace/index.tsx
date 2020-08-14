@@ -5,7 +5,7 @@
  */
 
 import React, { memo, useCallback, useEffect, useState } from 'react';
-import { Button, Tabs } from 'antd';
+import { Button, Tabs, Tooltip } from 'antd';
 import { PlusCircleOutlined } from '@ant-design/icons';
 import { useDispatch, useSelector } from 'react-redux';
 import isEmpty from 'lodash/fp/isEmpty';
@@ -163,12 +163,12 @@ export const Workspace = memo(() => {
           <Tabs defaultActiveKey="1" size="small">
             <TabPane
               tab={
-                <span>
-                  {/* <Badge count={25} /> */}
-                  {currentRole === Role.SALE
-                    ? 'Bill của tôi'
-                    : 'Bill tôi đang xử lý'}
-                </span>
+                <Tooltip title="Bill có tôi là Sale hoặc là Chứng Từ hoặc là Kế Toán">
+                  <span>
+                    {/* <Badge count={25} /> */}
+                    Bill của tôi
+                  </span>
+                </Tooltip>
               }
               key="1"
               disabled={isBusy}
@@ -186,10 +186,12 @@ export const Workspace = memo(() => {
               [Role.ACCOUNTANT],
               <TabPane
                 tab={
-                  <span>
-                    {/* <Badge count={25} /> */}
-                    Bill chờ xử lý
-                  </span>
+                  <Tooltip title="Bill chưa có Kế Toán làm">
+                    <span>
+                      {/* <Badge count={25} /> */}
+                      Bill chờ xử lý
+                    </span>
+                  </Tooltip>
                 }
                 key="2"
                 disabled={isBusy}

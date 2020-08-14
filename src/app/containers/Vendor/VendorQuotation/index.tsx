@@ -32,6 +32,8 @@ import {
 import { vendorQuotationSaga } from './saga';
 import ZoneCreationModal from './components/ZoneCreationModal';
 import ZoneTable from './ZoneTable';
+import { authorizeHelper, authStorage } from 'app/services/auth';
+import { Role } from 'app/models/user';
 
 const { Title } = Typography;
 
@@ -39,6 +41,7 @@ export const VendorQuotation = memo(() => {
   useInjectReducer({ key: sliceKey, reducer: reducer });
   useInjectSaga({ key: sliceKey, saga: vendorQuotationSaga });
 
+  const currentRole = authStorage.getRole();
   const history = useHistory();
   const [vendorForm] = Form.useForm();
   const dispatch = useDispatch();
@@ -127,36 +130,51 @@ export const VendorQuotation = memo(() => {
     vendorId,
   ]);
 
+  const rightActions =
+    currentRole === Role.ADMIN
+      ? [
+          <Button
+            key="1"
+            type="primary"
+            onClick={onNavigateQuotationDetailPage}
+          >
+            Báo Giá
+          </Button>,
+        ]
+      : [];
+
   return (
     <RootContainer
       title={title}
       subTitle="Cập nhật thông tin Phí & Zone"
       onBack={onGoBack}
-      rightComponents={[
-        <Button key="1" type="primary" onClick={onNavigateQuotationDetailPage}>
-          Báo Giá
-        </Button>,
-      ]}
+      rightComponents={rightActions}
     >
       <ContentContainer loading={isFetchingVendor}>
-        <Form layout="vertical" form={vendorForm} onFinish={onSaveVendor}>
+        <Form
+          layout="vertical"
+          form={vendorForm}
+          onFinish={onSaveVendor}
+          initialValues={{ otherFeeInUsd: 0, fuelChargePercent: 0 }}
+        >
           <Form.Item
             label="Phí nhiên liệu (%)"
             name="fuelChargePercent"
             rules={vendorValidator.fuelChargePercent}
-            initialValue={0}
           >
             <InputNumber min={0} autoFocus disabled={isEditingVendor} />
           </Form.Item>
 
-          <Form.Item
-            label="Phí khác (USD)"
-            name="otherFeeInUsd"
-            initialValue={0}
-            rules={vendorValidator.otherFeeInUsd}
-          >
-            <InputNumber precision={2} min={0} disabled={isEditingVendor} />
-          </Form.Item>
+          {authorizeHelper.canRenderWithRole(
+            [Role.ADMIN, Role.ACCOUNTANT],
+            <Form.Item
+              label="Phí khác (USD)"
+              name="otherFeeInUsd"
+              rules={vendorValidator.otherFeeInUsd}
+            >
+              <InputNumber precision={2} min={0} disabled={isEditingVendor} />
+            </Form.Item>,
+          )}
 
           <Form.Item>
             <Space>
