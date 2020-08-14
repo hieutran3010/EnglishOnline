@@ -68,7 +68,7 @@ export const BillAdvanceSearch = memo(() => {
   );
 
   const onArchiveBill = useCallback(
-    (billId: string) => () => {
+    (billId: string) => {
       dispatch(actions.archiveBill(billId));
     },
     [dispatch],

@@ -16,7 +16,7 @@ const isValidChildBillId = (id?: string) => async (
     return Promise.resolve();
   }
 
-  let query = `ChildBillId = "${value}"`;
+  let query = `ChildBillId = "${value}" and IsArchived = false`;
 
   if (id && !isEmpty(id)) {
     query = `${query} and Id != "${id}"`;
@@ -39,7 +39,7 @@ const isValidAirlineBillId = (id?: string) => async (
     return Promise.resolve();
   }
 
-  let query = `AirlineBillId = "${value}"`;
+  let query = `AirlineBillId = "${value}" and IsArchived = false`;
 
   if (id && !isEmpty(id)) {
     query = `${query} and Id != "${id}"`;
