@@ -255,7 +255,13 @@ const BillCreation = ({ bill, billParams, onSubmitting }: Props) => {
   }, [dispatch, getBillData]);
 
   const onFinalBill = useCallback(async () => {
-    await billForm.validateFields();
+    try {
+      await billForm.validateFields();
+    } catch {
+      toast.error('Vui lòng nhập đầy đủ thông tin trước khi chốt Bill');
+      return;
+    }
+
     showConfirm(
       'Bill sau khi chốt sẽ không thể chỉnh sửa, bạn có muốn tiếp tục?',
       () => {

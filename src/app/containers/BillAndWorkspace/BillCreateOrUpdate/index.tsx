@@ -49,6 +49,7 @@ import Payment from '../components/Payment';
 import { useInjectReducer, useInjectSaga } from 'utils/redux-injectors';
 import { reducer, sliceKey } from './slice';
 import { billCreateOrUpdateSaga } from './saga';
+import { toast } from 'react-toastify';
 
 const layout = {
   labelCol: { span: 4 },
@@ -284,7 +285,13 @@ export const BillCreateOrUpdate = memo(
     }, [dispatch, getBillData]);
 
     const onFinalBill = useCallback(async () => {
-      await billForm.validateFields();
+      try {
+        await billForm.validateFields();
+      } catch {
+        toast.error('Vui lòng nhập đầy đủ thông tin trước khi chốt Bill');
+        return;
+      }
+
       showConfirm(
         'Bill sau khi chốt sẽ không thể chỉnh sửa, bạn có muốn tiếp tục?',
         () => {
