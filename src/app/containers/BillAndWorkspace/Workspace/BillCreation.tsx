@@ -45,6 +45,7 @@ import Bill, { BILL_STATUS } from 'app/models/bill';
 import BillStatusTag from '../components/BillStatusTag';
 import Payment from '../components/Payment';
 import { BillParams } from 'app/models/appParam';
+import { toast } from 'react-toastify';
 
 const layout = {
   labelCol: { span: 4 },
@@ -255,7 +256,13 @@ const BillCreation = ({ bill, billParams, onSubmitting }: Props) => {
   }, [dispatch, getBillData]);
 
   const onFinalBill = useCallback(async () => {
-    await billForm.validateFields();
+    try {
+      await billForm.validateFields();
+    } catch {
+      toast.error('Vui lòng nhập đầy đủ thông tin trước khi chốt Bill');
+      return;
+    }
+
     showConfirm(
       'Bill sau khi chốt sẽ không thể chỉnh sửa, bạn có muốn tiếp tục?',
       () => {

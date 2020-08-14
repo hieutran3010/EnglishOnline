@@ -1,5 +1,5 @@
-import React, { useState, useCallback, useMemo, useEffect } from 'react';
-import { AutoComplete } from 'antd';
+import React, { useState, useCallback, useMemo } from 'react';
+import { AutoComplete, Spin } from 'antd';
 import { AutoCompleteProps } from 'antd/lib/auto-complete';
 import isEmpty from 'lodash/fp/isEmpty';
 import uniqueId from 'lodash/fp/uniqueId';
@@ -73,6 +73,8 @@ const DefaultAutoComplete = React.forwardRef(
     ref: any,
   ) => {
     const [items, setItems] = useState<any[]>();
+    const [isFetchedFirstTime, setIsFetchedFirstTime] = useState(false);
+    const [isFetchingFirstTime, setIsFetchingFirstTime] = useState(false);
 
     const fetchData = useCallback(
       async (searchKey: string) => {
@@ -88,14 +90,11 @@ const DefaultAutoComplete = React.forwardRef(
         } else {
           setItems([]);
         }
+
+        setIsFetchingFirstTime(false);
       },
       [fetchDataSource, pageSize, searchPropNames],
     );
-
-    useEffect(() => {
-      fetchData('');
-      // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
 
     const onSearchChange = useCallback(
       (value: string) => {
@@ -122,6 +121,17 @@ const DefaultAutoComplete = React.forwardRef(
         }
       },
       [items, onSelected, valuePath],
+    );
+
+    const onDropdownVisibleChanged = useCallback(
+      (open: boolean) => {
+        if (open === true && isEmpty(items) && !isFetchedFirstTime) {
+          fetchData('');
+          setIsFetchedFirstTime(true);
+          setIsFetchingFirstTime(true);
+        }
+      },
+      [fetchData, isFetchedFirstTime, items],
     );
 
     const source = useMemo(() => {
@@ -153,9 +163,10 @@ const DefaultAutoComplete = React.forwardRef(
         ref={ref}
         onSearch={onSearchChange}
         onSelect={onInternalSelected}
+        onDropdownVisibleChange={onDropdownVisibleChanged}
         {...restProps}
       >
-        {source}
+        {isFetchingFirstTime ? <Spin size="small" /> : source}
       </AutoComplete>
     );
   },

@@ -14,6 +14,8 @@ import { UserProfileState } from 'app/containers/Auth/UserProfile/types';
 import { CustomerListState } from 'app/containers/Customer/CustomerList/types';
 import { SettingState } from 'app/containers/Setting/types';
 import { HomepageState } from 'app/containers/HomePage/types';
+import { BillCreateOrUpdateState } from 'app/containers/BillAndWorkspace/BillCreateOrUpdate/types';
+import { BillUpdatingState } from 'app/containers/BillAndWorkspace/BillUpdating/types';
 // [IMPORT NEW CONTAINERSTATE ABOVE] < Needed for generating containers seamlessly
 
 /* 
@@ -37,5 +39,7 @@ export interface RootState {
   userProfile?: UserProfileState;
   customerList?: CustomerListState;
   setting?: SettingState;
+  billCreateOrUpdate?: BillCreateOrUpdateState;
+  billUpdating?: BillUpdatingState;
   // [INSERT NEW REDUCER KEY ABOVE] < Needed for generating containers seamlessly
 }

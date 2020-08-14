@@ -2,7 +2,8 @@ import React, { useState, useEffect, useCallback } from 'react';
 import isEmpty from 'lodash/fp/isEmpty';
 import getOr from 'lodash/fp/getOr';
 import map from 'lodash/fp/map';
-import { List, Input, Pagination, Space, Select, Tooltip } from 'antd';
+import { List, Input, Pagination, Space, Select, Tooltip, Button } from 'antd';
+import { ReloadOutlined } from '@ant-design/icons';
 import { ListProps } from 'antd/lib/list';
 import { IDataSource, QueryCriteria, QueryOperator } from '../types';
 import { Container } from './styles/StyledIndex';
@@ -155,6 +156,11 @@ export default function DefaultList({
     [currentPage, fetchData, fetchTotal, pageSize, searchFields],
   );
 
+  const onReloadData = useCallback(() => {
+    fetchTotal();
+    fetchData();
+  }, [fetchData, fetchTotal]);
+
   const defaultItemRender = item => (
     <List.Item onClick={onItemClicked(item)}>
       {getItemValue(item, displayPath)}
@@ -164,18 +170,29 @@ export default function DefaultList({
   const { renderItem } = restProps;
   return (
     <Container>
-      {!isEmpty(searchFields) && (
-        <Tooltip title={searchHint}>
-          <Input.Search
-            enterButton
-            disabled={loading}
+      <Space>
+        {!isEmpty(searchFields) && (
+          <Tooltip title={searchHint}>
+            <Input.Search
+              enterButton
+              disabled={loading}
+              size="small"
+              placeholder={searchPlaceholder}
+              onSearch={onSearchChanged}
+              allowClear
+            />
+          </Tooltip>
+        )}
+        <Tooltip title="Tải lại dữ liệu">
+          <Button
+            type="primary"
+            shape="circle"
+            icon={<ReloadOutlined />}
             size="small"
-            placeholder={searchPlaceholder}
-            onSearch={onSearchChanged}
-            allowClear
+            onClick={onReloadData}
           />
         </Tooltip>
-      )}
+      </Space>
       <List
         style={{
           flex: '1 1 auto',

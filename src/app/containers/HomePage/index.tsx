@@ -48,6 +48,7 @@ import { UserProfile } from '../Auth/UserProfile/Loadable';
 import { Setting } from '../Setting/Loadable';
 import { reducer, actions, sliceKey } from './slice';
 import { selectScreenMode, selectCollapsedMenu } from './selectors';
+import { BillUpdating } from '../BillAndWorkspace/BillUpdating/Loadable';
 
 const logo = require('assets/logo.png');
 const logoSmall = require('assets/logo-compact.png');
@@ -267,11 +268,19 @@ export function HomePage() {
           path="/customerUpdating/:customerId"
           component={CustomerCreateOrUpdatePage}
         />
+
         <Route
           breadcrumbName="Danh sách Bill trong tháng"
           exact
           path="/billsInMonth"
           component={BillsInMonth}
+        />
+
+        <Route
+          breadcrumbName="Cập nhật thông tin bill"
+          exact
+          path="/billUpdating/:billId"
+          component={BillUpdating}
         />
 
         <Route

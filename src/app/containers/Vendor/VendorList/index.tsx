@@ -20,25 +20,10 @@ import Vendor from 'app/models/vendor';
 import { authStorage, authorizeHelper } from 'app/services/auth';
 import { Role } from 'app/models/user';
 
-const getMenu = (vendor: Vendor) => (
-  <Menu>
-    <Menu.Item key="0">
-      <Link to={`/vendorCreation/${vendor.id}`}>Cập nhật Thông tin</Link>
-    </Menu.Item>
-    <Menu.Item key="1">
-      <Link to={`/vendorQuotation/${vendor.id}`}>Cập nhật Phí & Zone</Link>
-    </Menu.Item>
-    <Menu.Item key="3">
-      <Link to={`/vendorQuotationDetail/${vendor.id}`}>Cập nhật Báo giá</Link>
-    </Menu.Item>
-  </Menu>
-);
-
 const vendorDataSource = getDataSource(FETCHER_KEY.VENDOR);
 vendorDataSource.orderByFields = 'name';
 
-interface Props {}
-export const VendorList = memo((props: Props) => {
+export const VendorList = memo(() => {
   const history = useHistory();
   const currentUserRole = authStorage.getRole();
 
@@ -53,7 +38,38 @@ export const VendorList = memo((props: Props) => {
     [history],
   );
 
+  const getMenu = useCallback(
+    (vendor: Vendor) => (
+      <Menu>
+        <Menu.Item key="0">
+          <Link to={`/vendorCreation/${vendor.id}`}>Cập nhật Thông tin</Link>
+        </Menu.Item>
+        <Menu.Item key="1">
+          <Link to={`/vendorQuotation/${vendor.id}`}>Cập nhật Phí & Zone</Link>
+        </Menu.Item>
+        {currentUserRole === Role.ADMIN && (
+          <Menu.Item key="3">
+            <Link to={`/vendorQuotationDetail/${vendor.id}`}>
+              Cập nhật Báo giá
+            </Link>
+          </Menu.Item>
+        )}
+      </Menu>
+    ),
+    [currentUserRole],
+  );
+
   const columns = useMemo((): ColumnDefinition[] => {
+    const phoneColumn = {
+      title: 'Số ĐT',
+      dataIndex: 'phone',
+      key: 'phone',
+      width: 60,
+      type: COLUMN_TYPES.STRING,
+    };
+
+    const authorizedCols = currentUserRole !== Role.SALE ? [phoneColumn] : [];
+
     return [
       {
         title: 'Tên nhà cung cấp',
@@ -63,13 +79,7 @@ export const VendorList = memo((props: Props) => {
         canFilter: true,
         type: COLUMN_TYPES.STRING,
       },
-      {
-        title: 'Số ĐT',
-        dataIndex: 'phone',
-        key: 'phone',
-        width: 60,
-        type: COLUMN_TYPES.STRING,
-      },
+      ...authorizedCols,
       {
         title: 'Phí khác (USD)',
         dataIndex: 'otherFeeInUsd',
@@ -89,8 +99,8 @@ export const VendorList = memo((props: Props) => {
         key: 'action',
         render: record => (
           <Space size={1}>
-            {authorizeHelper.canRenderWithRole(
-              [Role.ADMIN, Role.LICENSE],
+            {authorizeHelper.willRenderIfNot(
+              [Role.SALE],
               <>
                 <Dropdown overlay={getMenu(record)} trigger={['click']}>
                   <Button type="link">
@@ -114,15 +124,16 @@ export const VendorList = memo((props: Props) => {
         width: 50,
       },
     ];
-  }, [onViewDetailVendor]);
+  }, [currentUserRole, getMenu, onViewDetailVendor]);
 
-  const actions = [Role.ADMIN, Role.LICENSE].includes(currentUserRole)
-    ? [
-        <Button key="1" type="primary" onClick={onCreateNewVendor}>
-          Thêm mới
-        </Button>,
-      ]
-    : [];
+  const actions =
+    currentUserRole !== Role.SALE
+      ? [
+          <Button key="1" type="primary" onClick={onCreateNewVendor}>
+            Thêm mới
+          </Button>,
+        ]
+      : [];
 
   return (
     <>

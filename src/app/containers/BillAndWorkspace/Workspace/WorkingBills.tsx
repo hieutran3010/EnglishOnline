@@ -14,7 +14,7 @@ function getMyBillsQuery(user: User) {
       return `Status != "${BILL_STATUS.DONE}" and AccountantUserId = "${user.id}"`;
     }
     case Role.ADMIN: {
-      return `Status != "${BILL_STATUS.DONE}" and (AccountantUserId = "${user.id}" || LicenseUserId = "${user.id}")`;
+      return `Status != "${BILL_STATUS.DONE}" and (AccountantUserId = "${user.id}" || LicenseUserId = "${user.id}" || SaleUserId = "${user.id}")`;
     }
     case Role.SALE: {
       return `Status != "${BILL_STATUS.DONE}" and SaleUserId = "${user.id}"`;
@@ -34,7 +34,7 @@ const getUnassignedBillsQuery = (user: User) => {
       return `AccountantUserId = null and Status = "${BILL_STATUS.ACCOUNTANT}"`;
     }
     case Role.ADMIN: {
-      return `LicenseUserId = null || AccountantUserId = null`;
+      return `(LicenseUserId = null || AccountantUserId = null) and Status != "${BILL_STATUS.DONE}"`;
     }
     default: {
       return `Id = null`;

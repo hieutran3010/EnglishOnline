@@ -1,4 +1,5 @@
 import React, { memo, useMemo, useCallback, useState } from 'react';
+import { useHistory } from 'react-router-dom';
 import isEmpty from 'lodash/fp/isEmpty';
 import filter from 'lodash/fp/filter';
 import {
@@ -18,11 +19,31 @@ import {
 import Bill, { BILL_STATUS } from 'app/models/bill';
 import { showConfirm } from 'app/components/Modal/utils';
 import { IDataSource } from 'app/components/collection/types';
-import { authorizeHelper } from 'app/services/auth';
-import { Role } from 'app/models/user';
+import { authorizeHelper, authStorage } from 'app/services/auth';
+import User, { Role } from 'app/models/user';
 
 import BillStatusTag from './BillStatusTag';
 import BillView from './BillView';
+
+const canEdit = (user: User, bill: Bill) => {
+  if (
+    user.role === Role.SALE ||
+    bill.isArchived === true ||
+    bill.status === BILL_STATUS.DONE
+  ) {
+    return false;
+  }
+
+  if (user.role === Role.LICENSE) {
+    return bill.licenseUserId === user.id;
+  }
+
+  if (user.role === Role.ACCOUNTANT) {
+    return bill.accountantUserId === user.id;
+  }
+
+  return true; // for admin
+};
 
 interface Props {
   onArchiveBill?: (billId: string) => void;
@@ -40,6 +61,10 @@ const BillList = ({
   extendCols,
   onPrintedVatBill,
 }: Props) => {
+  const user = authStorage.getUser();
+
+  const history = useHistory();
+
   const [selectedBill, setSelectedBill] = useState(new Bill());
   const [visibleBillView, setVisibleBillView] = useState(false);
 
@@ -78,6 +103,13 @@ const BillList = ({
       onCancelViewBill();
     },
     [onArchiveBill, onCancelViewBill],
+  );
+
+  const onEditBill = useCallback(
+    (bill: Bill) => () => {
+      history.push(`/billUpdating/${bill.id}`);
+    },
+    [history],
   );
 
   const columns = useMemo((): ColumnDefinition[] => {
@@ -178,6 +210,17 @@ const BillList = ({
                   Hủy
                 </Button>,
               )}
+
+            {canEdit(user, record) && (
+              <Button
+                size="small"
+                type="link"
+                danger
+                onClick={onEditBill(record)}
+              >
+                Sửa
+              </Button>
+            )}
           </Space>
         ),
       },
@@ -190,7 +233,15 @@ const BillList = ({
     }
 
     return result;
-  }, [_onArchiveBill, excludeFields, extendCols, onArchiveBill, onViewBill]);
+  }, [
+    _onArchiveBill,
+    excludeFields,
+    extendCols,
+    onArchiveBill,
+    onEditBill,
+    onViewBill,
+    user,
+  ]);
 
   return (
     <>
