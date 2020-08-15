@@ -64,7 +64,7 @@ export const BillsInMonth = memo(() => {
   }, [billDataSource, dispatch, needToReload]);
 
   const onArchiveBill = useCallback(
-    (billId: string) => () => {
+    (billId: string) => {
       dispatch(actions.archivedBill(billId));
     },
     [dispatch],
