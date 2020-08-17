@@ -67,6 +67,7 @@ export default class Bill extends ModelBase {
   purchasePriceAfterVatInUsd?: number;
   purchasePriceAfterVatInVnd?: number;
   isPrintedVatBill!: boolean;
+  oldPurchasePrice!: PurchasePrice;
 
   constructor(input?: Bill | any) {
     super(input);
@@ -116,6 +117,7 @@ export default class Bill extends ModelBase {
       this.profitBeforeTax = input.profitBeforeTax;
       this.profit = input.profit;
       this.isPrintedVatBill = input.isPrintedVatBill;
+      this.oldPurchasePrice = input.oldPurchasePrice;
     } else {
       this.status = BILL_STATUS.LICENSE;
       this.vendorOtherFee = 0;
@@ -147,4 +149,13 @@ export class CustomerStatistic {
   totalDebt!: number;
   totalPayment!: number;
   totalBill!: number;
+}
+
+export class PurchasePrice {
+  purchasePriceInUsd?: number;
+  purchasePriceInVnd?: number;
+  purchasePriceAfterVatInUsd?: number;
+  purchasePriceAfterVatInVnd?: number;
+  vendorNetPriceInUsd?: number;
+  quotationPriceInUsd?: number;
 }

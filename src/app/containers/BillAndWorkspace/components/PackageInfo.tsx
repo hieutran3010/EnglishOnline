@@ -1,5 +1,5 @@
 import React, { memo } from 'react';
-import { Typography, Form, InputNumber, Input } from 'antd';
+import { Typography, Form, InputNumber, Input, Button, Space } from 'antd';
 
 import { BillValidator } from 'app/models/validators/billValidator';
 import type Vendor from 'app/models/vendor';
@@ -62,13 +62,15 @@ const PackageInfo = ({
         />
       </Form.Item>
 
-      <Form.Item
-        name="weightInKg"
-        label="Trọng lượng (kg)"
-        rules={billValidator.weightInKg}
-      >
-        <InputNumber precision={2} min={0} />
+      <Form.Item label="Trọng lượng (kg)" required>
+        <Input.Group compact>
+          <Form.Item name="weightInKg" rules={billValidator.weightInKg} noStyle>
+            <InputNumber precision={2} min={0} />
+          </Form.Item>
+          <Button>Kaka</Button>
+        </Input.Group>
       </Form.Item>
+
       <Form.Item
         name="internationalParcelVendor"
         label="Dịch vụ"
@@ -76,6 +78,7 @@ const PackageInfo = ({
       >
         <IntParcelVendorSelect />
       </Form.Item>
+
       <Form.Item
         name="destinationCountry"
         label="Nước đến"
@@ -86,6 +89,7 @@ const PackageInfo = ({
           loading={isFetchingVendorCountries}
         />
       </Form.Item>
+
       <Form.Item
         name="airlineBillId"
         label="Bill hãng bay"
@@ -93,6 +97,7 @@ const PackageInfo = ({
       >
         <Input />
       </Form.Item>
+
       <Form.Item
         name="childBillId"
         label="Bill con"
