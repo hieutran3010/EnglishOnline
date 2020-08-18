@@ -50,6 +50,7 @@ import { useInjectReducer, useInjectSaga } from 'utils/redux-injectors';
 import { reducer, sliceKey } from './slice';
 import { billCreateOrUpdateSaga } from './saga';
 import { toast } from 'react-toastify';
+import { SagaInjectionModes } from 'redux-injectors';
 
 const layout = {
   labelCol: { span: 4 },
@@ -60,16 +61,16 @@ interface Props {
   inputBill: Bill;
   onSubmitting?: (isSubmitting: boolean) => void;
   canDelete: boolean;
-  customSliceKey?: any;
 }
 export const BillCreateOrUpdate = memo(
-  ({ inputBill, onSubmitting, canDelete, customSliceKey }: Props) => {
+  ({ inputBill, onSubmitting, canDelete }: Props) => {
     const role = authStorage.getRole();
 
-    useInjectReducer({ key: customSliceKey || sliceKey, reducer });
+    useInjectReducer({ key: sliceKey, reducer });
     useInjectSaga({
-      key: customSliceKey || sliceKey,
+      key: sliceKey,
       saga: billCreateOrUpdateSaga,
+      mode: SagaInjectionModes.RESTART_ON_REMOUNT,
     });
 
     const [hasVat, setHasVat] = useState(false);
@@ -110,6 +111,12 @@ export const BillCreateOrUpdate = memo(
     const [billForm] = Form.useForm();
 
     useEffect(() => {
+      return function reset() {
+        dispatch(actions.resetState());
+      };
+    }, [dispatch]);
+
+    useEffect(() => {
       if (role !== Role.SALE) {
         dispatch(actions.fetchVendor());
         dispatch(actions.fetchResponsibilityUsers());
@@ -148,7 +155,7 @@ export const BillCreateOrUpdate = memo(
       setHasVat((bill.vat || 0) > 0);
 
       setShouldRecalculatePurchasePrice(false);
-    }, [bill, billForm, billParams]);
+    }, [bill, billForm, billParams.usdExchangeRate]);
 
     const onVendorSelectionChanged = useCallback(
       (vendorId: string | undefined) => {

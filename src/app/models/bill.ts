@@ -42,6 +42,7 @@ export default class Bill extends ModelBase {
   description!: string;
   destinationCountry!: string;
   weightInKg!: number;
+  vendorWeightInKg?: number;
   salePrice?: number;
   purchasePriceInUsd?: number;
   purchasePriceInVnd?: number;
@@ -67,7 +68,6 @@ export default class Bill extends ModelBase {
   purchasePriceAfterVatInUsd?: number;
   purchasePriceAfterVatInVnd?: number;
   isPrintedVatBill!: boolean;
-  oldPurchasePrice!: PurchasePrice;
 
   constructor(input?: Bill | any) {
     super(input);
@@ -92,6 +92,7 @@ export default class Bill extends ModelBase {
       this.description = input.description;
       this.destinationCountry = input.destinationCountry;
       this.weightInKg = input.weightInKg;
+      this.vendorWeightInKg = input.vendorWeightInKg;
       this.salePrice = input.salePrice || 0;
       this.purchasePriceInUsd = input.purchasePriceInUsd;
       this.purchasePriceInVnd = input.purchasePriceInVnd;
@@ -117,7 +118,6 @@ export default class Bill extends ModelBase {
       this.profitBeforeTax = input.profitBeforeTax;
       this.profit = input.profit;
       this.isPrintedVatBill = input.isPrintedVatBill;
-      this.oldPurchasePrice = input.oldPurchasePrice;
     } else {
       this.status = BILL_STATUS.LICENSE;
       this.vendorOtherFee = 0;

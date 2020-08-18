@@ -143,8 +143,6 @@ export function* fetchResponsibilityUsersTask() {
 }
 
 export function* assignToAccountantTask() {
-  yield put(actions.setIsAssigningAccountant(true));
-
   const bill = (yield select(selectBill)) as Bill;
   if (!bill || !bill.id || bill.status !== BILL_STATUS.LICENSE) {
     return;
@@ -159,12 +157,10 @@ export function* assignToAccountantTask() {
     Sentry.captureException(error);
   }
 
-  yield put(actions.setIsAssigningAccountant(false));
+  yield put(actions.assignToAccountantCompleted());
 }
 
 export function* deleteBillTask() {
-  yield put(actions.setIsDeletingBill(true));
-
   const bill = (yield select(selectBill)) as Bill;
 
   try {
@@ -176,7 +172,7 @@ export function* deleteBillTask() {
     toast.error('Chưa xóa được Bill, vui lòng thử lại!');
   }
 
-  yield put(actions.setIsDeletingBill(false));
+  yield put(actions.deleteBillCompleted());
 }
 
 export function* calculatePurchasePriceTask(action: PayloadAction<any>) {
@@ -220,8 +216,6 @@ export function* calculatePurchasePriceTask(action: PayloadAction<any>) {
 }
 
 export function* finalBillTask() {
-  yield put(actions.setIsFinalBill(true));
-
   const bill = (yield select(selectBill)) as Bill;
 
   try {
@@ -232,12 +226,10 @@ export function* finalBillTask() {
     Sentry.captureException(error);
   }
 
-  yield put(actions.setIsFinalBill(false));
+  yield put(actions.finalBillCompleted());
 }
 
 export function* assignLicenseTask() {
-  yield put(actions.setIsAssigningLicense(true));
-
   const bill = (yield select(selectBill)) as Bill;
 
   try {
@@ -254,7 +246,7 @@ export function* assignLicenseTask() {
     Sentry.captureException(error);
   }
 
-  yield put(actions.setIsAssigningLicense(false));
+  yield put(actions.assignLicenseCompleted());
 }
 
 export function* fetchBillParamsTask() {

@@ -35,7 +35,7 @@ const billCreateOrUpdateSlice = createSlice({
   initialState,
   reducers: {
     setBill(state, action: PayloadAction<Bill>) {
-      state.bill = action.payload;
+      state.bill = new Bill(action.payload);
     },
     fetchVendor(state) {
       state.isFetchingVendor = true;
@@ -69,38 +69,46 @@ const billCreateOrUpdateSlice = createSlice({
       state.isFetchingResponsibilityUsers = false;
     },
 
-    setIsAssigningAccountant(state, action: PayloadAction<boolean>) {
-      state.isAssigningAccountant = action.payload;
+    assignToAccountant(state) {
+      state.isAssigningAccountant = true;
     },
-    assignToAccountant(state) {},
-
-    initNewBill(state) {
-      state.bill = new Bill();
+    assignToAccountantCompleted(state) {
+      state.isAssigningAccountant = false;
     },
 
-    setIsDeletingBill(state, action: PayloadAction<boolean>) {
-      state.isDeletingBill = action.payload;
+    deleteBill(state) {
+      state.isDeletingBill = true;
     },
-    deleteBill() {},
+    deleteBillCompleted(state) {
+      state.isDeletingBill = false;
+    },
 
     setIsCalculatingPurchasePrice(state, action: PayloadAction<boolean>) {
       state.isCalculatingPurchasePrice = action.payload;
     },
     calculatePurchasePrice(state, action: PayloadAction<any>) {},
 
-    setIsFinalBill(state, action: PayloadAction<boolean>) {
-      state.isFinalBill = action.payload;
+    finalBill(state) {
+      state.isFinalBill = true;
     },
-    finalBill() {},
+    finalBillCompleted(state) {
+      state.isFinalBill = false;
+    },
 
-    setIsAssigningLicense(state, action: PayloadAction<boolean>) {
-      state.isAssigningLicense = action.payload;
+    assignLicense(state) {
+      state.isAssigningLicense = true;
     },
-    assignLicense() {},
+    assignLicenseCompleted(state) {
+      state.isAssigningLicense = false;
+    },
 
     fetchBillParams() {},
     fetchBillParamsCompleted(state, action: PayloadAction<BillParams>) {
       state.billParams = action.payload;
+    },
+
+    resetState(state) {
+      state = { ...initialState };
     },
   },
 });
