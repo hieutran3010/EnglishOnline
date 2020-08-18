@@ -100,7 +100,7 @@ export const Workspace = memo(() => {
 
   const initNewBill = useCallback(() => {
     dispatch(actions.initNewBill());
-    setCurrentBillArea(undefined);
+    setCurrentBillArea(SELECTED_BILL_AREA.MY_BILLS);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
