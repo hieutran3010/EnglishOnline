@@ -12,8 +12,8 @@ import { CurrencyInput } from 'app/components/Input';
 const { Title } = Typography;
 
 const paymentLayout = {
-  labelCol: { span: 7 },
-  wrapperCol: { span: 15 },
+  labelCol: { span: 9 },
+  wrapperCol: { span: 13 },
 };
 
 const Payment = () => {

@@ -227,12 +227,13 @@ export const Workspace = memo(() => {
             </StyledMainToolbar>,
           )}
           {currentRole !== Role.SALE && <div style={{ marginTop: 54 }}></div>}
-          <ContentContainer>
+          <ContentContainer style={{ marginBottom: canEdit ? 65 : 0 }}>
             {canEdit && (
               <BillCreateOrUpdate
                 inputBill={bill}
                 canDelete
                 onSubmitting={onBillSubmitting}
+                isFixedCommandBar
               />
             )}
             {!canEdit && <BillView bill={bill} />}
