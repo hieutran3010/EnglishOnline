@@ -369,6 +369,8 @@ export const BillCreateOrUpdate = memo(
           onVendorSelectionChanged={onVendorSelectionChanged}
           billValidator={billValidator}
           vendorCountries={vendorCountries}
+          userRole={role}
+          bill={bill}
         />
 
         <FeeAndPrice

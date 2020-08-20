@@ -62,8 +62,8 @@ const PurchasePrice = ({ bill }: PurchasePriceProps) => {
       }
     >
       <Text mark>
-        {toCurrency(bill.purchasePriceAfterVatInVnd || 0)} = $
-        {bill.purchasePriceAfterVatInUsd || 0}
+        {toCurrency(bill.purchasePriceAfterVatInVnd || 0)} =
+        {toCurrency(bill.purchasePriceAfterVatInUsd || 0, true)}
       </Text>
     </Popover>
   );

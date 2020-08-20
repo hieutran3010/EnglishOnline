@@ -1,14 +1,18 @@
 import React, { memo } from 'react';
-import { Typography, Form, InputNumber, Input, Button } from 'antd';
+import { Typography, Form, InputNumber, Input } from 'antd';
+import isEmpty from 'lodash/fp/isEmpty';
 
 import { BillValidator } from 'app/models/validators/billValidator';
 import type Vendor from 'app/models/vendor';
+import { Role } from 'app/models/user';
+import Bill from 'app/models/bill';
 import getDataSource, { FETCHER_KEY } from 'app/collection-datasource';
+import { AutoComplete } from 'app/components/collection/AutoComplete';
 
 import VendorSelection from './VendorSelection';
 import IntParcelVendorSelect from './IntParcelVendorSelect';
 import VendorCountriesSelection from './VendorCountriesSelection';
-import { AutoComplete } from 'app/components/collection/AutoComplete';
+import VendorWeightAdjustment from '../components/VendorWeightAdjustment';
 
 const { Title } = Typography;
 
@@ -21,6 +25,8 @@ interface Props {
   vendorCountries: string[];
   isFetchingVendorCountries: boolean;
   onVendorSelectionChanged: (vendorId: string | undefined) => void;
+  userRole: Role;
+  bill: Bill;
 }
 const PackageInfo = ({
   billValidator,
@@ -29,6 +35,8 @@ const PackageInfo = ({
   vendorCountries,
   isFetchingVendorCountries,
   onVendorSelectionChanged,
+  userRole,
+  bill,
 }: Props) => {
   return (
     <>
@@ -67,7 +75,10 @@ const PackageInfo = ({
           <Form.Item name="weightInKg" rules={billValidator.weightInKg} noStyle>
             <InputNumber precision={2} min={0} />
           </Form.Item>
-          <Button>Kaka</Button>
+          {!isEmpty(bill.id) &&
+            [Role.ADMIN, Role.ACCOUNTANT].includes(userRole) && (
+              <VendorWeightAdjustment bill={bill} />
+            )}
         </Input.Group>
       </Form.Item>
 
