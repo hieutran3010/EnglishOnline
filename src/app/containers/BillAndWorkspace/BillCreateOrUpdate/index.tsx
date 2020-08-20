@@ -327,6 +327,13 @@ export const BillCreateOrUpdate = memo(
       [dispatch],
     );
 
+    const onRestoreSaleWeight = useCallback(
+      (saleWeight: number, purchasePrice: PurchasePriceCountingResult) => {
+        dispatch(actions.restoreSaleWeight({ saleWeight, purchasePrice }));
+      },
+      [dispatch],
+    );
+
     const billValidator = useMemo(() => getBillValidator(hasVat, bill.id), [
       hasVat,
       bill,
@@ -386,6 +393,7 @@ export const BillCreateOrUpdate = memo(
           userRole={role}
           bill={bill}
           onVendorWeightChanged={onVendorWeightChanged}
+          onRestoreSaleWeight={onRestoreSaleWeight}
         />
 
         <FeeAndPrice

@@ -114,6 +114,20 @@ const billCreateOrUpdateSlice = createSlice({
 
       state.bill = newBill;
     },
+    restoreSaleWeight(
+      state,
+      action: PayloadAction<{
+        saleWeight: number;
+        purchasePrice: PurchasePriceCountingResult;
+      }>,
+    ) {
+      const newBill = new Bill({ ...state.bill });
+      newBill.oldWeightInKg = undefined;
+      newBill.weightInKg = action.payload.saleWeight;
+      newBill.updatePurchasePriceInfo(action.payload.purchasePrice);
+
+      state.bill = newBill;
+    },
 
     finalBill(state) {
       state.isFinalBill = true;

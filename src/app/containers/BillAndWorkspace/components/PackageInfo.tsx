@@ -1,5 +1,5 @@
 import React, { memo } from 'react';
-import { Typography, Form, InputNumber, Input } from 'antd';
+import { Typography, Form, InputNumber, Input, Tooltip } from 'antd';
 import isEmpty from 'lodash/fp/isEmpty';
 import isUndefined from 'lodash/fp/isUndefined';
 
@@ -33,6 +33,10 @@ interface Props {
     newWeight: number,
     predictPurchasePrice: PurchasePriceCountingResult,
   ) => void;
+  onRestoreSaleWeight?: (
+    saleWeight: number,
+    purchasePrice: PurchasePriceCountingResult,
+  ) => void;
 }
 const PackageInfo = ({
   billValidator,
@@ -44,6 +48,7 @@ const PackageInfo = ({
   userRole,
   bill,
   onVendorWeightChanged,
+  onRestoreSaleWeight,
 }: Props) => {
   return (
     <>
@@ -83,15 +88,18 @@ const PackageInfo = ({
             <InputNumber precision={2} min={0} />
           </Form.Item>
           {!isUndefined(bill.oldWeightInKg) && (
-            <Text delete style={{ marginLeft: 10, marginRight: 10 }}>
-              {bill.oldWeightInKg}
-            </Text>
+            <Tooltip title="Ký bán cho khách">
+              <Text delete style={{ marginLeft: 10, marginRight: 10 }}>
+                {bill.oldWeightInKg}
+              </Text>
+            </Tooltip>
           )}
           {!isEmpty(bill.id) &&
             [Role.ADMIN, Role.ACCOUNTANT].includes(userRole) && (
               <VendorWeightAdjustment
                 bill={bill}
                 onSaveNewWeight={onVendorWeightChanged}
+                onRestoreSaleWeight={onRestoreSaleWeight}
               />
             )}
         </Input.Group>
