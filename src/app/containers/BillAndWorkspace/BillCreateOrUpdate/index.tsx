@@ -38,8 +38,11 @@ import {
   selectIsDeletingBill,
   selectIsFinalBill,
   selectIsAssigningLicense,
-  selectBill,
+  selectOldWeightInKg,
+  selectPurchasePriceInfo,
   selectBillParams,
+  selectBillId,
+  selectBillStatus,
 } from './selectors';
 import { StyledDateAndAssigneeContainer } from '../components/styles';
 import FeeAndPrice from '../components/FeeAndPrice';
@@ -60,6 +63,7 @@ import {
   selectScreenMode,
   selectCollapsedMenu,
 } from 'app/containers/HomePage/selectors';
+import { SubmitBillAction } from './types';
 
 const getStyle = (
   screenMode: ScreenMode,
@@ -115,7 +119,10 @@ export const BillCreateOrUpdate = memo(
     ] = useState(false);
     const [hint, setHint] = useState<string>();
 
-    const bill = useSelector(selectBill);
+    const billId = useSelector(selectBillId);
+    const purchasePriceInfo = useSelector(selectPurchasePriceInfo);
+    const oldWeightInKg = useSelector(selectOldWeightInKg);
+    const billStatus = useSelector(selectBillStatus);
     const billParams = useSelector(selectBillParams);
     const vendors = useSelector(selectVendors);
     const isFetchingVendors = useSelector(selectIsFetchingVendor);
@@ -161,24 +168,23 @@ export const BillCreateOrUpdate = memo(
       }
 
       dispatch(actions.setBill(inputBill));
-    }, [dispatch, inputBill, role]);
 
-    useEffect(() => {
-      billForm.setFieldsValue(bill);
+      billForm.setFieldsValue(inputBill);
       billForm.setFieldsValue({
-        usdExchangeRate: bill.usdExchangeRate || billParams.usdExchangeRate,
+        usdExchangeRate:
+          inputBill.usdExchangeRate || billParams.usdExchangeRate,
       });
 
       const user = authStorage.getUser();
       switch (user.role) {
         case Role.LICENSE: {
-          if (!bill.licenseUserId || isEmpty(bill.licenseUserId)) {
+          if (!inputBill.licenseUserId || isEmpty(inputBill.licenseUserId)) {
             billForm.setFieldsValue({ licenseUserId: user.id });
           }
           break;
         }
         case Role.ACCOUNTANT: {
-          if (isEmpty(bill.id) && isEmpty(bill.accountantUserId)) {
+          if (isEmpty(inputBill.id) && isEmpty(inputBill.accountantUserId)) {
             billForm.setFieldsValue({ accountantUserId: user.id });
           }
           break;
@@ -187,13 +193,29 @@ export const BillCreateOrUpdate = memo(
           break;
       }
 
-      setSenderId(bill.senderId);
-      setReceiverId(bill.receiverId);
-      setHasVat((bill.vat || 0) > 0);
+      setSenderId(inputBill.senderId);
+      setReceiverId(inputBill.receiverId);
+      setHasVat((inputBill.vat || 0) > 0);
 
       setShouldRecalculatePurchasePrice(false);
       setHint('');
-    }, [bill, billForm, billParams.usdExchangeRate]);
+    }, [billForm, billParams.usdExchangeRate, dispatch, inputBill, role]);
+
+    const getBillData = useCallback(() => {
+      const bill = billForm.getFieldsValue();
+      bill.salePrice = toNumber(bill.salePrice);
+      bill.senderId = senderId;
+      bill.receiverId = receiverId;
+      bill.date = bill.date.format('YYYY-MM-DD HH:mm:ss');
+
+      return bill as any;
+    }, [billForm, receiverId, senderId]);
+
+    const getSubmitActionParams = useCallback((): SubmitBillAction => {
+      const billData = getBillData();
+      const isDirty = billForm.isFieldsTouched();
+      return { billFormValues: billData, isDirty };
+    }, [billForm, getBillData]);
 
     const onVendorSelectionChanged = useCallback(
       (vendorId: string | undefined) => {
@@ -239,16 +261,6 @@ export const BillCreateOrUpdate = memo(
       [billForm],
     );
 
-    const getBillData = useCallback(() => {
-      const bill = billForm.getFieldsValue();
-      bill.salePrice = toNumber(bill.salePrice);
-      bill.senderId = senderId;
-      bill.receiverId = receiverId;
-      bill.date = bill.date.format('YYYY-MM-DD HH:mm:ss');
-
-      return bill as any;
-    }, [billForm, receiverId, senderId]);
-
     const onBillSubmit = useCallback(() => {
       const bill = getBillData();
       dispatch(actions.submitBill(bill));
@@ -270,9 +282,9 @@ export const BillCreateOrUpdate = memo(
     );
 
     const onAssignToAccountant = useCallback(() => {
-      dispatch(actions.assignToAccountant());
+      dispatch(actions.assignToAccountant(getSubmitActionParams()));
       if (onSubmitting) onSubmitting(isBusy);
-    }, [dispatch, onSubmitting, isBusy]);
+    }, [dispatch, getSubmitActionParams, onSubmitting, isBusy]);
 
     const onDeleteBill = useCallback(() => {
       showConfirm(
@@ -342,41 +354,50 @@ export const BillCreateOrUpdate = memo(
       showConfirm(
         'Bill sau khi chốt sẽ không thể chỉnh sửa, bạn có muốn tiếp tục?',
         () => {
-          dispatch(actions.finalBill());
+          dispatch(actions.finalBill(getSubmitActionParams()));
           if (onSubmitting) onSubmitting(isBusy);
         },
       );
-    }, [billForm, dispatch, isBusy, onSubmitting]);
+    }, [billForm, dispatch, getSubmitActionParams, isBusy, onSubmitting]);
 
     const onAssignToLicense = useCallback(() => {
-      dispatch(actions.assignLicense());
+      dispatch(actions.assignLicense(getSubmitActionParams()));
       if (onSubmitting) onSubmitting(isBusy);
-    }, [dispatch, isBusy, onSubmitting]);
+    }, [dispatch, getSubmitActionParams, isBusy, onSubmitting]);
 
     const onVendorWeightChanged = useCallback(
       (
+        oldWeight: number,
         newWeight: number,
         predictPurchasePrice: PurchasePriceCountingResult,
       ) => {
-        dispatch(actions.updateNewWeight({ newWeight, predictPurchasePrice }));
+        billForm.setFieldsValue({ weightInKg: newWeight });
+        dispatch(
+          actions.updateNewWeight({
+            oldWeight,
+            newWeight,
+            predictPurchasePrice,
+          }),
+        );
       },
-      [dispatch],
+      [billForm, dispatch],
     );
 
     const onRestoreSaleWeight = useCallback(
       (saleWeight: number, purchasePrice: PurchasePriceCountingResult) => {
+        billForm.setFieldsValue({ weightInKg: saleWeight });
         dispatch(actions.restoreSaleWeight({ saleWeight, purchasePrice }));
       },
-      [dispatch],
+      [billForm, dispatch],
     );
 
     const onFinishFormFailed = useCallback(() => {
       toast.error('Vui lòng nhập đầy đủ thông tin');
     }, []);
 
-    const billValidator = useMemo(() => getBillValidator(hasVat, bill.id), [
+    const billValidator = useMemo(() => getBillValidator(hasVat, billId), [
       hasVat,
-      bill,
+      billId,
     ]);
 
     return (
@@ -400,7 +421,7 @@ export const BillCreateOrUpdate = memo(
             <DatePicker format="DD-MM-YYYY" />
           </Form.Item>
           <div>
-            <BillStatusTag status={bill.status} />
+            <BillStatusTag status={billStatus} />
           </div>
         </StyledDateAndAssigneeContainer>
 
@@ -432,16 +453,18 @@ export const BillCreateOrUpdate = memo(
           billValidator={billValidator}
           vendorCountries={vendorCountries}
           userRole={role}
-          bill={bill}
+          oldWeightInKg={oldWeightInKg}
           onVendorWeightChanged={onVendorWeightChanged}
           onRestoreSaleWeight={onRestoreSaleWeight}
+          billId={billId}
+          billForm={billForm.getFieldsValue()}
         />
 
         <FeeAndPrice
           billValidator={billValidator}
           onVatCheckingChanged={onVatCheckingChanged}
           hasVat={hasVat}
-          bill={bill}
+          purchasePriceInfo={purchasePriceInfo}
           shouldRecalculatePurchasePrice={shouldRecalculatePurchasePrice}
           onCalculatePurchasePrice={onCalculatePurchasePrice}
           isCalculating={isCalculatingPurchasePrice}
@@ -474,7 +497,7 @@ export const BillCreateOrUpdate = memo(
                 Lưu
               </Button>
 
-              {bill.id && bill.status === BILL_STATUS.LICENSE && (
+              {billId && billStatus === BILL_STATUS.LICENSE && (
                 <Button
                   size="middle"
                   type="ghost"
@@ -492,8 +515,8 @@ export const BillCreateOrUpdate = memo(
                 </Button>
               )}
 
-              {!isEmpty(bill.id) &&
-                bill.status === BILL_STATUS.ACCOUNTANT &&
+              {!isEmpty(billId) &&
+                billStatus === BILL_STATUS.ACCOUNTANT &&
                 authorizeHelper.canRenderWithRole(
                   [Role.ACCOUNTANT, Role.ADMIN],
                   <>
@@ -532,8 +555,8 @@ export const BillCreateOrUpdate = memo(
                 )}
 
               {canDelete &&
-                !isEmpty(bill.id) &&
-                bill.status !== BILL_STATUS.DONE && (
+                !isEmpty(billId) &&
+                billStatus !== BILL_STATUS.DONE && (
                   <Button
                     size="middle"
                     type="primary"

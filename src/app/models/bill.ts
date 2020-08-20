@@ -21,6 +21,36 @@ export enum PARCEL_VENDOR {
   FEDEX = 'FEDEX',
 }
 
+export class PurchasePriceInfo {
+  weightInKg!: number;
+  destinationCountry!: string;
+  quotationPriceInUsd?: number;
+  zoneName?: string;
+  purchasePriceInVnd?: number;
+  purchasePriceAfterVatInUsd?: number;
+  purchasePriceAfterVatInVnd?: number;
+  vendorNetPriceInUsd?: number;
+  vendorOtherFee!: number;
+  vendorFuelChargePercent!: number;
+  vendorFuelChargeFeeInUsd?: number;
+  vendorFuelChargeFeeInVnd?: number;
+  purchasePriceInUsd?: number;
+  vat?: number;
+  usdExchangeRate!: number;
+
+  updatePurchasePriceInfo(result: PurchasePriceCountingResult) {
+    this.purchasePriceInUsd = result.purchasePriceInUsd;
+    this.purchasePriceInVnd = result.purchasePriceInVnd;
+    this.vendorFuelChargeFeeInUsd = result.fuelChargeFeeInUsd;
+    this.vendorFuelChargeFeeInVnd = result.fuelChargeFeeInVnd;
+    this.quotationPriceInUsd = result.quotationPriceInUsd;
+    this.vendorNetPriceInUsd = result.vendorNetPriceInUsd;
+    this.zoneName = result.zoneName;
+    this.purchasePriceAfterVatInUsd = result.purchasePriceAfterVatInUsd;
+    this.purchasePriceAfterVatInVnd = result.purchasePriceAfterVatInVnd;
+  }
+}
+
 export default class Bill extends ModelBase {
   saleUserId?: string;
   licenseUserId?: string;
@@ -131,6 +161,26 @@ export default class Bill extends ModelBase {
       this.vendorPaymentType = PAYMENT_TYPE.CASH;
       this.isPrintedVatBill = false;
     }
+  }
+
+  getPurchasePriceInfo(): PurchasePriceInfo {
+    const info = new PurchasePriceInfo();
+    info.weightInKg = this.weightInKg;
+    info.destinationCountry = this.destinationCountry;
+    info.zoneName = this.zoneName;
+    info.quotationPriceInUsd = this.quotationPriceInUsd;
+    info.vendorNetPriceInUsd = this.vendorNetPriceInUsd;
+    info.vendorOtherFee = this.vendorOtherFee;
+    info.vendorFuelChargePercent = this.vendorFuelChargePercent;
+    info.vendorFuelChargeFeeInUsd = this.vendorFuelChargeFeeInUsd;
+    info.vendorFuelChargeFeeInVnd = this.vendorFuelChargeFeeInVnd;
+    info.purchasePriceInUsd = this.purchasePriceInUsd;
+    info.vat = this.vat;
+    info.usdExchangeRate = this.usdExchangeRate;
+    info.purchasePriceAfterVatInVnd = this.purchasePriceAfterVatInVnd;
+    info.purchasePriceAfterVatInUsd = this.purchasePriceAfterVatInUsd;
+    info.purchasePriceInVnd = this.purchasePriceInVnd;
+    return info;
   }
 
   updatePurchasePriceInfo(result: PurchasePriceCountingResult) {

@@ -5,9 +5,7 @@ import flatten from 'lodash/fp/flatten';
 import map from 'lodash/fp/map';
 import isEmpty from 'lodash/fp/isEmpty';
 import find from 'lodash/fp/find';
-import set from 'lodash/fp/set';
-import assign from 'lodash/fp/assign';
-import omit from 'lodash/fp/omit';
+import isUndefined from 'lodash/fp/isUndefined';
 import * as Sentry from '@sentry/react';
 
 import VendorFetcher from 'app/fetchers/vendorFetcher';
@@ -24,10 +22,17 @@ import {
 } from 'app/models/purchasePriceCounting';
 
 import { actions } from './slice';
-import { selectBill, selectVendors } from './selectors';
+import {
+  selectBillId,
+  selectOldWeightInKg,
+  selectPurchasePriceInfo,
+  selectVendors,
+  selectBillStatus,
+} from './selectors';
 import AppParamsFetcher from 'app/fetchers/appParamsFetcher';
 import AppParam, { APP_PARAM_KEY, BillParams } from 'app/models/appParam';
 import User from 'app/models/user';
+import { SubmitBillAction } from './types';
 
 const vendorFetcher = new VendorFetcher();
 const billFetcher = new BillFetcher();
@@ -68,7 +73,7 @@ export function* fetchVendorCountriesTask(action: PayloadAction<string>) {
 }
 
 export function* submitBillTask(action: PayloadAction<Bill | any>) {
-  let resultBill = action.payload;
+  let billFormValues = action.payload;
   try {
     // check auto save customer
     const {
@@ -77,7 +82,7 @@ export function* submitBillTask(action: PayloadAction<Bill | any>) {
       senderId,
       receiverId,
       vendorId,
-    } = resultBill;
+    } = billFormValues;
 
     if (isSaveSender === true && !senderId) {
       const { senderName, senderPhone, senderAddress } = action.payload;
@@ -88,7 +93,7 @@ export function* submitBillTask(action: PayloadAction<Bill | any>) {
         phone: senderPhone,
         address: senderAddress,
       });
-      resultBill.senderId = sender.id;
+      billFormValues.senderId = sender.id;
     }
 
     if (isSaveReceiver === true && !receiverId) {
@@ -99,36 +104,30 @@ export function* submitBillTask(action: PayloadAction<Bill | any>) {
         phone: receiverPhone,
         address: receiverAddress,
       });
-      resultBill.receiverId = receiver.id;
+      billFormValues.receiverId = receiver.id;
     }
 
     const vendors = (yield select(selectVendors)) as Vendor[];
     const vendor = find((v: Vendor) => v.id === vendorId)(vendors);
-    resultBill.vendorName = vendor?.name || '';
+    billFormValues.vendorName = vendor?.name || '';
 
-    const currentBill = (yield select(selectBill)) as Bill;
-    const isUpdate = !isEmpty(currentBill.id);
+    const billId = yield select(selectBillId);
+    const isUpdate = !isEmpty(billId);
 
-    resultBill = omit(['isSaveSender', 'isSaveReceiver'])(
-      assign(currentBill)(resultBill),
-    );
+    let bill = yield call(mergeBillFormWithStore, billFormValues);
     if (isUpdate === true) {
-      resultBill = yield call(
-        billFetcher.updateAsync,
-        currentBill.id,
-        resultBill,
-      );
+      bill = yield call(billFetcher.updateAsync, billId, bill);
     } else {
-      resultBill = yield call(billFetcher.addAsync, resultBill);
+      bill = yield call(billFetcher.addAsync, bill);
     }
 
+    yield put(actions.submitBillSuccess(bill));
     toast.success('Đã lưu Bill');
+    return bill;
   } catch (error) {
     toast.error('Chưa lưu được Bill, vui lòng thử lại!');
-    Sentry.captureException(error);
+    throw error;
   }
-
-  yield put(actions.submitBillSuccess(new Bill(resultBill)));
 }
 
 export function* fetchResponsibilityUsersTask() {
@@ -142,37 +141,46 @@ export function* fetchResponsibilityUsersTask() {
   yield put(actions.fetchResponsibilityUsersCompleted(users));
 }
 
-export function* assignToAccountantTask() {
-  let bill = (yield select(selectBill)) as Bill;
-  if (!bill || !bill.id || bill.status !== BILL_STATUS.LICENSE) {
+export function* assignToAccountantTask(
+  action: PayloadAction<SubmitBillAction>,
+) {
+  const billStatus = (yield select(selectBillStatus)) as BILL_STATUS;
+  const billId = yield select(selectBillId);
+
+  if (!isEmpty(billId) || billStatus !== BILL_STATUS.LICENSE) {
     return;
   }
 
-  try {
-    yield call(billFetcher.assignToAccountant, bill.id);
-    bill = new Bill(set('status', BILL_STATUS.ACCOUNTANT)(bill));
-    yield put(actions.submitBillSuccess(bill));
-    toast.success('Đã chuyển Bill cho Kế Toán');
-  } catch (error) {
-    Sentry.captureException(error);
+  const { billFormValues, isDirty } = action.payload;
+  if (isDirty) {
+    const bill = yield call(submitBillTask, billFormValues);
+    if (isUndefined(bill)) {
+      return;
+    }
   }
 
-  yield put(actions.assignToAccountantCompleted(bill));
+  try {
+    yield call(billFetcher.assignToAccountant, billId);
+    yield put(actions.assignToAccountantCompleted(new Bill()));
+    toast.success('Đã chuyển Bill cho Kế Toán');
+  } catch (error) {
+    toast.success('Chưa chuyển được bill cho Kế Toán, vui lòng thử lại!');
+    throw error;
+  }
 }
 
 export function* deleteBillTask() {
-  const bill = (yield select(selectBill)) as Bill;
+  const billId = yield select(selectBillId);
 
   try {
-    yield call(billFetcher.deleteAsync, bill.id);
+    yield call(billFetcher.deleteAsync, billId);
+    yield put(actions.deleteBillCompleted());
     toast.success('Đã xóa Bill!');
-    yield put(actions.submitBillSuccess(new Bill()));
   } catch (error) {
     Sentry.captureException(error);
     toast.error('Chưa xóa được Bill, vui lòng thử lại!');
+    yield put(actions.deleteBillCompleted(false));
   }
-
-  yield put(actions.deleteBillCompleted());
 }
 
 export function* calculatePurchasePriceTask(action: PayloadAction<any>) {
@@ -194,13 +202,19 @@ export function* calculatePurchasePriceTask(action: PayloadAction<any>) {
   yield put(actions.calculatePurchasePriceCompleted(result));
 }
 
-export function* finalBillTask() {
-  const bill = (yield select(selectBill)) as Bill;
+export function* finalBillTask(action: PayloadAction<SubmitBillAction>) {
+  const { billFormValues, isDirty } = action.payload;
+  if (isDirty) {
+    const bill = yield call(submitBillTask, billFormValues);
+    if (isUndefined(bill)) {
+      return;
+    }
+  }
 
+  const billId = yield select(selectBillId);
   try {
-    yield call(billFetcher.finalBill, bill.id);
+    yield call(billFetcher.finalBill, billId);
     toast.success('Đã chốt bill!');
-    yield put(actions.submitBillSuccess(new Bill()));
   } catch (error) {
     Sentry.captureException(error);
   }
@@ -208,24 +222,21 @@ export function* finalBillTask() {
   yield put(actions.finalBillCompleted());
 }
 
-export function* assignLicenseTask() {
-  let bill = (yield select(selectBill)) as Bill;
-
+export function* assignLicenseTask(action: PayloadAction<SubmitBillAction>) {
+  const { billFormValues } = action.payload;
   try {
-    bill = yield call(
-      billFetcher.updateAsync,
-      bill.id,
-      new Bill({ ...bill, status: BILL_STATUS.LICENSE }),
-    );
+    let bill = yield call(mergeBillFormWithStore, billFormValues);
+    bill.status = BILL_STATUS.LICENSE;
 
-    bill = new Bill(bill);
+    const billId = yield select(selectBillId);
+    bill = yield call(billFetcher.updateAsync, billId, bill);
+    yield put(actions.assignLicenseCompleted(bill));
     toast.success('Đã chuyển Bill cho Chứng Từ!');
-    yield put(actions.submitBillSuccess(bill));
   } catch (error) {
     Sentry.captureException(error);
   }
 
-  yield put(actions.assignLicenseCompleted(bill));
+  yield put(actions.assignLicenseCompleted(undefined));
 }
 
 export function* fetchBillParamsTask() {
@@ -249,6 +260,15 @@ export function* fetchBillParamsTask() {
   }
 
   yield put(actions.fetchBillParamsCompleted(billParams));
+}
+
+function* mergeBillFormWithStore(billFormValues: any) {
+  const bill = new Bill(billFormValues);
+  bill.oldWeightInKg = yield select(selectOldWeightInKg);
+  bill.status = yield select(selectBillStatus);
+  bill.updatePurchasePriceInfo(yield select(selectPurchasePriceInfo));
+
+  return bill;
 }
 
 export function* billCreateOrUpdateSaga() {

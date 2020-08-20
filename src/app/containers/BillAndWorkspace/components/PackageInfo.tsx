@@ -28,8 +28,8 @@ interface Props {
   isFetchingVendorCountries: boolean;
   onVendorSelectionChanged: (vendorId: string | undefined) => void;
   userRole: Role;
-  bill: Bill;
   onVendorWeightChanged?: (
+    oldWeight: number,
     newWeight: number,
     predictPurchasePrice: PurchasePriceCountingResult,
   ) => void;
@@ -37,6 +37,9 @@ interface Props {
     saleWeight: number,
     purchasePrice: PurchasePriceCountingResult,
   ) => void;
+  oldWeightInKg?: number;
+  billForm: any;
+  billId: string;
 }
 const PackageInfo = ({
   billValidator,
@@ -46,9 +49,11 @@ const PackageInfo = ({
   isFetchingVendorCountries,
   onVendorSelectionChanged,
   userRole,
-  bill,
   onVendorWeightChanged,
   onRestoreSaleWeight,
+  oldWeightInKg,
+  billForm,
+  billId,
 }: Props) => {
   return (
     <>
@@ -87,17 +92,17 @@ const PackageInfo = ({
           <Form.Item name="weightInKg" rules={billValidator.weightInKg} noStyle>
             <InputNumber precision={2} min={0} />
           </Form.Item>
-          {!isUndefined(bill.oldWeightInKg) && (
+          {!isUndefined(oldWeightInKg) && (
             <Tooltip title="Ký bán cho khách">
               <Text delete style={{ marginLeft: 10, marginRight: 10 }}>
-                {bill.oldWeightInKg}
+                {oldWeightInKg}
               </Text>
             </Tooltip>
           )}
-          {!isEmpty(bill.id) &&
+          {!isEmpty(billId) &&
             [Role.ADMIN, Role.ACCOUNTANT].includes(userRole) && (
               <VendorWeightAdjustment
-                bill={bill}
+                bill={billForm}
                 onSaveNewWeight={onVendorWeightChanged}
                 onRestoreSaleWeight={onRestoreSaleWeight}
               />

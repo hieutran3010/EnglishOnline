@@ -1,14 +1,12 @@
 import { PayloadAction } from '@reduxjs/toolkit';
-import flow from 'lodash/fp/flow';
-import set from 'lodash/fp/set';
 
 import { createSlice } from 'utils/@reduxjs/toolkit';
-import Bill from 'app/models/bill';
+import Bill, { PurchasePriceInfo, BILL_STATUS } from 'app/models/bill';
 import { BillParams } from 'app/models/appParam';
 import type Vendor from 'app/models/vendor';
 import type User from 'app/models/user';
 
-import { ContainerState } from './types';
+import { ContainerState, SubmitBillAction } from './types';
 import { PurchasePriceCountingResult } from 'app/models/purchasePriceCounting';
 
 // The initial state of the BillCreateOrUpdate container
@@ -20,7 +18,10 @@ export const initialState: ContainerState = {
   vendorCountries: [],
 
   isSubmitting: false,
-  bill: new Bill(),
+  billId: '',
+  purchasePriceInfo: new PurchasePriceInfo(),
+  oldWeightInKg: undefined,
+  billStatus: BILL_STATUS.LICENSE,
 
   isFetchingResponsibilityUsers: false,
   users: [],
@@ -33,12 +34,20 @@ export const initialState: ContainerState = {
   billParams: new BillParams(),
 };
 
+const extractBillInfo = (state: ContainerState, bill: Bill) => {
+  state.billId = bill.id;
+  state.purchasePriceInfo = bill.getPurchasePriceInfo();
+  state.oldWeightInKg = bill.oldWeightInKg;
+  state.billStatus = bill.status;
+};
+
 const billCreateOrUpdateSlice = createSlice({
   name: 'billCreateOrUpdate',
   initialState,
   reducers: {
     setBill(state, action: PayloadAction<Bill>) {
-      state.bill = new Bill(action.payload);
+      const bill = action.payload;
+      extractBillInfo(state, bill);
     },
     fetchVendor(state) {
       state.isFetchingVendor = true;
@@ -59,8 +68,11 @@ const billCreateOrUpdateSlice = createSlice({
     submitBill(state, action: PayloadAction<Bill>) {
       state.isSubmitting = true;
     },
-    submitBillSuccess(state, action: PayloadAction<Bill>) {
-      state.bill = action.payload;
+    submitBillSuccess(state, action: PayloadAction<Bill | undefined>) {
+      if (action.payload) {
+        extractBillInfo(state, action.payload);
+      }
+
       state.isSubmitting = false;
     },
 
@@ -72,10 +84,11 @@ const billCreateOrUpdateSlice = createSlice({
       state.isFetchingResponsibilityUsers = false;
     },
 
-    assignToAccountant(state) {
+    assignToAccountant(state, action: PayloadAction<SubmitBillAction>) {
       state.isAssigningAccountant = true;
     },
     assignToAccountantCompleted(state, action: PayloadAction<Bill>) {
+      state.billStatus = BILL_STATUS.ACCOUNTANT;
       state.isAssigningAccountant = false;
     },
 
@@ -83,6 +96,11 @@ const billCreateOrUpdateSlice = createSlice({
       state.isDeletingBill = true;
     },
     deleteBillCompleted(state) {
+      state.oldWeightInKg = initialState.oldWeightInKg;
+      state.billStatus = initialState.billStatus;
+      state.purchasePriceInfo = initialState.purchasePriceInfo;
+      state.billId = initialState.billId;
+
       state.isDeletingBill = false;
     },
 
@@ -93,9 +111,12 @@ const billCreateOrUpdateSlice = createSlice({
       state,
       action: PayloadAction<PurchasePriceCountingResult>,
     ) {
-      const newBill = new Bill(state.bill);
-      newBill.updatePurchasePriceInfo(action.payload);
-      state.bill = newBill;
+      const newPurchasePriceInfo = {
+        ...state.purchasePriceInfo,
+      } as PurchasePriceInfo;
+
+      newPurchasePriceInfo.updatePurchasePriceInfo(action.payload);
+      state.purchasePriceInfo = newPurchasePriceInfo;
 
       state.isCalculatingPurchasePrice = false;
     },
@@ -103,16 +124,20 @@ const billCreateOrUpdateSlice = createSlice({
     updateNewWeight(
       state,
       action: PayloadAction<{
+        oldWeight: number;
         newWeight: number;
         predictPurchasePrice: PurchasePriceCountingResult;
       }>,
     ) {
-      const newBill = new Bill({ ...state.bill });
-      newBill.oldWeightInKg = newBill.weightInKg;
-      newBill.weightInKg = action.payload.newWeight;
-      newBill.updatePurchasePriceInfo(action.payload.predictPurchasePrice);
+      state.oldWeightInKg = action.payload.oldWeight;
+      const newPurchasePriceInfo = {
+        ...state.purchasePriceInfo,
+      } as PurchasePriceInfo;
 
-      state.bill = newBill;
+      newPurchasePriceInfo.updatePurchasePriceInfo(
+        action.payload.predictPurchasePrice,
+      );
+      state.purchasePriceInfo = newPurchasePriceInfo;
     },
     restoreSaleWeight(
       state,
@@ -121,31 +146,42 @@ const billCreateOrUpdateSlice = createSlice({
         purchasePrice: PurchasePriceCountingResult;
       }>,
     ) {
-      const newBill = new Bill({ ...state.bill });
-      newBill.oldWeightInKg = undefined;
-      newBill.weightInKg = action.payload.saleWeight;
-      newBill.updatePurchasePriceInfo(action.payload.purchasePrice);
+      state.oldWeightInKg = undefined;
+      const newPurchasePriceInfo = {
+        ...state.purchasePriceInfo,
+      } as PurchasePriceInfo;
 
-      state.bill = newBill;
+      newPurchasePriceInfo.updatePurchasePriceInfo(
+        action.payload.purchasePrice,
+      );
+      state.purchasePriceInfo = newPurchasePriceInfo;
     },
 
-    finalBill(state) {
+    finalBill(state, action: PayloadAction<SubmitBillAction>) {
       state.isFinalBill = true;
     },
     finalBillCompleted(state) {
+      extractBillInfo(state, new Bill());
       state.isFinalBill = false;
     },
 
-    assignLicense(state) {
+    assignLicense(state, action: PayloadAction<SubmitBillAction>) {
       state.isAssigningLicense = true;
     },
-    assignLicenseCompleted(state, action: PayloadAction<Bill>) {
+    assignLicenseCompleted(state, action: PayloadAction<Bill | undefined>) {
+      if (action.payload) {
+        extractBillInfo(state, action.payload);
+      }
       state.isAssigningLicense = false;
     },
 
     fetchBillParams() {},
     fetchBillParamsCompleted(state, action: PayloadAction<BillParams>) {
       state.billParams = action.payload;
+    },
+
+    setBillStatus(state, action: PayloadAction<BILL_STATUS>) {
+      state.billStatus = action.payload;
     },
 
     resetState(state) {

@@ -35,6 +35,7 @@ const { Title, Text } = Typography;
 interface Props {
   bill: Bill;
   onSaveNewWeight?: (
+    oldWeight: number,
     newWeight: number,
     predictPurchasePrice: PurchasePriceCountingResult,
   ) => void;
@@ -99,12 +100,13 @@ const VendorWeightAdjustment = ({
   const onSubmitNewWeight = useCallback(() => {
     if (onSaveNewWeight) {
       onSaveNewWeight(
+        bill.weightInKg,
         form.getFieldValue('vendorWeightInKg'),
         predictPurchasePrice,
       );
     }
     onClose();
-  }, [form, onClose, onSaveNewWeight, predictPurchasePrice]);
+  }, [bill.weightInKg, form, onClose, onSaveNewWeight, predictPurchasePrice]);
 
   const onCancelVendorWeight = useCallback(async () => {
     setIsCountingPurchasePrice(true);
