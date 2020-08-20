@@ -1,5 +1,6 @@
 import ModelBase from './modelBase';
 import moment from 'moment';
+import { PurchasePriceCountingResult } from './purchasePriceCounting';
 
 export enum BILL_STATUS {
   LICENSE = 'LICENSE',
@@ -42,7 +43,7 @@ export default class Bill extends ModelBase {
   description!: string;
   destinationCountry!: string;
   weightInKg!: number;
-  vendorWeightInKg?: number;
+  oldWeightInKg?: number;
   salePrice?: number;
   purchasePriceInUsd?: number;
   purchasePriceInVnd?: number;
@@ -92,7 +93,7 @@ export default class Bill extends ModelBase {
       this.description = input.description;
       this.destinationCountry = input.destinationCountry;
       this.weightInKg = input.weightInKg;
-      this.vendorWeightInKg = input.vendorWeightInKg;
+      this.oldWeightInKg = input.vendorWeightInKg;
       this.salePrice = input.salePrice || 0;
       this.purchasePriceInUsd = input.purchasePriceInUsd;
       this.purchasePriceInVnd = input.purchasePriceInVnd;
@@ -130,6 +131,18 @@ export default class Bill extends ModelBase {
       this.vendorPaymentType = PAYMENT_TYPE.CASH;
       this.isPrintedVatBill = false;
     }
+  }
+
+  updatePurchasePriceInfo(result: PurchasePriceCountingResult) {
+    this.purchasePriceInUsd = result.purchasePriceInUsd;
+    this.purchasePriceInVnd = result.purchasePriceInVnd;
+    this.vendorFuelChargeFeeInUsd = result.fuelChargeFeeInUsd;
+    this.vendorFuelChargeFeeInVnd = result.fuelChargeFeeInVnd;
+    this.quotationPriceInUsd = result.quotationPriceInUsd;
+    this.vendorNetPriceInUsd = result.vendorNetPriceInUsd;
+    this.zoneName = result.zoneName;
+    this.purchasePriceAfterVatInUsd = result.purchasePriceAfterVatInUsd;
+    this.purchasePriceAfterVatInVnd = result.purchasePriceAfterVatInVnd;
   }
 }
 

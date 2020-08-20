@@ -1,3 +1,5 @@
+import Bill from './bill';
+
 export const purchasePriceCountingFields = [
   'weightInKg',
   'destinationCountry',
@@ -28,4 +30,14 @@ export class PurchasePriceCountingParams {
   fuelChargePercent!: number;
   vat?: number;
   usdExchangeRate!: number;
+
+  constructor(bill: Bill) {
+    this.destinationCountry = bill.destinationCountry;
+    this.fuelChargePercent = bill.vendorFuelChargePercent;
+    this.otherFeeInUsd = bill.vendorOtherFee;
+    this.usdExchangeRate = bill.usdExchangeRate;
+    this.vat = bill.vat;
+    this.vendorId = bill.vendorId;
+    this.weightInKg = bill.weightInKg;
+  }
 }

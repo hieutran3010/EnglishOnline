@@ -72,7 +72,7 @@ const billCreateOrUpdateSlice = createSlice({
     assignToAccountant(state) {
       state.isAssigningAccountant = true;
     },
-    assignToAccountantCompleted(state) {
+    assignToAccountantCompleted(state, action: PayloadAction<Bill>) {
       state.isAssigningAccountant = false;
     },
 
@@ -98,7 +98,7 @@ const billCreateOrUpdateSlice = createSlice({
     assignLicense(state) {
       state.isAssigningLicense = true;
     },
-    assignLicenseCompleted(state) {
+    assignLicenseCompleted(state, action: PayloadAction<Bill>) {
       state.isAssigningLicense = false;
     },
 

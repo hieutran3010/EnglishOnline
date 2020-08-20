@@ -62,15 +62,9 @@ const VendorWeightAdjustment = ({ bill }: Props) => {
 
       setIsCountingPurchasePrice(true);
 
-      const purchasePriceCountingResult = await getPurchasePrice({
-        vendorId: bill.vendorId,
-        weightInKg: vendorWeightInKg,
-        destinationCountry: bill.destinationCountry,
-        otherFeeInUsd: bill.vendorOtherFee,
-        fuelChargePercent: bill.vendorFuelChargePercent,
-        vat: bill.vat,
-        usdExchangeRate: bill.usdExchangeRate,
-      });
+      const purchasePriceCountingResult = await getPurchasePrice(
+        new PurchasePriceCountingParams(bill),
+      );
 
       setPredictPurchasePrice(
         purchasePriceCountingResult.purchasePriceAfterVatInUsd,
@@ -78,14 +72,7 @@ const VendorWeightAdjustment = ({ bill }: Props) => {
 
       setIsCountingPurchasePrice(false);
     },
-    [
-      bill.destinationCountry,
-      bill.usdExchangeRate,
-      bill.vat,
-      bill.vendorFuelChargePercent,
-      bill.vendorId,
-      bill.vendorOtherFee,
-    ],
+    [bill],
   );
 
   return (

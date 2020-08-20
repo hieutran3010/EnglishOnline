@@ -1,8 +1,9 @@
 import { call, put, takeLatest } from 'redux-saga/effects';
 import BillFetcher from 'app/fetchers/billFetcher';
-import { BILL_STATUS } from 'app/models/bill';
+import Bill, { BILL_STATUS } from 'app/models/bill';
 import { actions } from './slice';
 import { actions as billCreateOrUpdateActions } from '../BillCreateOrUpdate/slice';
+import { PayloadAction } from '@reduxjs/toolkit';
 
 const billFetcher = new BillFetcher();
 
@@ -22,6 +23,13 @@ export function* setNeedToRefreshBillListTask() {
   yield put(actions.setNeedToReloadWorkingBills(true));
 }
 
+export function* assignLicenseOrAccountantCompletedTask(
+  action: PayloadAction<Bill>,
+) {
+  yield call(setNeedToRefreshBillListTask);
+  yield put(actions.selectBill(action.payload));
+}
+
 export function* workspaceSaga() {
   yield takeLatest(
     actions.fetchNumberOfUncheckedVatBill.type,
@@ -37,7 +45,7 @@ export function* workspaceSaga() {
   );
   yield takeLatest(
     billCreateOrUpdateActions.assignLicenseCompleted,
-    setNeedToRefreshBillListTask,
+    assignLicenseOrAccountantCompletedTask,
   );
   yield takeLatest(
     billCreateOrUpdateActions.deleteBillCompleted,
@@ -45,6 +53,6 @@ export function* workspaceSaga() {
   );
   yield takeLatest(
     billCreateOrUpdateActions.assignToAccountantCompleted,
-    setNeedToRefreshBillListTask,
+    assignLicenseOrAccountantCompletedTask,
   );
 }

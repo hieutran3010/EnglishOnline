@@ -143,21 +143,21 @@ export function* fetchResponsibilityUsersTask() {
 }
 
 export function* assignToAccountantTask() {
-  const bill = (yield select(selectBill)) as Bill;
+  let bill = (yield select(selectBill)) as Bill;
   if (!bill || !bill.id || bill.status !== BILL_STATUS.LICENSE) {
     return;
   }
 
   try {
     yield call(billFetcher.assignToAccountant, bill.id);
-    let submitBill = new Bill(set('status', BILL_STATUS.ACCOUNTANT)(bill));
-    yield put(actions.submitBillSuccess(submitBill));
+    bill = new Bill(set('status', BILL_STATUS.ACCOUNTANT)(bill));
+    yield put(actions.submitBillSuccess(bill));
     toast.success('Đã chuyển Bill cho Kế Toán');
   } catch (error) {
     Sentry.captureException(error);
   }
 
-  yield put(actions.assignToAccountantCompleted());
+  yield put(actions.assignToAccountantCompleted(bill));
 }
 
 export function* deleteBillTask() {
@@ -181,14 +181,7 @@ export function* calculatePurchasePriceTask(action: PayloadAction<any>) {
   try {
     const billForm = action.payload;
 
-    const params = new PurchasePriceCountingParams();
-    params.destinationCountry = billForm.destinationCountry;
-    params.fuelChargePercent = billForm.vendorFuelChargePercent;
-    params.otherFeeInUsd = billForm.vendorOtherFee;
-    params.usdExchangeRate = billForm.usdExchangeRate;
-    params.vat = billForm.vat;
-    params.vendorId = billForm.vendorId;
-    params.weightInKg = billForm.weightInKg;
+    const params = new PurchasePriceCountingParams(billForm);
 
     const result = (yield call(
       billFetcher.countPurchasePrice,
@@ -196,15 +189,7 @@ export function* calculatePurchasePriceTask(action: PayloadAction<any>) {
     )) as PurchasePriceCountingResult;
 
     const bill = new Bill({ ...(yield select(selectBill)), ...billForm });
-    bill.purchasePriceInUsd = result.purchasePriceInUsd;
-    bill.purchasePriceInVnd = result.purchasePriceInVnd;
-    bill.vendorFuelChargeFeeInUsd = result.fuelChargeFeeInUsd;
-    bill.vendorFuelChargeFeeInVnd = result.fuelChargeFeeInVnd;
-    bill.quotationPriceInUsd = result.quotationPriceInUsd;
-    bill.vendorNetPriceInUsd = result.vendorNetPriceInUsd;
-    bill.zoneName = result.zoneName;
-    bill.purchasePriceAfterVatInUsd = result.purchasePriceAfterVatInUsd;
-    bill.purchasePriceAfterVatInVnd = result.purchasePriceAfterVatInVnd;
+    bill.updatePurchasePriceInfo(result);
 
     yield put(actions.submitBillSuccess(bill));
   } catch (error) {
@@ -230,23 +215,23 @@ export function* finalBillTask() {
 }
 
 export function* assignLicenseTask() {
-  const bill = (yield select(selectBill)) as Bill;
+  let bill = (yield select(selectBill)) as Bill;
 
   try {
-    let resultBill = yield call(
+    bill = yield call(
       billFetcher.updateAsync,
       bill.id,
       new Bill({ ...bill, status: BILL_STATUS.LICENSE }),
     );
 
-    resultBill = new Bill(resultBill);
+    bill = new Bill(bill);
     toast.success('Đã chuyển Bill cho Chứng Từ!');
-    yield put(actions.submitBillSuccess(resultBill));
+    yield put(actions.submitBillSuccess(bill));
   } catch (error) {
     Sentry.captureException(error);
   }
 
-  yield put(actions.assignLicenseCompleted());
+  yield put(actions.assignLicenseCompleted(bill));
 }
 
 export function* fetchBillParamsTask() {

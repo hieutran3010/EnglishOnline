@@ -226,6 +226,7 @@ export const BillCreateOrUpdate = memo(
         } else {
           billForm.setFieldsValue({ vat: undefined });
         }
+        setShouldRecalculatePurchasePrice(true);
       },
       [billForm, billParams.vat],
     );
