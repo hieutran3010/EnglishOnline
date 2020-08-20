@@ -1,6 +1,7 @@
 import React, { memo } from 'react';
 import { Typography, Form, InputNumber, Input } from 'antd';
 import isEmpty from 'lodash/fp/isEmpty';
+import isUndefined from 'lodash/fp/isUndefined';
 
 import { BillValidator } from 'app/models/validators/billValidator';
 import type Vendor from 'app/models/vendor';
@@ -13,8 +14,9 @@ import VendorSelection from './VendorSelection';
 import IntParcelVendorSelect from './IntParcelVendorSelect';
 import VendorCountriesSelection from './VendorCountriesSelection';
 import VendorWeightAdjustment from '../components/VendorWeightAdjustment';
+import { PurchasePriceCountingResult } from 'app/models/purchasePriceCounting';
 
-const { Title } = Typography;
+const { Title, Text } = Typography;
 
 const billDescriptionDataSource = getDataSource(FETCHER_KEY.BILL_DESCRIPTION);
 
@@ -27,6 +29,10 @@ interface Props {
   onVendorSelectionChanged: (vendorId: string | undefined) => void;
   userRole: Role;
   bill: Bill;
+  onVendorWeightChanged?: (
+    newWeight: number,
+    predictPurchasePrice: PurchasePriceCountingResult,
+  ) => void;
 }
 const PackageInfo = ({
   billValidator,
@@ -37,6 +43,7 @@ const PackageInfo = ({
   onVendorSelectionChanged,
   userRole,
   bill,
+  onVendorWeightChanged,
 }: Props) => {
   return (
     <>
@@ -75,9 +82,17 @@ const PackageInfo = ({
           <Form.Item name="weightInKg" rules={billValidator.weightInKg} noStyle>
             <InputNumber precision={2} min={0} />
           </Form.Item>
+          {!isUndefined(bill.oldWeightInKg) && (
+            <Text delete style={{ marginLeft: 10, marginRight: 10 }}>
+              {bill.oldWeightInKg}
+            </Text>
+          )}
           {!isEmpty(bill.id) &&
             [Role.ADMIN, Role.ACCOUNTANT].includes(userRole) && (
-              <VendorWeightAdjustment bill={bill} />
+              <VendorWeightAdjustment
+                bill={bill}
+                onSaveNewWeight={onVendorWeightChanged}
+              />
             )}
         </Input.Group>
       </Form.Item>

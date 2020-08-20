@@ -1,4 +1,6 @@
 import { PayloadAction } from '@reduxjs/toolkit';
+import flow from 'lodash/fp/flow';
+import set from 'lodash/fp/set';
 
 import { createSlice } from 'utils/@reduxjs/toolkit';
 import Bill from 'app/models/bill';
@@ -7,6 +9,7 @@ import type Vendor from 'app/models/vendor';
 import type User from 'app/models/user';
 
 import { ContainerState } from './types';
+import { PurchasePriceCountingResult } from 'app/models/purchasePriceCounting';
 
 // The initial state of the BillCreateOrUpdate container
 export const initialState: ContainerState = {
@@ -83,10 +86,34 @@ const billCreateOrUpdateSlice = createSlice({
       state.isDeletingBill = false;
     },
 
-    setIsCalculatingPurchasePrice(state, action: PayloadAction<boolean>) {
-      state.isCalculatingPurchasePrice = action.payload;
+    calculatePurchasePrice(state, action: PayloadAction<any>) {
+      state.isCalculatingPurchasePrice = true;
     },
-    calculatePurchasePrice(state, action: PayloadAction<any>) {},
+    calculatePurchasePriceCompleted(
+      state,
+      action: PayloadAction<PurchasePriceCountingResult>,
+    ) {
+      const newBill = new Bill(state.bill);
+      newBill.updatePurchasePriceInfo(action.payload);
+      state.bill = newBill;
+
+      state.isCalculatingPurchasePrice = false;
+    },
+
+    updateNewWeight(
+      state,
+      action: PayloadAction<{
+        newWeight: number;
+        predictPurchasePrice: PurchasePriceCountingResult;
+      }>,
+    ) {
+      const newBill = new Bill({ ...state.bill });
+      newBill.oldWeightInKg = newBill.weightInKg;
+      newBill.weightInKg = action.payload.newWeight;
+      newBill.updatePurchasePriceInfo(action.payload.predictPurchasePrice);
+
+      state.bill = newBill;
+    },
 
     finalBill(state) {
       state.isFinalBill = true;

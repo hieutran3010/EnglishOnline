@@ -31,13 +31,15 @@ export class PurchasePriceCountingParams {
   vat?: number;
   usdExchangeRate!: number;
 
-  constructor(bill: Bill) {
-    this.destinationCountry = bill.destinationCountry;
-    this.fuelChargePercent = bill.vendorFuelChargePercent;
-    this.otherFeeInUsd = bill.vendorOtherFee;
-    this.usdExchangeRate = bill.usdExchangeRate;
-    this.vat = bill.vat;
-    this.vendorId = bill.vendorId;
-    this.weightInKg = bill.weightInKg;
+  constructor(bill?: Bill) {
+    if (bill) {
+      this.destinationCountry = bill.destinationCountry;
+      this.fuelChargePercent = bill.vendorFuelChargePercent;
+      this.otherFeeInUsd = bill.vendorOtherFee;
+      this.usdExchangeRate = bill.usdExchangeRate;
+      this.vat = bill.vat;
+      this.vendorId = bill.vendorId;
+      this.weightInKg = bill.weightInKg;
+    }
   }
 }

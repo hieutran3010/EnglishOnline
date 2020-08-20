@@ -176,28 +176,22 @@ export function* deleteBillTask() {
 }
 
 export function* calculatePurchasePriceTask(action: PayloadAction<any>) {
-  yield put(actions.setIsCalculatingPurchasePrice(true));
-
+  let result: PurchasePriceCountingResult = new PurchasePriceCountingResult();
   try {
     const billForm = action.payload;
 
     const params = new PurchasePriceCountingParams(billForm);
 
-    const result = (yield call(
+    result = (yield call(
       billFetcher.countPurchasePrice,
       params,
     )) as PurchasePriceCountingResult;
-
-    const bill = new Bill({ ...(yield select(selectBill)), ...billForm });
-    bill.updatePurchasePriceInfo(result);
-
-    yield put(actions.submitBillSuccess(bill));
   } catch (error) {
     Sentry.captureException(error);
     toast.error('Chưa tính được giá mua, vui lòng thử lại!');
   }
 
-  yield put(actions.setIsCalculatingPurchasePrice(false));
+  yield put(actions.calculatePurchasePriceCompleted(result));
 }
 
 export function* finalBillTask() {

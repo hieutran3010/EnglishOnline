@@ -34,11 +34,17 @@ const { Title, Text } = Typography;
 
 interface Props {
   bill: Bill;
+  onSaveNewWeight?: (
+    newWeight: number,
+    predictPurchasePrice: PurchasePriceCountingResult,
+  ) => void;
 }
-const VendorWeightAdjustment = ({ bill }: Props) => {
+const VendorWeightAdjustment = ({ bill, onSaveNewWeight }: Props) => {
   const [form] = Form.useForm();
 
-  const [predictPurchasePrice, setPredictPurchasePrice] = useState(0);
+  const [predictPurchasePrice, setPredictPurchasePrice] = useState<
+    PurchasePriceCountingResult
+  >(new PurchasePriceCountingResult());
   const [isCountingPurchasePrice, setIsCountingPurchasePrice] = useState(false);
 
   const [visible, setVisible] = useState(false);
@@ -48,7 +54,7 @@ const VendorWeightAdjustment = ({ bill }: Props) => {
   }, []);
 
   const onClose = useCallback(() => {
-    setPredictPurchasePrice(0);
+    setPredictPurchasePrice(new PurchasePriceCountingResult());
     form.resetFields();
     setVisible(false);
   }, [form]);
@@ -62,18 +68,35 @@ const VendorWeightAdjustment = ({ bill }: Props) => {
 
       setIsCountingPurchasePrice(true);
 
+      const countingParams = new PurchasePriceCountingParams();
+      countingParams.destinationCountry = bill.destinationCountry;
+      countingParams.fuelChargePercent = bill.vendorFuelChargePercent;
+      countingParams.otherFeeInUsd = bill.vendorOtherFee;
+      countingParams.usdExchangeRate = bill.usdExchangeRate;
+      countingParams.vat = bill.vat;
+      countingParams.vendorId = bill.vendorId;
+      countingParams.weightInKg = vendorWeightInKg;
+
       const purchasePriceCountingResult = await getPurchasePrice(
-        new PurchasePriceCountingParams(bill),
+        countingParams,
       );
 
-      setPredictPurchasePrice(
-        purchasePriceCountingResult.purchasePriceAfterVatInUsd,
-      );
+      setPredictPurchasePrice(purchasePriceCountingResult);
 
       setIsCountingPurchasePrice(false);
     },
     [bill],
   );
+
+  const onSubmitNewWeight = useCallback(() => {
+    if (onSaveNewWeight) {
+      onSaveNewWeight(
+        form.getFieldValue('vendorWeightInKg'),
+        predictPurchasePrice,
+      );
+    }
+    onClose();
+  }, [form, onClose, onSaveNewWeight, predictPurchasePrice]);
 
   return (
     <>
@@ -85,11 +108,12 @@ const VendorWeightAdjustment = ({ bill }: Props) => {
         width={650}
         visible={visible}
         title={bill.airlineBillId || '<Chưa có Bill hãng bay>'}
-        okText="Lưu số ký mới từ NCC"
+        okText="Lưu số ký mới"
+        onOk={onSubmitNewWeight}
       >
         <div style={{ display: 'flex' }}>
           <div style={{ flex: 0.5 }}>
-            <Title level={4}>Trọng lượng NCC</Title>
+            <Title level={4}>Trọng lượng mới</Title>
             <Descriptions size="small" column={1}>
               <Descriptions.Item
                 label={
@@ -120,7 +144,12 @@ const VendorWeightAdjustment = ({ bill }: Props) => {
                 {isCountingPurchasePrice ? (
                   <Spin size="small" />
                 ) : (
-                  <Text mark>{toCurrency(predictPurchasePrice, true)}</Text>
+                  <Text mark>
+                    {toCurrency(
+                      predictPurchasePrice.purchasePriceAfterVatInUsd || 0,
+                      true,
+                    )}
+                  </Text>
                 )}
               </Descriptions.Item>
             </Descriptions>

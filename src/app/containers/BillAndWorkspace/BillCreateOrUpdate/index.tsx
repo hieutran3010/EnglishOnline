@@ -15,7 +15,10 @@ import some from 'lodash/fp/some';
 
 import type Customer from 'app/models/customer';
 import type Vendor from 'app/models/vendor';
-import { purchasePriceCountingFields } from 'app/models/purchasePriceCounting';
+import {
+  purchasePriceCountingFields,
+  PurchasePriceCountingResult,
+} from 'app/models/purchasePriceCounting';
 import getBillValidator from 'app/models/validators/billValidator';
 import { authStorage, authorizeHelper } from 'app/services/auth';
 import { Role } from 'app/models/user';
@@ -314,6 +317,16 @@ export const BillCreateOrUpdate = memo(
       if (onSubmitting) onSubmitting(isBusy);
     }, [dispatch, isBusy, onSubmitting]);
 
+    const onVendorWeightChanged = useCallback(
+      (
+        newWeight: number,
+        predictPurchasePrice: PurchasePriceCountingResult,
+      ) => {
+        dispatch(actions.updateNewWeight({ newWeight, predictPurchasePrice }));
+      },
+      [dispatch],
+    );
+
     const billValidator = useMemo(() => getBillValidator(hasVat, bill.id), [
       hasVat,
       bill,
@@ -372,6 +385,7 @@ export const BillCreateOrUpdate = memo(
           vendorCountries={vendorCountries}
           userRole={role}
           bill={bill}
+          onVendorWeightChanged={onVendorWeightChanged}
         />
 
         <FeeAndPrice
