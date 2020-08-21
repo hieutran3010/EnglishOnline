@@ -33,6 +33,7 @@ const normalFields: string[] = [
   'isArchived',
   'destinationCountry',
   'isPrintedVatBill',
+  'createdOn',
 ];
 
 const saleExtendFields: string[] = ['vat', 'usdExchangeRate', 'salePrice'];

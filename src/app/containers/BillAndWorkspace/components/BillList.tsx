@@ -163,23 +163,10 @@ const BillList = ({
         fixed: 'left',
       },
       {
-        title: 'Đã Hủy?',
-        dataIndex: 'isArchived',
-        key: 'isArchived',
-        render: (value: boolean) => <Checkbox disabled checked={value} />,
-      },
-      {
-        title: 'Trạng Thái',
-        dataIndex: 'status',
-        key: 'status',
-        render: (value: any) => <BillStatusTag status={value} />,
-      },
-
-      {
         title: 'Ngày',
         dataIndex: 'date',
         key: 'date',
-        type: COLUMN_TYPES.DATE_TIME,
+        type: COLUMN_TYPES.DATE,
         sorter: true,
       },
       {
@@ -226,7 +213,28 @@ const BillList = ({
           );
         },
       },
+      {
+        title: 'Ngày Tạo Bill',
+        key: 'createdOn',
+        dataIndex: 'createdOn',
+        type: COLUMN_TYPES.DATE_TIME,
+        sorter: true,
+      },
       ...moreCols,
+      {
+        title: 'Trạng Thái',
+        dataIndex: 'status',
+        key: 'status',
+        render: (value: any) => <BillStatusTag status={value} />,
+        width: 100,
+      },
+      {
+        title: 'Hủy?',
+        dataIndex: 'isArchived',
+        key: 'isArchived',
+        width: 50,
+        render: (value: boolean) => <Checkbox disabled checked={value} />,
+      },
       {
         title: 'Tác Vụ',
         key: 'action',
