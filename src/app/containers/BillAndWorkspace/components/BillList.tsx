@@ -1,5 +1,5 @@
 import React, { memo, useMemo, useCallback, useState } from 'react';
-import { useHistory } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import isEmpty from 'lodash/fp/isEmpty';
 import filter from 'lodash/fp/filter';
 import {
@@ -9,8 +9,11 @@ import {
   Checkbox,
   Modal,
   Table as AntDataGrid,
+  Typography,
+  Menu,
+  Dropdown,
 } from 'antd';
-
+import { DownOutlined } from '@ant-design/icons';
 import {
   COLUMN_TYPES,
   ColumnDefinition,
@@ -24,6 +27,9 @@ import User, { Role } from 'app/models/user';
 
 import BillStatusTag from './BillStatusTag';
 import BillView from './BillView';
+import VendorWeightAdjustment from './VendorWeightAdjustment';
+
+const { Text } = Typography;
 
 const canEdit = (user: User, bill: Bill) => {
   if (
@@ -62,8 +68,6 @@ const BillList = ({
   onPrintedVatBill,
 }: Props) => {
   const user = authStorage.getUser();
-
-  const history = useHistory();
 
   const [selectedBill, setSelectedBill] = useState(new Bill());
   const [visibleBillView, setVisibleBillView] = useState(false);
@@ -105,11 +109,36 @@ const BillList = ({
     [onArchiveBill, onCancelViewBill],
   );
 
-  const onEditBill = useCallback(
-    (bill: Bill) => () => {
-      history.push(`/billUpdating/${bill.id}`);
-    },
-    [history],
+  const onSubmitWeightSucceeded = useCallback(() => {
+    billDataSource.onReloadData();
+  }, [billDataSource]);
+
+  const getMenu = useCallback(
+    (bill: Bill) => (
+      <Menu>
+        <Menu.Item key="0">
+          <Link to={`/billUpdating/${bill.id}`}>Sửa full thông tin</Link>
+        </Menu.Item>
+        <Menu.Item key="1">
+          <Link to={`/billUpdating/${bill.id}`} target="_blank">
+            Sửa full thông tin ở Tab mới
+          </Link>
+        </Menu.Item>
+        {authorizeHelper.canRenderWithRole(
+          [Role.ACCOUNTANT, Role.ADMIN],
+          <Menu.Item key="2">
+            <VendorWeightAdjustment
+              bill={bill}
+              oldWeightInKg={bill.oldWeightInKg}
+              purchasePriceInUsd={bill.purchasePriceInUsd || 0}
+              canSelfSubmit={true}
+              onSubmitSucceeded={onSubmitWeightSucceeded}
+            />
+          </Menu.Item>,
+        )}
+      </Menu>
+    ),
+    [onSubmitWeightSucceeded],
   );
 
   const columns = useMemo((): ColumnDefinition[] => {
@@ -185,9 +214,17 @@ const BillList = ({
       },
       {
         title: 'Trọng lượng (kg)',
-        dataIndex: 'weightInKg',
         key: 'weightInKg',
         type: COLUMN_TYPES.NUMBER,
+        render: record => {
+          const { weightInKg, oldWeightInKg } = record;
+          return (
+            <Space>
+              <Text>{weightInKg}</Text>
+              {oldWeightInKg && <Text delete>{oldWeightInKg}</Text>}
+            </Space>
+          );
+        },
       },
       ...moreCols,
       {
@@ -200,31 +237,34 @@ const BillList = ({
             <Button size="small" type="link" onClick={onViewBill(record)}>
               Xem
             </Button>
-            <Divider type="vertical" />
+
             {onArchiveBill &&
               record.status === BILL_STATUS.DONE &&
               !record.isArchived &&
               authorizeHelper.canRenderWithRole(
                 [Role.ADMIN, Role.ACCOUNTANT],
-                <Button
-                  size="small"
-                  type="link"
-                  danger
-                  onClick={_onArchiveBill(record)}
-                >
-                  Hủy
-                </Button>,
+                <>
+                  <Divider type="vertical" />
+                  <Button
+                    size="small"
+                    type="link"
+                    danger
+                    onClick={_onArchiveBill(record)}
+                  >
+                    Hủy
+                  </Button>
+                </>,
               )}
 
             {canEdit(user, record) && (
-              <Button
-                size="small"
-                type="link"
-                danger
-                onClick={onEditBill(record)}
-              >
-                Sửa
-              </Button>
+              <>
+                <Divider type="vertical" />
+                <Dropdown overlay={getMenu(record)} trigger={['click']}>
+                  <Button type="link" style={{ paddingLeft: 8 }}>
+                    Sửa <DownOutlined />
+                  </Button>
+                </Dropdown>
+              </>
             )}
           </Space>
         ),
@@ -242,8 +282,8 @@ const BillList = ({
     _onArchiveBill,
     excludeFields,
     extendCols,
+    getMenu,
     onArchiveBill,
-    onEditBill,
     onViewBill,
     user,
   ]);
