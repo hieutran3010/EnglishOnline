@@ -147,6 +147,11 @@ export default class BillFetcher extends GraphQLFetcherBase<Bill> {
               totalDebt
               totalPayment
               totalBill
+              totalSalePrice
+              totalCashPayment
+              totalBankTransferPayment
+              totalProfit
+              totalProfitBeforeTax
           }
         }
       }`,
@@ -162,10 +167,15 @@ export default class BillFetcher extends GraphQLFetcherBase<Bill> {
           getCustomerStatistic(query: $query) {
               senderName
               senderPhone
+              totalPurchase
               totalSalePrice
               totalDebt
               totalPayment
               totalBill
+              totalCashPayment
+              totalBankTransferPayment
+              totalProfit
+              totalProfitBeforeTax
           }
         }
       }`,

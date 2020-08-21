@@ -31,6 +31,12 @@ const columns = [
     key: 'totalBill',
   },
   {
+    title: 'Tổng Giá Mua',
+    dataIndex: 'totalPurchase',
+    key: 'totalPurchase',
+    render: value => <span>{toCurrency(value)}</span>,
+  },
+  {
     title: 'Tổng Giá Bán',
     dataIndex: 'totalSalePrice',
     key: 'totalSalePrice',
@@ -38,15 +44,38 @@ const columns = [
   },
   {
     title: 'Đã Trả',
-    dataIndex: 'totalPayment',
     key: 'totalPayment',
-    render: value => <span>{toCurrency(value)}</span>,
+    render: record => {
+      const {
+        totalPayment,
+        totalCashPayment,
+        totalBankTransferPayment,
+      } = record;
+      return (
+        <span>
+          {toCurrency(totalPayment)} (TM: {toCurrency(totalCashPayment)} - CK:{' '}
+          {toCurrency(totalBankTransferPayment)})
+        </span>
+      );
+    },
   },
   {
     title: 'Còn Nợ',
     dataIndex: 'totalDebt',
     key: 'totalDebt',
     render: value => <span>{toCurrency(value)}</span>,
+  },
+  {
+    title: 'Lợi nhuận thô sau thuế/trước thuế',
+    key: 'profit',
+    render: record => {
+      const { totalProfit, totalProfitBeforeTax } = record;
+      return (
+        <span>
+          {toCurrency(totalProfit)} / {toCurrency(totalProfitBeforeTax)}
+        </span>
+      );
+    },
   },
 ];
 

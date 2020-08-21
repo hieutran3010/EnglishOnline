@@ -43,7 +43,7 @@ const BillView = ({ bill, onArchiveBill, onPrintedVat }: Props) => {
   }, [bill, onPrintedVat]);
 
   const purchasePriceInfo = useMemo(() => {
-    return bill.getPurchasePriceInfo();
+    return new Bill(bill).getPurchasePriceInfo();
   }, [bill]);
 
   return (

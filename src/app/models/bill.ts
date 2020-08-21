@@ -1,5 +1,6 @@
-import ModelBase from './modelBase';
 import moment from 'moment';
+
+import ModelBase from './modelBase';
 import { PurchasePriceCountingResult } from './purchasePriceCounting';
 
 export enum BILL_STATUS {
@@ -226,16 +227,26 @@ export class VendorStatistic {
   totalPurchase!: number;
   totalDebt!: number;
   totalPayment!: number;
+  totalCashPayment!: number;
+  totalBankTransferPayment!: number;
   totalBill!: number;
+  totalSalePrice!: number;
+  totalProfit!: number;
+  totalProfitBeforeTax!: number;
 }
 
 export class CustomerStatistic {
   senderName!: string;
   senderPhone!: string;
+  totalPurchase!: number;
   totalSalePrice!: number;
   totalDebt!: number;
   totalPayment!: number;
+  totalCashPayment!: number;
+  totalBankTransferPayment!: number;
   totalBill!: number;
+  totalProfit!: number;
+  totalProfitBeforeTax!: number;
 }
 
 export class PurchasePrice {
