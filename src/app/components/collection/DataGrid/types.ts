@@ -10,4 +10,5 @@ export interface ColumnDefinition {
   width?: number;
   render?: (data?: any) => ReactElement;
   sorter?: any;
+  fixed?: 'left' | 'right' | true;
 }

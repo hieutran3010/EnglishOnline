@@ -211,8 +211,9 @@ export const BillCreateOrUpdate = memo(
       billForm.setFieldsValue(inputBill);
 
       const formData: any = {};
-      formData.usdExchangeRate =
-        inputBill.usdExchangeRate || billParams.usdExchangeRate;
+      if (isEmpty(inputBill.id)) {
+        formData.usdExchangeRate = billParams.usdExchangeRate;
+      }
 
       const user = authStorage.getUser();
       switch (user.role) {

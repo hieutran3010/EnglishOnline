@@ -116,25 +116,13 @@ const BillList = ({
     const moreCols = extendCols ? extendCols : [];
     const result: ColumnDefinition[] = [
       {
-        title: 'Đã Hủy?',
-        dataIndex: 'isArchived',
-        key: 'isArchived',
-        render: (value: boolean) => <Checkbox disabled checked={value} />,
-        width: 100,
-      },
-      {
-        title: 'Trạng Thái',
-        dataIndex: 'status',
-        key: 'status',
-        render: (value: any) => <BillStatusTag status={value} />,
-        width: 150,
-      },
-      {
         title: 'Bill hãng bay',
         dataIndex: 'airlineBillId',
         key: 'airlineBillId',
         canFilter: true,
         type: COLUMN_TYPES.STRING,
+        width: 170,
+        fixed: 'left',
       },
       {
         title: 'Bill con',
@@ -142,12 +130,27 @@ const BillList = ({
         key: 'childBillId',
         canFilter: true,
         type: COLUMN_TYPES.STRING,
+        width: 150,
+        fixed: 'left',
       },
+      {
+        title: 'Đã Hủy?',
+        dataIndex: 'isArchived',
+        key: 'isArchived',
+        render: (value: boolean) => <Checkbox disabled checked={value} />,
+      },
+      {
+        title: 'Trạng Thái',
+        dataIndex: 'status',
+        key: 'status',
+        render: (value: any) => <BillStatusTag status={value} />,
+      },
+
       {
         title: 'Ngày',
         dataIndex: 'date',
         key: 'date',
-        type: COLUMN_TYPES.DATE,
+        type: COLUMN_TYPES.DATE_TIME,
         sorter: true,
       },
       {
@@ -167,7 +170,7 @@ const BillList = ({
         ),
       },
       {
-        title: 'Nhà cung cấp',
+        title: 'NCC',
         dataIndex: 'vendorName',
         key: 'vendorName',
         type: COLUMN_TYPES.STRING,
@@ -190,6 +193,8 @@ const BillList = ({
       {
         title: 'Tác Vụ',
         key: 'action',
+        width: 150,
+        fixed: 'right',
         render: (record: Bill) => (
           <Space size={1}>
             <Button size="small" type="link" onClick={onViewBill(record)}>
@@ -252,6 +257,7 @@ const BillList = ({
             columns={columns}
             pageSize={20}
             locale={{ emptyText: 'Không tìm thấy Bill nào :(' }}
+            scroll={{ x: 1300 }}
           />
           <Modal
             visible={visibleBillView}

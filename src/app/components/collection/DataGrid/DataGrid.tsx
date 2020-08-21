@@ -44,7 +44,7 @@ export default function DataGrid({
   locale,
   size,
   ...restProps
-}: DataGrid) {
+}: DataGrid & any) {
   const [items, setItems] = useState<any[]>([]);
   const [pagination, setPagination] = useState<TablePaginationConfig>({
     pageSize,
@@ -219,7 +219,6 @@ export default function DataGrid({
 
   return (
     <Table
-      {...restProps}
       scroll={{ y: maxHeight }}
       columns={formattedColumns}
       dataSource={items}
@@ -236,6 +235,7 @@ export default function DataGrid({
       }}
       size={size}
       locale={locale}
+      {...restProps}
     />
   );
 }

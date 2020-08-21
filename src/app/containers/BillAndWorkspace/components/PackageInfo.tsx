@@ -2,6 +2,7 @@ import React, { memo } from 'react';
 import { Typography, Form, InputNumber, Input, Tooltip } from 'antd';
 import isEmpty from 'lodash/fp/isEmpty';
 import isUndefined from 'lodash/fp/isUndefined';
+import isNil from 'lodash/fp/isNil';
 
 import { BillValidator } from 'app/models/validators/billValidator';
 import type Vendor from 'app/models/vendor';
@@ -93,7 +94,7 @@ const PackageInfo = ({
           <Form.Item name="weightInKg" rules={billValidator.weightInKg} noStyle>
             <InputNumber precision={2} min={0} />
           </Form.Item>
-          {!isUndefined(oldWeightInKg) && (
+          {!isUndefined(oldWeightInKg) && !isNil(oldWeightInKg) && (
             <Tooltip title="Ký bán cho khách">
               <Text delete style={{ marginLeft: 10, marginRight: 10 }}>
                 {oldWeightInKg}

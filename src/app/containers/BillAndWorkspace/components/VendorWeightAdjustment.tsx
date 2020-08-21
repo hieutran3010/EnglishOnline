@@ -13,6 +13,7 @@ import {
 } from 'antd';
 import { InfoCircleOutlined } from '@ant-design/icons';
 import isUndefined from 'lodash/fp/isUndefined';
+import isNil from 'lodash/fp/isNil';
 
 import Bill from 'app/models/bill';
 import { toCurrency } from 'utils/numberFormat';
@@ -144,7 +145,7 @@ const VendorWeightAdjustment = ({
 
   return (
     <>
-      {isUndefined(oldWeightInKg) ? (
+      {isUndefined(oldWeightInKg) || isNil(oldWeightInKg) ? (
         <>
           <Button type="primary" onClick={onVisible}>
             Nhập ký NCC
