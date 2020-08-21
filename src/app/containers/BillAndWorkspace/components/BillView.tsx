@@ -1,4 +1,4 @@
-import React, { memo, useState, useCallback } from 'react';
+import React, { memo, useState, useCallback, useMemo } from 'react';
 import moment from 'moment';
 import { Divider, Typography, Descriptions, Button, Space, Tag } from 'antd';
 
@@ -41,6 +41,10 @@ const BillView = ({ bill, onArchiveBill, onPrintedVat }: Props) => {
       setIsRequestedPrinted(true);
     }
   }, [bill, onPrintedVat]);
+
+  const purchasePriceInfo = useMemo(() => {
+    return bill.getPurchasePriceInfo();
+  }, [bill]);
 
   return (
     <>
@@ -177,7 +181,7 @@ const BillView = ({ bill, onArchiveBill, onPrintedVat }: Props) => {
             {authorizeHelper.canRenderWithRole(
               [Role.ACCOUNTANT, Role.ADMIN],
               <Descriptions.Item label="Giá mua">
-                <PurchasePrice bill={bill} />
+                <PurchasePrice info={purchasePriceInfo} />
               </Descriptions.Item>,
             )}
             <Descriptions.Item label="Giá bán">

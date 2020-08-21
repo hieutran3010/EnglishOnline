@@ -51,6 +51,21 @@ export const selectBillStatus = createSelector(
   billCreateOrUpdateState => billCreateOrUpdateState.billStatus,
 );
 
+export const selectSenderId = createSelector(
+  [selectDomain],
+  billCreateOrUpdateState => billCreateOrUpdateState.senderId,
+);
+
+export const selectReceiverId = createSelector(
+  [selectDomain],
+  billCreateOrUpdateState => billCreateOrUpdateState.receiverId,
+);
+
+export const selectBill = createSelector(
+  [selectDomain],
+  billCreateOrUpdateState => billCreateOrUpdateState.bill,
+);
+
 export const selectIsFetchingResponsibilityUsers = createSelector(
   [selectDomain],
   billCreateOrUpdateState =>

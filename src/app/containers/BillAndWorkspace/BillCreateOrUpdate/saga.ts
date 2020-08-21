@@ -6,6 +6,8 @@ import map from 'lodash/fp/map';
 import isEmpty from 'lodash/fp/isEmpty';
 import find from 'lodash/fp/find';
 import isUndefined from 'lodash/fp/isUndefined';
+import assign from 'lodash/fp/assign';
+import omit from 'lodash/fp/omit';
 import * as Sentry from '@sentry/react';
 
 import VendorFetcher from 'app/fetchers/vendorFetcher';
@@ -28,6 +30,9 @@ import {
   selectPurchasePriceInfo,
   selectVendors,
   selectBillStatus,
+  selectBill,
+  selectSenderId,
+  selectReceiverId,
 } from './selectors';
 import AppParamsFetcher from 'app/fetchers/appParamsFetcher';
 import AppParam, { APP_PARAM_KEY, BillParams } from 'app/models/appParam';
@@ -73,6 +78,8 @@ export function* fetchVendorCountriesTask(action: PayloadAction<string>) {
 }
 
 export function* submitBillTask(action: PayloadAction<Bill | any>) {
+  yield put(actions.setIsSubmitting(true));
+
   let billFormValues = action.payload;
   try {
     // check auto save customer
@@ -121,13 +128,17 @@ export function* submitBillTask(action: PayloadAction<Bill | any>) {
       bill = yield call(billFetcher.addAsync, bill);
     }
 
-    yield put(actions.submitBillSuccess(bill));
+    yield put(actions.submitBillCompleted(bill));
     toast.success('Đã lưu Bill');
+    yield put(actions.setIsSubmitting(false));
     return bill;
   } catch (error) {
+    Sentry.captureException(error);
     toast.error('Chưa lưu được Bill, vui lòng thử lại!');
-    throw error;
   }
+
+  yield put(actions.setIsSubmitting(false));
+  return undefined;
 }
 
 export function* fetchResponsibilityUsersTask() {
@@ -144,32 +155,35 @@ export function* fetchResponsibilityUsersTask() {
 export function* assignToAccountantTask(
   action: PayloadAction<SubmitBillAction>,
 ) {
-  const billStatus = (yield select(selectBillStatus)) as BILL_STATUS;
-  const billId = yield select(selectBillId);
-
-  if (!isEmpty(billId) || billStatus !== BILL_STATUS.LICENSE) {
-    return;
-  }
-
   const { billFormValues, isDirty } = action.payload;
   if (isDirty) {
-    const bill = yield call(submitBillTask, billFormValues);
+    const bill = yield call(submitBillTask, {
+      payload: billFormValues,
+      type: '',
+    });
     if (isUndefined(bill)) {
       return;
     }
   }
 
+  yield put(actions.setIsAssigningAccountant(true));
+
   try {
-    yield call(billFetcher.assignToAccountant, billId);
-    yield put(actions.assignToAccountantCompleted(new Bill()));
+    const billId = yield select(selectBillId);
+    const submittedBill = yield call(billFetcher.assignToAccountant, billId);
+    yield put(actions.assignToAccountantCompleted(submittedBill));
     toast.success('Đã chuyển Bill cho Kế Toán');
   } catch (error) {
-    toast.success('Chưa chuyển được bill cho Kế Toán, vui lòng thử lại!');
-    throw error;
+    toast.error('Chưa chuyển được bill cho Kế Toán, vui lòng thử lại!');
+    Sentry.captureException(error);
   }
+
+  yield put(actions.setIsAssigningAccountant(false));
 }
 
 export function* deleteBillTask() {
+  yield put(actions.setIsDeletingBill(true));
+
   const billId = yield select(selectBillId);
 
   try {
@@ -179,50 +193,62 @@ export function* deleteBillTask() {
   } catch (error) {
     Sentry.captureException(error);
     toast.error('Chưa xóa được Bill, vui lòng thử lại!');
-    yield put(actions.deleteBillCompleted(false));
   }
+
+  yield put(actions.setIsDeletingBill(true));
 }
 
 export function* calculatePurchasePriceTask(action: PayloadAction<any>) {
-  let result: PurchasePriceCountingResult = new PurchasePriceCountingResult();
+  yield put(actions.setIsCalculatingPurchasePrice(true));
+
   try {
     const billForm = action.payload;
 
     const params = new PurchasePriceCountingParams(billForm);
 
-    result = (yield call(
+    const result = (yield call(
       billFetcher.countPurchasePrice,
       params,
     )) as PurchasePriceCountingResult;
+    yield put(actions.calculatePurchasePriceCompleted(result));
   } catch (error) {
     Sentry.captureException(error);
     toast.error('Chưa tính được giá mua, vui lòng thử lại!');
   }
 
-  yield put(actions.calculatePurchasePriceCompleted(result));
+  yield put(actions.setIsCalculatingPurchasePrice(false));
 }
 
 export function* finalBillTask(action: PayloadAction<SubmitBillAction>) {
   const { billFormValues, isDirty } = action.payload;
   if (isDirty) {
-    const bill = yield call(submitBillTask, billFormValues);
+    const bill = yield call(submitBillTask, {
+      payload: billFormValues,
+      type: '',
+    });
     if (isUndefined(bill)) {
       return;
     }
   }
 
+  yield put(actions.setIsFinalBill(true));
+
   const billId = yield select(selectBillId);
   try {
     yield call(billFetcher.finalBill, billId);
     toast.success('Đã chốt bill!');
+    yield put(actions.finalBillCompleted(new Bill()));
   } catch (error) {
     Sentry.captureException(error);
+    toast.error('Chưa chốt được bill, vui lòng thử lại!');
   }
 
-  yield put(actions.finalBillCompleted());
+  yield put(actions.setIsFinalBill(false));
 }
 
 export function* assignLicenseTask(action: PayloadAction<SubmitBillAction>) {
+  yield put(actions.setIsAssigningLicense(true));
+
   const { billFormValues } = action.payload;
   try {
     let bill = yield call(mergeBillFormWithStore, billFormValues);
@@ -234,9 +260,10 @@ export function* assignLicenseTask(action: PayloadAction<SubmitBillAction>) {
     toast.success('Đã chuyển Bill cho Chứng Từ!');
   } catch (error) {
     Sentry.captureException(error);
+    toast.error('Chưa chuyển được bill cho Chứng Từ, vui lòng thử lại!');
   }
 
-  yield put(actions.assignLicenseCompleted(undefined));
+  yield put(actions.setIsAssigningLicense(false));
 }
 
 export function* fetchBillParamsTask() {
@@ -266,9 +293,12 @@ function* mergeBillFormWithStore(billFormValues: any) {
   const bill = new Bill(billFormValues);
   bill.oldWeightInKg = yield select(selectOldWeightInKg);
   bill.status = yield select(selectBillStatus);
+  bill.senderId = yield select(selectSenderId);
+  bill.receiverId = yield select(selectReceiverId);
   bill.updatePurchasePriceInfo(yield select(selectPurchasePriceInfo));
 
-  return bill;
+  const cachedBill = yield select(selectBill);
+  return assign(cachedBill)(omit(['isPrintedVatBill'])(bill));
 }
 
 export function* billCreateOrUpdateSaga() {

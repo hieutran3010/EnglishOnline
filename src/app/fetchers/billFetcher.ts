@@ -57,6 +57,7 @@ const otherFields: string[] = [
   'customerPaymentAmount',
   'vendorPaymentDebt',
   'customerPaymentDebt',
+  'oldWeightInKg',
 ];
 
 const getBillFields = () => {
@@ -105,10 +106,16 @@ export default class BillFetcher extends GraphQLFetcherBase<Bill> {
   };
 
   assignToAccountant = (billId: string) => {
-    return this.executeCustomMutationAsync(
+    return this.executeAsync<Bill>(
       'assignToAccountant',
+      `mutation($billId: GUID!) {
+        bill {
+          assignToAccountant(billId: $billId) {
+            ${getBillFields()}
+          }
+        }
+      }`,
       { billId },
-      { input: 'AssignToAccountantInput!' },
     );
   };
 

@@ -38,6 +38,30 @@ export class PurchasePriceInfo {
   vat?: number;
   usdExchangeRate!: number;
 
+  /**
+   *
+   */
+  constructor(input?: PurchasePriceInfo) {
+    if (input) {
+      this.weightInKg = input.weightInKg;
+      this.destinationCountry = input.destinationCountry;
+      this.quotationPriceInUsd = input.quotationPriceInUsd;
+      this.zoneName = input.zoneName;
+      this.purchasePriceInVnd = input.purchasePriceInVnd;
+      this.purchasePriceInUsd = input.purchasePriceInUsd;
+      this.purchasePriceAfterVatInUsd = input.purchasePriceAfterVatInUsd;
+      this.purchasePriceAfterVatInVnd = input.purchasePriceAfterVatInVnd;
+      this.vendorNetPriceInUsd = input.vendorNetPriceInUsd;
+      this.vendorOtherFee = input.vendorOtherFee;
+      this.vendorFuelChargePercent = input.vendorFuelChargePercent;
+      this.vendorFuelChargeFeeInUsd = input.vendorFuelChargeFeeInUsd;
+      this.vendorFuelChargeFeeInVnd = input.vendorFuelChargeFeeInVnd;
+      this.purchasePriceInUsd = input.purchasePriceInUsd;
+      this.vat = input.vat;
+      this.usdExchangeRate = input.usdExchangeRate;
+    }
+  }
+
   updatePurchasePriceInfo(result: PurchasePriceCountingResult) {
     this.purchasePriceInUsd = result.purchasePriceInUsd;
     this.purchasePriceInVnd = result.purchasePriceInVnd;
@@ -123,7 +147,7 @@ export default class Bill extends ModelBase {
       this.description = input.description;
       this.destinationCountry = input.destinationCountry;
       this.weightInKg = input.weightInKg;
-      this.oldWeightInKg = input.vendorWeightInKg;
+      this.oldWeightInKg = input.oldWeightInKg;
       this.salePrice = input.salePrice || 0;
       this.purchasePriceInUsd = input.purchasePriceInUsd;
       this.purchasePriceInVnd = input.purchasePriceInVnd;

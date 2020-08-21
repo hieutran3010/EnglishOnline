@@ -16,7 +16,14 @@ const paymentLayout = {
   wrapperCol: { span: 13 },
 };
 
-const Payment = () => {
+interface Props {
+  onCustomerPaymentAmountFocused: () => void;
+  onVendorPaymentAmountFocused: () => void;
+}
+const Payment = ({
+  onCustomerPaymentAmountFocused,
+  onVendorPaymentAmountFocused,
+}: Props) => {
   return (
     <StyledCustomerContainer>
       <StyledSenderContainer>
@@ -37,7 +44,7 @@ const Payment = () => {
           name="customerPaymentAmount"
           {...paymentLayout}
         >
-          <CurrencyInput />
+          <CurrencyInput onFocus={onCustomerPaymentAmountFocused} />
         </Form.Item>
         <Form.Item
           label="Còn nợ (VNĐ)"
@@ -65,7 +72,7 @@ const Payment = () => {
           name="vendorPaymentAmount"
           {...paymentLayout}
         >
-          <CurrencyInput />
+          <CurrencyInput onFocus={onVendorPaymentAmountFocused} />
         </Form.Item>
         <Form.Item
           label="Còn nợ (VNĐ)"

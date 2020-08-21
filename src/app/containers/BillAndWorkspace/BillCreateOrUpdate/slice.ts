@@ -18,6 +18,7 @@ export const initialState: ContainerState = {
   vendorCountries: [],
 
   isSubmitting: false,
+  bill: new Bill(),
   billId: '',
   purchasePriceInfo: new PurchasePriceInfo(),
   oldWeightInKg: undefined,
@@ -34,11 +35,24 @@ export const initialState: ContainerState = {
   billParams: new BillParams(),
 };
 
-const extractBillInfo = (state: ContainerState, bill: Bill) => {
+const extractBillInfo = (state: ContainerState, billInfo: any) => {
+  const bill = new Bill(billInfo);
   state.billId = bill.id;
   state.purchasePriceInfo = bill.getPurchasePriceInfo();
   state.oldWeightInKg = bill.oldWeightInKg;
   state.billStatus = bill.status;
+  state.senderId = bill.senderId;
+  state.receiverId = bill.receiverId;
+  state.bill = bill;
+};
+
+const updatePurchasePrice = (
+  state: ContainerState,
+  purchasePrice: PurchasePriceCountingResult,
+) => {
+  const newPurchasePriceInfo = new PurchasePriceInfo(state.purchasePriceInfo);
+  newPurchasePriceInfo.updatePurchasePriceInfo(purchasePrice);
+  state.purchasePriceInfo = newPurchasePriceInfo;
 };
 
 const billCreateOrUpdateSlice = createSlice({
@@ -65,15 +79,12 @@ const billCreateOrUpdateSlice = createSlice({
       state.isFetchingVendorCountries = false;
     },
 
-    submitBill(state, action: PayloadAction<Bill>) {
-      state.isSubmitting = true;
+    setIsSubmitting(state, action: PayloadAction<boolean>) {
+      state.isSubmitting = action.payload;
     },
-    submitBillSuccess(state, action: PayloadAction<Bill | undefined>) {
-      if (action.payload) {
-        extractBillInfo(state, action.payload);
-      }
-
-      state.isSubmitting = false;
+    submitBill(state, action: PayloadAction<Bill>) {},
+    submitBillCompleted(state, action: PayloadAction<Bill>) {
+      extractBillInfo(state, action.payload);
     },
 
     fetchResponsibilityUsers(state) {
@@ -84,41 +95,36 @@ const billCreateOrUpdateSlice = createSlice({
       state.isFetchingResponsibilityUsers = false;
     },
 
-    assignToAccountant(state, action: PayloadAction<SubmitBillAction>) {
-      state.isAssigningAccountant = true;
+    setIsAssigningAccountant(state, action: PayloadAction<boolean>) {
+      state.isAssigningAccountant = action.payload;
     },
+    assignToAccountant(state, action: PayloadAction<SubmitBillAction>) {},
     assignToAccountantCompleted(state, action: PayloadAction<Bill>) {
       state.billStatus = BILL_STATUS.ACCOUNTANT;
-      state.isAssigningAccountant = false;
     },
 
-    deleteBill(state) {
-      state.isDeletingBill = true;
+    setIsDeletingBill(state, action: PayloadAction<boolean>) {
+      state.isDeletingBill = action.payload;
     },
+    deleteBill() {},
     deleteBillCompleted(state) {
       state.oldWeightInKg = initialState.oldWeightInKg;
       state.billStatus = initialState.billStatus;
       state.purchasePriceInfo = initialState.purchasePriceInfo;
       state.billId = initialState.billId;
-
-      state.isDeletingBill = false;
+      state.senderId = initialState.senderId;
+      state.receiverId = initialState.receiverId;
     },
 
-    calculatePurchasePrice(state, action: PayloadAction<any>) {
-      state.isCalculatingPurchasePrice = true;
+    setIsCalculatingPurchasePrice(state, action: PayloadAction<boolean>) {
+      state.isCalculatingPurchasePrice = action.payload;
     },
+    calculatePurchasePrice(state, action: PayloadAction<any>) {},
     calculatePurchasePriceCompleted(
       state,
       action: PayloadAction<PurchasePriceCountingResult>,
     ) {
-      const newPurchasePriceInfo = {
-        ...state.purchasePriceInfo,
-      } as PurchasePriceInfo;
-
-      newPurchasePriceInfo.updatePurchasePriceInfo(action.payload);
-      state.purchasePriceInfo = newPurchasePriceInfo;
-
-      state.isCalculatingPurchasePrice = false;
+      updatePurchasePrice(state, action.payload);
     },
 
     updateNewWeight(
@@ -130,14 +136,7 @@ const billCreateOrUpdateSlice = createSlice({
       }>,
     ) {
       state.oldWeightInKg = action.payload.oldWeight;
-      const newPurchasePriceInfo = {
-        ...state.purchasePriceInfo,
-      } as PurchasePriceInfo;
-
-      newPurchasePriceInfo.updatePurchasePriceInfo(
-        action.payload.predictPurchasePrice,
-      );
-      state.purchasePriceInfo = newPurchasePriceInfo;
+      updatePurchasePrice(state, action.payload.predictPurchasePrice);
     },
     restoreSaleWeight(
       state,
@@ -147,32 +146,23 @@ const billCreateOrUpdateSlice = createSlice({
       }>,
     ) {
       state.oldWeightInKg = undefined;
-      const newPurchasePriceInfo = {
-        ...state.purchasePriceInfo,
-      } as PurchasePriceInfo;
-
-      newPurchasePriceInfo.updatePurchasePriceInfo(
-        action.payload.purchasePrice,
-      );
-      state.purchasePriceInfo = newPurchasePriceInfo;
+      updatePurchasePrice(state, action.payload.purchasePrice);
     },
 
-    finalBill(state, action: PayloadAction<SubmitBillAction>) {
-      state.isFinalBill = true;
+    setIsFinalBill(state, action: PayloadAction<boolean>) {
+      state.isFinalBill = action.payload;
     },
-    finalBillCompleted(state) {
-      extractBillInfo(state, new Bill());
-      state.isFinalBill = false;
+    finalBill(state, action: PayloadAction<SubmitBillAction>) {},
+    finalBillCompleted(state, action: PayloadAction<Bill>) {
+      extractBillInfo(state, action.payload);
     },
 
-    assignLicense(state, action: PayloadAction<SubmitBillAction>) {
-      state.isAssigningLicense = true;
+    setIsAssigningLicense(state, action: PayloadAction<boolean>) {
+      state.isAssigningLicense = action.payload;
     },
-    assignLicenseCompleted(state, action: PayloadAction<Bill | undefined>) {
-      if (action.payload) {
-        extractBillInfo(state, action.payload);
-      }
-      state.isAssigningLicense = false;
+    assignLicense(state, action: PayloadAction<SubmitBillAction>) {},
+    assignLicenseCompleted(state, action: PayloadAction<Bill>) {
+      extractBillInfo(state, action.payload);
     },
 
     fetchBillParams() {},
@@ -182,6 +172,12 @@ const billCreateOrUpdateSlice = createSlice({
 
     setBillStatus(state, action: PayloadAction<BILL_STATUS>) {
       state.billStatus = action.payload;
+    },
+    setSenderId(state, action: PayloadAction<string | undefined>) {
+      state.senderId = action.payload;
+    },
+    setReceiverId(state, action: PayloadAction<string | undefined>) {
+      state.receiverId = action.payload;
     },
 
     resetState(state) {

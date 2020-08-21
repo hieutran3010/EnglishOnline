@@ -6,7 +6,6 @@ import isUndefined from 'lodash/fp/isUndefined';
 import { BillValidator } from 'app/models/validators/billValidator';
 import type Vendor from 'app/models/vendor';
 import { Role } from 'app/models/user';
-import Bill from 'app/models/bill';
 import getDataSource, { FETCHER_KEY } from 'app/collection-datasource';
 import { AutoComplete } from 'app/components/collection/AutoComplete';
 
@@ -40,6 +39,7 @@ interface Props {
   oldWeightInKg?: number;
   billForm: any;
   billId: string;
+  purchasePriceInUsd: number;
 }
 const PackageInfo = ({
   billValidator,
@@ -54,6 +54,7 @@ const PackageInfo = ({
   oldWeightInKg,
   billForm,
   billId,
+  purchasePriceInUsd,
 }: Props) => {
   return (
     <>
@@ -105,6 +106,8 @@ const PackageInfo = ({
                 bill={billForm}
                 onSaveNewWeight={onVendorWeightChanged}
                 onRestoreSaleWeight={onRestoreSaleWeight}
+                oldWeightInKg={oldWeightInKg}
+                purchasePriceInUsd={purchasePriceInUsd}
               />
             )}
         </Input.Group>

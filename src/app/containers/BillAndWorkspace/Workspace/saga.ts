@@ -36,7 +36,7 @@ export function* workspaceSaga() {
     fetchNumberOfUncheckedVatBillTask,
   );
   yield takeLatest(
-    billCreateOrUpdateActions.submitBillSuccess,
+    billCreateOrUpdateActions.submitBillCompleted,
     setNeedToRefreshBillListTask,
   );
   yield takeLatest(

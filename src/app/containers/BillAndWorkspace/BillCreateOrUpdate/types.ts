@@ -1,5 +1,5 @@
 import type Vendor from 'app/models/vendor';
-import type { PurchasePriceInfo, BILL_STATUS } from 'app/models/bill';
+import Bill, { PurchasePriceInfo, BILL_STATUS } from 'app/models/bill';
 import type User from 'app/models/user';
 import type { BillParams } from 'app/models/appParam';
 
@@ -12,10 +12,14 @@ export interface BillCreateOrUpdateState {
   vendorCountries: string[];
 
   isSubmitting: boolean;
+
+  bill: Bill;
   billId: string;
   purchasePriceInfo: PurchasePriceInfo;
   oldWeightInKg?: number;
   billStatus: BILL_STATUS;
+  senderId?: string;
+  receiverId?: string;
 
   isFetchingResponsibilityUsers: boolean;
   users: User[];

@@ -43,11 +43,15 @@ interface Props {
     saleWeight: number,
     purchasePrice: PurchasePriceCountingResult,
   ) => void;
+  oldWeightInKg?: number;
+  purchasePriceInUsd: number;
 }
 const VendorWeightAdjustment = ({
   bill,
+  purchasePriceInUsd,
   onSaveNewWeight,
   onRestoreSaleWeight,
+  oldWeightInKg,
 }: Props) => {
   const [form] = Form.useForm();
 
@@ -118,29 +122,29 @@ const VendorWeightAdjustment = ({
     countingParams.usdExchangeRate = bill.usdExchangeRate;
     countingParams.vat = bill.vat;
     countingParams.vendorId = bill.vendorId;
-    countingParams.weightInKg = bill.oldWeightInKg || 0;
+    countingParams.weightInKg = oldWeightInKg || 0;
 
     const purchasePriceCountingResult = await getPurchasePrice(countingParams);
 
     if (onRestoreSaleWeight) {
-      onRestoreSaleWeight(bill.oldWeightInKg || 0, purchasePriceCountingResult);
+      onRestoreSaleWeight(oldWeightInKg || 0, purchasePriceCountingResult);
     }
 
     setIsCountingPurchasePrice(false);
   }, [
     bill.destinationCountry,
-    bill.oldWeightInKg,
     bill.usdExchangeRate,
     bill.vat,
     bill.vendorFuelChargePercent,
     bill.vendorId,
     bill.vendorOtherFee,
+    oldWeightInKg,
     onRestoreSaleWeight,
   ]);
 
   return (
     <>
-      {isUndefined(bill.oldWeightInKg) ? (
+      {isUndefined(oldWeightInKg) ? (
         <>
           <Button type="primary" onClick={onVisible}>
             Nhập ký NCC
@@ -213,9 +217,7 @@ const VendorWeightAdjustment = ({
                     <Text>{bill.weightInKg}kg</Text>
                   </Descriptions.Item>
                   <Descriptions.Item label="Giá mua vào (USD)">
-                    <Text>
-                      {toCurrency(bill.purchasePriceInUsd ?? 0, true)}
-                    </Text>
+                    <Text>{toCurrency(purchasePriceInUsd ?? 0, true)}</Text>
                   </Descriptions.Item>
                 </Descriptions>
               </div>
