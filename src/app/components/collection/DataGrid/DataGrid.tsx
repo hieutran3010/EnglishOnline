@@ -15,7 +15,6 @@ import head from 'lodash/fp/head';
 import isEqual from 'lodash/fp/isEqual';
 import all from 'lodash/fp/all';
 import values from 'lodash/fp/values';
-import isNil from 'lodash/fp/isNil';
 
 import { ColumnDefinition } from './types';
 import {

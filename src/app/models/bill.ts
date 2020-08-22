@@ -124,6 +124,7 @@ export default class Bill extends ModelBase {
   purchasePriceAfterVatInUsd?: number;
   purchasePriceAfterVatInVnd?: number;
   isPrintedVatBill!: boolean;
+  packageStatus!: string;
 
   constructor(input?: Bill | any) {
     super(input);
@@ -174,6 +175,7 @@ export default class Bill extends ModelBase {
       this.profitBeforeTax = input.profitBeforeTax;
       this.profit = input.profit;
       this.isPrintedVatBill = input.isPrintedVatBill;
+      this.packageStatus = input.packageStatus;
     } else {
       this.status = BILL_STATUS.LICENSE;
       this.vendorOtherFee = 0;

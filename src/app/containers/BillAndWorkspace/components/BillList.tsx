@@ -165,6 +165,11 @@ const BillList = ({
         fixed: 'left',
       },
       {
+        title: 'Tình trạng hàng',
+        dataIndex: 'packageStatus',
+        key: 'packageStatus',
+      },
+      {
         title: 'Ngày',
         dataIndex: 'date',
         key: 'date',

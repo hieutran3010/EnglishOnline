@@ -33,6 +33,7 @@ const normalFields: string[] = [
   'isArchived',
   'destinationCountry',
   'isPrintedVatBill',
+  'packageStatus',
   'createdOn',
 ];
 
