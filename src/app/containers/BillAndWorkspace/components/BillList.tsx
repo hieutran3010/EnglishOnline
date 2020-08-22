@@ -48,7 +48,11 @@ const canEdit = (user: User, bill: Bill) => {
     return bill.accountantUserId === user.id;
   }
 
-  return true; // for admin
+  if (user.role === Role.ADMIN) {
+    return true;
+  }
+
+  return false;
 };
 
 interface Props {
