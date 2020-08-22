@@ -16,7 +16,13 @@ import {
   Spin,
   Popover,
   Descriptions,
+  Alert,
+  Typography,
 } from 'antd';
+
+import isEmpty from 'lodash/fp/isEmpty';
+import isUndefined from 'lodash/fp/isUndefined';
+import isNil from 'lodash/fp/isNil';
 
 import { useInjectReducer, useInjectSaga } from 'utils/redux-injectors';
 import getDataSource, { FETCHER_KEY } from 'app/collection-datasource';
@@ -48,6 +54,8 @@ import {
   selectCheckingExportSession,
   selectBillExportStatus,
   selectExportSession,
+  selectIsFetchingTotalBillCount,
+  selectTotalBillCount,
 } from './selectors';
 import BillList from '../components/BillList';
 import BillStatistic, { BillStatisticProps } from './BillStatistic';
@@ -56,7 +64,7 @@ import SenderGroupingTable from './SenderGroupingTable';
 import { getDefaultReportQueryCriteria, getAdminCols } from './utils';
 import { EXPORT_SESSION_STATUS } from 'app/models/exportSession';
 
-const { RangePicker } = DatePicker;
+const { Text } = Typography;
 
 enum BillListType {
   Normal = 1,
@@ -75,6 +83,7 @@ export const BillReport = memo((props: Props) => {
   const [adminBillListType, setAdminBillListType] = useState(
     BillListType.Normal,
   );
+  const [isFilterError, setIsFilterError] = useState(false);
   const [dateRange, setDateRange] = useState<any[]>([]);
 
   const user = authStorage.getUser();
@@ -98,6 +107,9 @@ export const BillReport = memo((props: Props) => {
   const totalProfit = useSelector(selectTotalProfit);
   const totalProfitBeforeTax = useSelector(selectTotalProfitBeforeTax);
   const isFetchingTotalProfit = useSelector(selectIsFetchingTotalProfit);
+
+  const totalBillCount = useSelector(selectTotalBillCount);
+  const isFetchingTotalBillCount = useSelector(selectIsFetchingTotalBillCount);
 
   const isFetchingBillsVendorGrouping = useSelector(
     selectIsFetchingVendorGroupingList,
@@ -189,6 +201,15 @@ export const BillReport = memo((props: Props) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [adminBillListType]);
 
+  const getFilter = useCallback(() => {
+    const { fromDate, toDate } = filterForm.getFieldsValue();
+    if (isNil(toDate)) {
+      return [fromDate, moment()];
+    }
+
+    return [fromDate, toDate];
+  }, [filterForm]);
+
   const refreshBillList = useCallback(
     (query: string) => {
       switch (adminBillListType) {
@@ -210,53 +231,62 @@ export const BillReport = memo((props: Props) => {
     [adminBillListType, billDataSource, dispatch],
   );
 
-  const onSubmitReport = useCallback(
-    filter => {
-      const { dateRange } = filter;
-      setDateRange(dateRange || []);
-      const query = getQuery(dateRange);
-      refreshBillList(query);
-      setIsReset(false);
+  const onSubmitReport = useCallback(() => {
+    setIsFilterError(false);
 
-      switch (user.role) {
-        case Role.SALE: {
-          dispatch(actions.fetchTotalSalePrice(query));
-          break;
-        }
-        case Role.ADMIN: {
-          dispatch(actions.fetchTotalRevenue(query));
-          dispatch(actions.fetchCustomerDebt(query));
-          dispatch(actions.fetchVendorDebt(query));
-          dispatch(actions.fetchProfit(query));
-          break;
-        }
-        case Role.ACCOUNTANT: {
-          dispatch(actions.fetchCustomerDebt(query));
-          dispatch(actions.fetchVendorDebt(query));
-          break;
-        }
+    const _dateRange = getFilter();
+
+    setDateRange(_dateRange || []);
+    const query = getQuery(_dateRange);
+    refreshBillList(query);
+    setIsReset(false);
+
+    dispatch(actions.fetchTotalBillCount(query));
+
+    switch (user.role) {
+      case Role.SALE: {
+        dispatch(actions.fetchTotalSalePrice(query));
+        break;
       }
-    },
-    [dispatch, getQuery, refreshBillList, user.role],
-  );
+      case Role.ADMIN: {
+        dispatch(actions.fetchTotalRevenue(query));
+        dispatch(actions.fetchCustomerDebt(query));
+        dispatch(actions.fetchVendorDebt(query));
+        dispatch(actions.fetchProfit(query));
+        break;
+      }
+      case Role.ACCOUNTANT: {
+        dispatch(actions.fetchCustomerDebt(query));
+        dispatch(actions.fetchVendorDebt(query));
+        break;
+      }
+    }
+  }, [dispatch, getFilter, getQuery, refreshBillList, user.role]);
 
   const onAdminBillListTypeChanged = useCallback(e => {
     setAdminBillListType(e.target.value);
   }, []);
 
   const onExportBills = useCallback(async () => {
-    await filterForm.validateFields();
-    const latestDateRange = filterForm.getFieldValue('dateRange');
-    const query = getQuery(latestDateRange);
+    try {
+      await filterForm.validateFields();
+    } catch (error) {
+      setIsFilterError(true);
+      return;
+    }
+
+    setIsFilterError(false);
+    const _dateRange = getFilter();
+    const query = getQuery(_dateRange);
     dispatch(
       actions.requestBillExport({
         query,
-        note: `Báo cáo từ ngày ${latestDateRange[0].format(
+        note: `Báo cáo từ ngày ${_dateRange[0].format(
           'DD-MM-YYYY',
-        )} đến ngày ${latestDateRange[1].format('DD-MM-YYYY')}`,
+        )} đến ngày ${_dateRange[1].format('DD-MM-YYYY')}`,
       }),
     );
-  }, [dispatch, filterForm, getQuery]);
+  }, [dispatch, filterForm, getFilter, getQuery]);
 
   const onDownloadBill = useCallback(() => {
     dispatch(actions.downloadBills());
@@ -275,12 +305,32 @@ export const BillReport = memo((props: Props) => {
     totalProfitBeforeTax,
     totalVendorDebt,
     isFetchingTotalVendorDebt,
+    totalBillCount,
+    isFetchingTotalBillCount,
   };
 
   const filterValidator = useMemo(() => {
     return {
-      dateRange: [{ required: true, message: 'Chưa chọn thời điểm Báo cáo' }],
+      fromDate: [{ required: true }],
     };
+  }, []);
+
+  const disabledToDate = useCallback(current => {
+    const fromDate = filterForm.getFieldValue('fromDate');
+    return fromDate && current < moment(fromDate);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const onFilterChanged = useCallback((_changeValues, allValues) => {
+    const { fromDate } = allValues;
+    if (isEmpty(fromDate) || isUndefined(fromDate) || isNil(fromDate)) {
+      filterForm.setFieldsValue({ toDate: null });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const onSubmitReportFailed = useCallback(() => {
+    setIsFilterError(true);
   }, []);
 
   return (
@@ -288,20 +338,21 @@ export const BillReport = memo((props: Props) => {
       title="Báo Cáo"
       subTitle="Chỉ thống kê những Bill không bị hủy"
       tags={
-        <Form form={filterForm} layout="inline" onFinish={onSubmitReport}>
-          <Form.Item name="dateRange" rules={filterValidator.dateRange}>
-            <RangePicker
-              ranges={{
-                'Tháng trước': [
-                  moment().subtract(1, 'months').startOf('month'),
-                  moment().subtract(1, 'months').endOf('month'),
-                ],
-                'Tháng này': [
-                  moment().startOf('month'),
-                  moment().endOf('month'),
-                ],
-              }}
+        <Form
+          form={filterForm}
+          layout="inline"
+          onFinish={onSubmitReport}
+          onValuesChange={onFilterChanged}
+          onFinishFailed={onSubmitReportFailed}
+        >
+          <Form.Item name="fromDate" rules={filterValidator.fromDate} noStyle>
+            <DatePicker format="DD-MM-YYYY" placeholder="Từ ngày" />
+          </Form.Item>
+          <Form.Item name="toDate" style={{ marginLeft: 15 }}>
+            <DatePicker
               format="DD-MM-YYYY"
+              placeholder="Tới ngày"
+              disabledDate={disabledToDate}
             />
           </Form.Item>
           <Form.Item>
@@ -371,6 +422,13 @@ export const BillReport = memo((props: Props) => {
                   )}
                 </>,
               )}
+              {isFilterError && (
+                <Alert
+                  type="error"
+                  message="Nhập ngày bắt đầu để xem hoặc tải"
+                  style={{ paddingTop: 4, paddingBottom: 4 }}
+                />
+              )}
             </Space>
           </Form.Item>
         </Form>
@@ -379,6 +437,23 @@ export const BillReport = memo((props: Props) => {
       <div style={{ paddingLeft: 20, paddingRight: 20, paddingBottom: 20 }}>
         <BillStatistic {...billStatisticProps} />
       </div>
+
+      {!isEmpty(dateRange) && (
+        <div
+          style={{
+            display: 'flex',
+            width: '100%',
+            justifyContent: 'center',
+            alignItems: 'center',
+            marginBottom: 10,
+          }}
+        >
+          <Text strong>{`Báo cáo từ ngày ${dateRange[0].format(
+            'DD-MM-YYYY 00:00',
+          )} đến ngày ${dateRange[1].format('DD-MM-YYYY 23:59')}`}</Text>
+        </div>
+      )}
+
       {authorizeHelper.canRenderWithRole(
         [Role.ADMIN],
         <Radio.Group

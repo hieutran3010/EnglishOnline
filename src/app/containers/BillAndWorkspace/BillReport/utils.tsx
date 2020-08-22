@@ -26,7 +26,7 @@ const getDefaultReportQueryCriteria = (dateRange: any[]): QueryCriteria[] => {
     criteria.push({
       field: 'Date',
       operator: GRAPHQL_QUERY_OPERATOR.LTE,
-      value: toDate.format('YYYY-MM-DD 23:59:00'),
+      value: toDate.format('YYYY-MM-DD 23:59:59'),
     });
   }
 

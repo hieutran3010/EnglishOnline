@@ -331,7 +331,7 @@ const BillList = ({
           </Modal>
         </>
       )}
-      {isReset && <AntDataGrid columns={columns} />}
+      {isReset && <AntDataGrid columns={columns} scroll={{ x: 1300 }} />}
     </>
   );
 };

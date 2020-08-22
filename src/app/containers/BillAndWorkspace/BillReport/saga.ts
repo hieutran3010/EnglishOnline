@@ -54,6 +54,12 @@ export function* fetchProfitTask(action: PayloadAction<string>) {
   );
 }
 
+export function* fetchTotalBillCountTask(action: PayloadAction<string>) {
+  const query = action.payload;
+  const totalBillCount = yield call(billFetcher.countAsync, query);
+  yield put(actions.fetchTotalBillCountCompleted(totalBillCount));
+}
+
 export function* fetchBillsGroupedByVendorTask(action: PayloadAction<string>) {
   const query = action.payload;
 
@@ -135,6 +141,7 @@ export function* billReportSaga() {
   yield takeLatest(actions.fetchCustomerDebt.type, fetchCustomerDebtTask);
   yield takeLatest(actions.fetchVendorDebt.type, fetchVendorDebtTask);
   yield takeLatest(actions.fetchProfit.type, fetchProfitTask);
+  yield takeLatest(actions.fetchTotalBillCount.type, fetchTotalBillCountTask);
   yield takeLatest(
     actions.fetchBillsGroupedByVendor.type,
     fetchBillsGroupedByVendorTask,

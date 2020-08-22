@@ -19,6 +19,9 @@ export interface BillReportState {
   totalProfitBeforeTax: number;
   totalProfit: number;
 
+  isFetchingTotalBillCount: boolean;
+  totalBillCount: number;
+
   isFetchingVendorGroupingList: boolean;
   billsGroupedByVendor: VendorStatistic[];
 

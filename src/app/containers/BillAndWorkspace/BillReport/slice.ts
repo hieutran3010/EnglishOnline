@@ -13,11 +13,13 @@ export const initialState: ContainerState = {
   totalRevenue: 0,
   totalSalePriceOfSale: 0,
   totalVendorDebt: 0,
+  totalBillCount: 0,
   isFetchingTotalCustomerDebt: false,
   isFetchingTotalProfit: false,
   isFetchingTotalRevenue: false,
   isFetchingTotalSalePrice: false,
   isFetchingTotalVendorDebt: false,
+  isFetchingTotalBillCount: false,
 
   isFetchingCustomerGroupingList: false,
   billsGroupedByCustomer: [],
@@ -78,6 +80,14 @@ const billReportSlice = createSlice({
       state.totalProfitBeforeTax = action.payload.totalProfitBeforeTax;
     },
 
+    fetchTotalBillCount(state, action: PayloadAction<string>) {
+      state.isFetchingTotalBillCount = true;
+    },
+    fetchTotalBillCountCompleted(state, action: PayloadAction<number>) {
+      state.isFetchingTotalBillCount = false;
+      state.totalBillCount = action.payload;
+    },
+
     fetchBillsGroupedByVendor(state, action: PayloadAction<string>) {
       state.isFetchingVendorGroupingList = true;
     },
@@ -131,6 +141,7 @@ const billReportSlice = createSlice({
       state.totalProfitBeforeTax = 0;
       state.totalRevenue = 0;
       state.totalVendorDebt = 0;
+      state.totalBillCount = 0;
       state.billsGroupedByCustomer = [];
       state.billsGroupedByVendor = [];
     },
