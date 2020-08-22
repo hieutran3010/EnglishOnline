@@ -56,6 +56,9 @@ import {
   selectExportSession,
   selectIsFetchingTotalBillCount,
   selectTotalBillCount,
+  selectTotalRawProfit,
+  selectTotalRawProfitBeforeTax,
+  selectIsFetchingTotalRawProfit,
 } from './selectors';
 import BillList from '../components/BillList';
 import BillStatistic, { BillStatisticProps } from './BillStatistic';
@@ -107,6 +110,10 @@ export const BillReport = memo((props: Props) => {
   const totalProfit = useSelector(selectTotalProfit);
   const totalProfitBeforeTax = useSelector(selectTotalProfitBeforeTax);
   const isFetchingTotalProfit = useSelector(selectIsFetchingTotalProfit);
+
+  const totalRawProfit = useSelector(selectTotalRawProfit);
+  const totalRawProfitBeforeTax = useSelector(selectTotalRawProfitBeforeTax);
+  const isFetchingTotalRawProfit = useSelector(selectIsFetchingTotalRawProfit);
 
   const totalBillCount = useSelector(selectTotalBillCount);
   const isFetchingTotalBillCount = useSelector(selectIsFetchingTotalBillCount);
@@ -253,6 +260,7 @@ export const BillReport = memo((props: Props) => {
         dispatch(actions.fetchCustomerDebt(query));
         dispatch(actions.fetchVendorDebt(query));
         dispatch(actions.fetchProfit(query));
+        dispatch(actions.fetchRawProfit(query));
         break;
       }
       case Role.ACCOUNTANT: {
@@ -307,6 +315,9 @@ export const BillReport = memo((props: Props) => {
     isFetchingTotalVendorDebt,
     totalBillCount,
     isFetchingTotalBillCount,
+    isFetchingTotalRawProfit,
+    totalRawProfit,
+    totalRawProfitBeforeTax,
   };
 
   const filterValidator = useMemo(() => {
@@ -438,22 +449,6 @@ export const BillReport = memo((props: Props) => {
         <BillStatistic {...billStatisticProps} />
       </div>
 
-      {!isEmpty(dateRange) && (
-        <div
-          style={{
-            display: 'flex',
-            width: '100%',
-            justifyContent: 'center',
-            alignItems: 'center',
-            marginBottom: 10,
-          }}
-        >
-          <Text strong>{`Báo cáo từ ngày ${dateRange[0].format(
-            'DD-MM-YYYY 00:00',
-          )} đến ngày ${dateRange[1].format('DD-MM-YYYY 23:59')}`}</Text>
-        </div>
-      )}
-
       {authorizeHelper.canRenderWithRole(
         [Role.ADMIN],
         <Radio.Group
@@ -474,6 +469,21 @@ export const BillReport = memo((props: Props) => {
           buttonStyle="solid"
           value={adminBillListType}
         />,
+      )}
+      {!isEmpty(dateRange) && (
+        <div
+          style={{
+            display: 'flex',
+            width: '100%',
+            justifyContent: 'center',
+            alignItems: 'center',
+            marginBottom: 10,
+          }}
+        >
+          <Text strong>{`Báo cáo từ ngày ${dateRange[0].format(
+            'DD-MM-YYYY 00:00',
+          )} đến ngày ${dateRange[1].format('DD-MM-YYYY 23:59')}`}</Text>
+        </div>
       )}
       {(adminBillListType === BillListType.Normal || isReset) && (
         <BillList

@@ -51,6 +51,21 @@ export const selectIsFetchingTotalProfit = createSelector(
   billReportState => billReportState.isFetchingTotalProfit,
 );
 
+export const selectTotalRawProfitBeforeTax = createSelector(
+  [selectDomain],
+  billReportState => billReportState.totalRawProfitBeforeTax,
+);
+
+export const selectTotalRawProfit = createSelector(
+  [selectDomain],
+  billReportState => billReportState.totalRawProfit,
+);
+
+export const selectIsFetchingTotalRawProfit = createSelector(
+  [selectDomain],
+  billReportState => billReportState.isFetchingTotalRawProfit,
+);
+
 export const selectIsFetchingTotalBillCount = createSelector(
   [selectDomain],
   billReportState => billReportState.isFetchingTotalBillCount,

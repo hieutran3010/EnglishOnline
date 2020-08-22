@@ -10,6 +10,8 @@ export const initialState: ContainerState = {
   totalCustomerDebt: 0,
   totalProfit: 0,
   totalProfitBeforeTax: 0,
+  totalRawProfit: 0,
+  totalRawProfitBeforeTax: 0,
   totalRevenue: 0,
   totalSalePriceOfSale: 0,
   totalVendorDebt: 0,
@@ -20,6 +22,7 @@ export const initialState: ContainerState = {
   isFetchingTotalSalePrice: false,
   isFetchingTotalVendorDebt: false,
   isFetchingTotalBillCount: false,
+  isFetchingTotalRawProfit: false,
 
   isFetchingCustomerGroupingList: false,
   billsGroupedByCustomer: [],
@@ -78,6 +81,21 @@ const billReportSlice = createSlice({
       state.isFetchingTotalProfit = false;
       state.totalProfit = action.payload.totalProfit;
       state.totalProfitBeforeTax = action.payload.totalProfitBeforeTax;
+    },
+
+    fetchRawProfit(state, action: PayloadAction<string>) {
+      state.isFetchingTotalRawProfit = true;
+    },
+    fetchRawProfitCompleted(
+      state,
+      action: PayloadAction<{
+        totalRawProfitBeforeTax: number;
+        totalRawProfit: number;
+      }>,
+    ) {
+      state.isFetchingTotalRawProfit = false;
+      state.totalRawProfit = action.payload.totalRawProfit;
+      state.totalRawProfitBeforeTax = action.payload.totalRawProfitBeforeTax;
     },
 
     fetchTotalBillCount(state, action: PayloadAction<string>) {

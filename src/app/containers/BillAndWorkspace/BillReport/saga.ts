@@ -28,21 +28,32 @@ export function* fetchTotalRevenueTask(action: PayloadAction<string>) {
 
 export function* fetchCustomerDebtTask(action: PayloadAction<string>) {
   const query = action.payload;
-  const result = yield call(billFetcher.sumAsync, 'CustomerPaymentDebt', query);
+  const result = yield call(
+    billFetcher.sumAsync,
+    'CustomerPaymentDebt',
+    'CustomerPaymentDebt',
+    query,
+  );
   yield put(actions.fetchCustomerDebtCompleted(result.value));
 }
 
 export function* fetchVendorDebtTask(action: PayloadAction<string>) {
   const query = action.payload;
-  const result = yield call(billFetcher.sumAsync, 'VendorPaymentDebt', query);
+  const result = yield call(
+    billFetcher.sumAsync,
+    'VendorPaymentDebt',
+    'VendorPaymentDebt',
+    query,
+  );
   yield put(actions.fetchVendorDebtCompleted(result.value));
 }
 
 export function* fetchProfitTask(action: PayloadAction<string>) {
   const query = action.payload;
-  const profit = yield call(billFetcher.sumAsync, 'Profit', query);
+  const profit = yield call(billFetcher.sumAsync, 'Profit', 'Profit', query);
   const profitBeforeTax = yield call(
     billFetcher.sumAsync,
+    'ProfitBeforeTax',
     'ProfitBeforeTax',
     query,
   );
@@ -50,6 +61,28 @@ export function* fetchProfitTask(action: PayloadAction<string>) {
     actions.fetchProfitCompleted({
       totalProfit: profit.value,
       totalProfitBeforeTax: profitBeforeTax.value,
+    }),
+  );
+}
+
+export function* fetchRawProfitTask(action: PayloadAction<string>) {
+  const query = action.payload;
+  const rawProfit = yield call(
+    billFetcher.sumAsync,
+    'SalePrice,PurchasePriceAfterVatInVnd',
+    'SalePrice - PurchasePriceAfterVatInVnd',
+    query,
+  );
+  const rawProfitBeforeTax = yield call(
+    billFetcher.sumAsync,
+    'SalePrice,PurchasePriceInVnd',
+    'SalePrice - PurchasePriceInVnd',
+    query,
+  );
+  yield put(
+    actions.fetchRawProfitCompleted({
+      totalRawProfit: rawProfit.value,
+      totalRawProfitBeforeTax: rawProfitBeforeTax.value,
     }),
   );
 }
@@ -127,7 +160,7 @@ export function* downloadBillsTask() {
 export async function getRevenue(query: string): Promise<MathResult> {
   let result: MathResult;
   try {
-    result = await billFetcher.sumAsync('SalePrice', query);
+    result = await billFetcher.sumAsync('SalePrice', 'SalePrice', query);
   } catch (error) {
     result = { value: 0 };
   }
@@ -141,6 +174,7 @@ export function* billReportSaga() {
   yield takeLatest(actions.fetchCustomerDebt.type, fetchCustomerDebtTask);
   yield takeLatest(actions.fetchVendorDebt.type, fetchVendorDebtTask);
   yield takeLatest(actions.fetchProfit.type, fetchProfitTask);
+  yield takeLatest(actions.fetchRawProfit.type, fetchRawProfitTask);
   yield takeLatest(actions.fetchTotalBillCount.type, fetchTotalBillCountTask);
   yield takeLatest(
     actions.fetchBillsGroupedByVendor.type,

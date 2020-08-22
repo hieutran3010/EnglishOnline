@@ -6490,10 +6490,10 @@ graceful-fs@^4.1.11, graceful-fs@^4.1.15, graceful-fs@^4.1.2, graceful-fs@^4.1.6
   resolved "https://registry.yarnpkg.com/graceful-fs/-/graceful-fs-4.2.3.tgz#4a12ff1b60376ef09862c2093edd908328be8423"
   integrity sha512-a30VEBm4PEdx1dRB7MFK7BejejvCvBronbLjht+sHuGYj8PHs7M/5Z+rt5lw551vZ7yfTCj4Vuyy3mSJytDWRQ==
 
-graphql-door-client@1.1.13:
-  version "1.1.13"
-  resolved "https://registry.yarnpkg.com/graphql-door-client/-/graphql-door-client-1.1.13.tgz#eba0f41acd8f60f1dfcc1b7de1b08c9eab112682"
-  integrity sha512-z8xsI/uoXuTYs79507LgAYTR5jaCplmexLBNTJtYf+zATOJfrRhi1VZcgQ8pLmRvGRKUcZqbh1xUD4E19sbxfA==
+graphql-door-client@1.1.14:
+  version "1.1.14"
+  resolved "https://registry.yarnpkg.com/graphql-door-client/-/graphql-door-client-1.1.14.tgz#e0884191fc592750cf033cdc379f0f78c971dfb7"
+  integrity sha512-MTSGseTOLKB9KOAIsfsVKGD+8F+rNo06wb6YllZR+jdcLukNaIAgqj66ZQrEdkhPtIRmtw6qSStk2E8DZCvA0g==
   dependencies:
     graphql-request "1.8.2"
     lodash "^4.17.15"

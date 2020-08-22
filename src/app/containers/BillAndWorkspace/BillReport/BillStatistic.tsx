@@ -18,6 +18,9 @@ export interface BillStatisticProps {
   isFetchingTotalProfit: boolean;
   totalProfitBeforeTax: number;
   totalProfit: number;
+  isFetchingTotalRawProfit: boolean;
+  totalRawProfitBeforeTax: number;
+  totalRawProfit: number;
   totalBillCount: number;
   isFetchingTotalBillCount: boolean;
 }
@@ -103,7 +106,13 @@ const BillStatistic = (props: BillStatisticProps) => {
             }
           />
           <StatisticBlock
-            title="Lợi nhuận sau thuế /trước thuế"
+            title="Lợi nhuận thô sau thuế /trước thuế "
+            value={props.totalRawProfit}
+            isFetching={props.isFetchingTotalRawProfit}
+            suffix={`/ ${toCurrency(props.totalRawProfitBeforeTax)}`}
+          />
+          <StatisticBlock
+            title="Lợi nhuận sau thuế /trước thuế theo dữ liệu nhập"
             value={props.totalProfit}
             isFetching={props.isFetchingTotalProfit}
             suffix={`/ ${toCurrency(props.totalProfitBeforeTax)}`}

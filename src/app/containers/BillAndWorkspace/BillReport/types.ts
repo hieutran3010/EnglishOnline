@@ -15,6 +15,10 @@ export interface BillReportState {
   isFetchingTotalVendorDebt: boolean;
   totalVendorDebt: number;
 
+  isFetchingTotalRawProfit: boolean;
+  totalRawProfitBeforeTax: number;
+  totalRawProfit: number;
+
   isFetchingTotalProfit: boolean;
   totalProfitBeforeTax: number;
   totalProfit: number;
