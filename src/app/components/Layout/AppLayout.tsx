@@ -82,7 +82,7 @@ const AppLayout = ({
             left: 0,
           }}
         >
-          <div>{children}</div>
+          {children}
         </Content>
       </Layout>
     </Layout>
