@@ -60,11 +60,11 @@ const formatColumns = (columns: ColumnDefinition[]) => {
     if (
       column.canFilter === true &&
       searchableColumnTypes.includes(column.type) &&
-      column.dataIndex
+      (column.dataIndex || column.filterField)
     ) {
-      formattedColumn = assign(getColumnSearchProps(column.dataIndex))(
-        formattedColumn,
-      );
+      formattedColumn = assign(
+        getColumnSearchProps(column.dataIndex || column.filterField || ''),
+      )(formattedColumn);
     }
 
     return formattedColumn;

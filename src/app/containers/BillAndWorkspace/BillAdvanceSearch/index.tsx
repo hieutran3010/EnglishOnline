@@ -5,7 +5,7 @@
  */
 
 import React, { memo, useMemo, useCallback, useEffect } from 'react';
-import { Button, Form, DatePicker, Input } from 'antd';
+import { Button, Form, DatePicker, Input, Row, Col } from 'antd';
 import isEmpty from 'lodash/fp/isEmpty';
 import { useDispatch, useSelector } from 'react-redux';
 
@@ -180,6 +180,7 @@ export const BillAdvanceSearch = memo(() => {
           onArchiveBill={onArchiveBill}
           billDataSource={billDataSource}
           onPrintedVatBill={onCheckPrintedVat}
+          dontLoadInitialData={true}
         />
       </RootContainer>
     </>

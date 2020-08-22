@@ -5,6 +5,7 @@ export interface ColumnDefinition {
   type?: string;
   dataIndex?: string;
   canFilter?: boolean;
+  filterField?: string;
   searchOperator?: string;
   key: string;
   width?: number;

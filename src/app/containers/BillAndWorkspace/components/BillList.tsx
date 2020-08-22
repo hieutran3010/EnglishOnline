@@ -58,6 +58,7 @@ interface Props {
   excludeFields?: string[];
   extendCols?: ColumnDefinition[];
   onPrintedVatBill?: (bill: Bill) => void;
+  dontLoadInitialData?: boolean;
 }
 const BillList = ({
   onArchiveBill,
@@ -66,6 +67,7 @@ const BillList = ({
   excludeFields,
   extendCols,
   onPrintedVatBill,
+  dontLoadInitialData,
 }: Props) => {
   const user = authStorage.getUser();
 
@@ -172,6 +174,9 @@ const BillList = ({
       {
         title: 'Khách Gởi',
         key: 'sender',
+        canFilter: true,
+        filterField: 'senderName',
+        type: COLUMN_TYPES.STRING,
         render: (record: Bill) => (
           <span>{[record.senderName, record.senderPhone].join(' - ')}</span>
         ),
@@ -179,6 +184,9 @@ const BillList = ({
       {
         title: 'Người Nhận',
         key: 'receiver',
+        canFilter: true,
+        filterField: 'receiverName',
+        type: COLUMN_TYPES.STRING,
         render: (record: Bill) => (
           <span>
             {[record.receiverName, record.receiverAddress].join(' - ')}
@@ -304,8 +312,8 @@ const BillList = ({
             dataSource={billDataSource}
             columns={columns}
             pageSize={20}
-            locale={{ emptyText: 'Không tìm thấy Bill nào :(' }}
             scroll={{ x: 1300 }}
+            dontLoadInitialData={dontLoadInitialData}
           />
           <Modal
             visible={visibleBillView}
