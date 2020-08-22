@@ -10,14 +10,19 @@ export const initialState: ContainerState = {
   totalCustomerDebt: 0,
   totalProfit: 0,
   totalProfitBeforeTax: 0,
+  totalRawProfit: 0,
+  totalRawProfitBeforeTax: 0,
   totalRevenue: 0,
   totalSalePriceOfSale: 0,
   totalVendorDebt: 0,
+  totalBillCount: 0,
   isFetchingTotalCustomerDebt: false,
   isFetchingTotalProfit: false,
   isFetchingTotalRevenue: false,
   isFetchingTotalSalePrice: false,
   isFetchingTotalVendorDebt: false,
+  isFetchingTotalBillCount: false,
+  isFetchingTotalRawProfit: false,
 
   isFetchingCustomerGroupingList: false,
   billsGroupedByCustomer: [],
@@ -78,6 +83,29 @@ const billReportSlice = createSlice({
       state.totalProfitBeforeTax = action.payload.totalProfitBeforeTax;
     },
 
+    fetchRawProfit(state, action: PayloadAction<string>) {
+      state.isFetchingTotalRawProfit = true;
+    },
+    fetchRawProfitCompleted(
+      state,
+      action: PayloadAction<{
+        totalRawProfitBeforeTax: number;
+        totalRawProfit: number;
+      }>,
+    ) {
+      state.isFetchingTotalRawProfit = false;
+      state.totalRawProfit = action.payload.totalRawProfit;
+      state.totalRawProfitBeforeTax = action.payload.totalRawProfitBeforeTax;
+    },
+
+    fetchTotalBillCount(state, action: PayloadAction<string>) {
+      state.isFetchingTotalBillCount = true;
+    },
+    fetchTotalBillCountCompleted(state, action: PayloadAction<number>) {
+      state.isFetchingTotalBillCount = false;
+      state.totalBillCount = action.payload;
+    },
+
     fetchBillsGroupedByVendor(state, action: PayloadAction<string>) {
       state.isFetchingVendorGroupingList = true;
     },
@@ -131,6 +159,7 @@ const billReportSlice = createSlice({
       state.totalProfitBeforeTax = 0;
       state.totalRevenue = 0;
       state.totalVendorDebt = 0;
+      state.totalBillCount = 0;
       state.billsGroupedByCustomer = [];
       state.billsGroupedByVendor = [];
     },

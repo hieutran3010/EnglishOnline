@@ -6,16 +6,30 @@
 
 import React, { memo, useEffect, useCallback, useState, useMemo } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import { Form, DatePicker, Button, Divider, Space } from 'antd';
+import {
+  Form,
+  DatePicker,
+  Button,
+  Divider,
+  Space,
+  Alert,
+  Typography,
+  Modal,
+} from 'antd';
+import { CheckOutlined } from '@ant-design/icons';
 import toNumber from 'lodash/fp/toNumber';
 import find from 'lodash/fp/find';
 import isEmpty from 'lodash/fp/isEmpty';
 import keys from 'lodash/fp/keys';
 import some from 'lodash/fp/some';
+import toString from 'lodash/fp/toString';
 
 import type Customer from 'app/models/customer';
 import type Vendor from 'app/models/vendor';
-import { purchasePriceCountingFields } from 'app/models/purchasePriceCounting';
+import {
+  purchasePriceCountingFields,
+  PurchasePriceCountingResult,
+} from 'app/models/purchasePriceCounting';
 import getBillValidator from 'app/models/validators/billValidator';
 import { authStorage, authorizeHelper } from 'app/services/auth';
 import { Role } from 'app/models/user';
@@ -35,21 +49,80 @@ import {
   selectIsDeletingBill,
   selectIsFinalBill,
   selectIsAssigningLicense,
-  selectBill,
+  selectOldWeightInKg,
+  selectPurchasePriceInfo,
   selectBillParams,
+  selectBillId,
+  selectBillStatus,
+  selectSenderId,
+  selectReceiverId,
 } from './selectors';
 import { StyledDateAndAssigneeContainer } from '../components/styles';
 import FeeAndPrice from '../components/FeeAndPrice';
 import PackageInfo from '../components/PackageInfo';
 import CustomerInfo from '../components/CustomerInfo';
 import ResponsibilityEmp from '../components/ResponsibilityEmp';
-import Bill, { BILL_STATUS } from 'app/models/bill';
+import Bill, { BILL_STATUS, PAYMENT_TYPE } from 'app/models/bill';
 import BillStatusTag from '../components/BillStatusTag';
 import Payment from '../components/Payment';
 import { useInjectReducer, useInjectSaga } from 'utils/redux-injectors';
 import { reducer, sliceKey } from './slice';
 import { billCreateOrUpdateSaga } from './saga';
 import { toast } from 'react-toastify';
+import { SagaInjectionModes } from 'redux-injectors';
+import { getMarginLeft } from 'app/components/Layout/AppLayout';
+import { ScreenMode } from 'app/components/AppNavigation';
+import {
+  selectScreenMode,
+  selectCollapsedMenu,
+} from 'app/containers/HomePage/selectors';
+import { SubmitBillAction } from './types';
+
+const { Text } = Typography;
+
+const finalBillWarningModalConfig = {
+  title:
+    'Có vẻ bạn đang thiếu thông tin bắt buộc khi Chốt Bill, kiểm tra lại nhé:',
+  content: (
+    <div>
+      <Space>
+        <CheckOutlined />
+        <Text>Mã bill hãng bay</Text>
+      </Space>
+      <Space>
+        <CheckOutlined />
+        <Text>Thông tin thanh toán khách hàng</Text>
+      </Space>
+      <Space>
+        <CheckOutlined />
+        <Text>Thông tin thanh toán cho nhà cung cấp</Text>
+      </Space>
+    </div>
+  ),
+};
+
+const getStyle = (
+  screenMode: ScreenMode,
+  collapsedMenu: boolean,
+  isFixedCommandBar?: boolean,
+): React.CSSProperties | undefined => {
+  if (isFixedCommandBar === true) {
+    return {
+      position: 'fixed',
+      left: getMarginLeft(screenMode, collapsedMenu) + 320,
+      right: 20,
+      top: '93%',
+      bottom: 10,
+      background: 'white',
+      display: 'flex',
+      padding: 24,
+      borderRadius: 5,
+      boxShadow:
+        '0px 1px 3px 0px rgba(0, 0, 0, 0.1), 0px 1px 2px 0px rgba(0, 0, 0, 0.06) ',
+    };
+  }
+  return undefined;
+};
 
 const layout = {
   labelCol: { span: 4 },
@@ -60,27 +133,33 @@ interface Props {
   inputBill: Bill;
   onSubmitting?: (isSubmitting: boolean) => void;
   canDelete: boolean;
-  customSliceKey?: any;
+  isFixedCommandBar?: boolean;
 }
 export const BillCreateOrUpdate = memo(
-  ({ inputBill, onSubmitting, canDelete, customSliceKey }: Props) => {
+  ({ inputBill, onSubmitting, canDelete, isFixedCommandBar }: Props) => {
     const role = authStorage.getRole();
 
-    useInjectReducer({ key: customSliceKey || sliceKey, reducer });
+    useInjectReducer({ key: sliceKey, reducer });
     useInjectSaga({
-      key: customSliceKey || sliceKey,
+      key: sliceKey,
       saga: billCreateOrUpdateSaga,
+      mode: SagaInjectionModes.RESTART_ON_REMOUNT,
     });
 
     const [hasVat, setHasVat] = useState(false);
-    const [senderId, setSenderId] = useState<string | undefined>();
-    const [receiverId, setReceiverId] = useState<string | undefined>();
     const [
       shouldRecalculatePurchasePrice,
       setShouldRecalculatePurchasePrice,
     ] = useState(false);
+    const [isDirty, setIsDirty] = useState<boolean>(false);
 
-    const bill = useSelector(selectBill);
+    const billId = useSelector(selectBillId);
+    const purchasePriceInfo = useSelector(selectPurchasePriceInfo);
+    const oldWeightInKg = useSelector(selectOldWeightInKg);
+    const billStatus = useSelector(selectBillStatus);
+    const senderId = useSelector(selectSenderId);
+    const receiverId = useSelector(selectReceiverId);
+
     const billParams = useSelector(selectBillParams);
     const vendors = useSelector(selectVendors);
     const isFetchingVendors = useSelector(selectIsFetchingVendor);
@@ -99,6 +178,9 @@ export const BillCreateOrUpdate = memo(
     const isFinalBill = useSelector(selectIsFinalBill);
     const isAssigningLicense = useSelector(selectIsAssigningLicense);
 
+    const screenMode = useSelector(selectScreenMode);
+    const collapsedMenu = useSelector(selectCollapsedMenu);
+
     const isBusy =
       isSubmitting ||
       isFinalBill ||
@@ -110,6 +192,14 @@ export const BillCreateOrUpdate = memo(
     const [billForm] = Form.useForm();
 
     useEffect(() => {
+      return function reset() {
+        dispatch(actions.resetState());
+      };
+    }, [dispatch]);
+
+    useEffect(() => {
+      setIsDirty(false);
+
       if (role !== Role.SALE) {
         dispatch(actions.fetchVendor());
         dispatch(actions.fetchResponsibilityUsers());
@@ -117,25 +207,25 @@ export const BillCreateOrUpdate = memo(
       }
 
       dispatch(actions.setBill(inputBill));
-    }, [dispatch, inputBill, role]);
 
-    useEffect(() => {
-      billForm.setFieldsValue(bill);
-      billForm.setFieldsValue({
-        usdExchangeRate: bill.usdExchangeRate || billParams.usdExchangeRate,
-      });
+      billForm.setFieldsValue(inputBill);
+
+      const formData: any = {};
+      if (isEmpty(inputBill.id)) {
+        formData.usdExchangeRate = billParams.usdExchangeRate;
+      }
 
       const user = authStorage.getUser();
       switch (user.role) {
         case Role.LICENSE: {
-          if (!bill.licenseUserId || isEmpty(bill.licenseUserId)) {
-            billForm.setFieldsValue({ licenseUserId: user.id });
+          if (!inputBill.licenseUserId || isEmpty(inputBill.licenseUserId)) {
+            formData.licenseUserId = user.id;
           }
           break;
         }
         case Role.ACCOUNTANT: {
-          if (isEmpty(bill.id) && isEmpty(bill.accountantUserId)) {
-            billForm.setFieldsValue({ accountantUserId: user.id });
+          if (isEmpty(inputBill.id) && isEmpty(inputBill.accountantUserId)) {
+            formData.accountantUserId = user.id;
           }
           break;
         }
@@ -143,12 +233,47 @@ export const BillCreateOrUpdate = memo(
           break;
       }
 
-      setSenderId(bill.senderId);
-      setReceiverId(bill.receiverId);
-      setHasVat((bill.vat || 0) > 0);
+      if (role === Role.ADMIN || role === Role.ACCOUNTANT) {
+        if (isEmpty(inputBill.vendorPaymentType)) {
+          formData.vendorPaymentType = PAYMENT_TYPE.CASH;
+        }
 
+        if (isEmpty(inputBill.customerPaymentType)) {
+          formData.customerPaymentType = PAYMENT_TYPE.CASH;
+        }
+      }
+
+      updateBillFormData(formData, isEmpty(inputBill.id));
+
+      setHasVat((inputBill.vat || 0) > 0);
       setShouldRecalculatePurchasePrice(false);
-    }, [bill, billForm, billParams]);
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [inputBill, role]);
+
+    const getBillData = useCallback(() => {
+      const bill = billForm.getFieldsValue();
+      bill.salePrice = toNumber(bill.salePrice);
+      bill.date = bill.date.format('YYYY-MM-DD HH:mm:ss');
+
+      return bill as any;
+    }, [billForm]);
+
+    const getSubmitActionParams = useCallback((): SubmitBillAction => {
+      const billData = getBillData();
+      return { billFormValues: billData, isDirty };
+    }, [getBillData, isDirty]);
+
+    const updateBillFormData = useCallback(
+      (data: any, skipSetDirty: boolean = false) => {
+        if (!isEmpty(data)) {
+          billForm.setFieldsValue(data);
+          if (!skipSetDirty) {
+            setIsDirty(true);
+          }
+        }
+      },
+      [billForm],
+    );
 
     const onVendorSelectionChanged = useCallback(
       (vendorId: string | undefined) => {
@@ -157,77 +282,68 @@ export const BillCreateOrUpdate = memo(
           const { id } = vendor;
           dispatch(actions.fetchVendorCountries(id));
 
-          billForm.setFieldsValue({
+          updateBillFormData({
             vendorOtherFee: vendor.otherFeeInUsd,
             vendorFuelChargePercent: vendor.fuelChargePercent,
           });
         }
       },
-      // eslint-disable-next-line react-hooks/exhaustive-deps
-      [vendors],
+      [dispatch, updateBillFormData, vendors],
     );
 
-    const onSenderSelectionChanged = useCallback((value: Customer) => {
-      const { id, name, phone, address } = value;
+    const onSenderSelectionChanged = useCallback(
+      (value: Customer) => {
+        const { id, name, phone, address } = value;
 
-      billForm.setFieldsValue({
-        senderName: name,
-        senderPhone: phone,
-        senderAddress: address,
-      });
-      setSenderId(id);
-      // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
-
-    const onReceiverSelectionChanged = useCallback((value: Customer) => {
-      const { id, name, phone, address } = value;
-
-      billForm.setFieldsValue({
-        receiverName: name,
-        receiverPhone: phone,
-        receiverAddress: address,
-      });
-      setReceiverId(id);
-      // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
-
-    const getBillData = useCallback(() => {
-      const bill = billForm.getFieldsValue();
-      bill.salePrice = toNumber(bill.salePrice);
-      bill.senderId = senderId;
-      bill.receiverId = receiverId;
-      bill.date = bill.date.format('YYYY-MM-DD HH:mm:ss');
-
-      return bill as any;
-    }, [billForm, receiverId, senderId]);
-
-    const onBillSubmit = useCallback(
-      () => {
-        const bill = getBillData();
-        dispatch(actions.submitBill(bill));
-        if (onSubmitting) onSubmitting(isBusy);
+        updateBillFormData({
+          senderName: name,
+          senderPhone: phone,
+          senderAddress: address,
+        });
+        dispatch(actions.setSenderId(id));
       },
-      // eslint-disable-next-line react-hooks/exhaustive-deps
-      [senderId, receiverId, onSubmitting, isBusy],
+      [dispatch, updateBillFormData],
     );
+
+    const onReceiverSelectionChanged = useCallback(
+      (value: Customer) => {
+        const { id, name, phone, address } = value;
+
+        updateBillFormData({
+          receiverName: name,
+          receiverPhone: phone,
+          receiverAddress: address,
+        });
+        dispatch(actions.setReceiverId(id));
+      },
+      [dispatch, updateBillFormData],
+    );
+
+    const onSubmitBill = useCallback(() => {
+      const bill = getBillData();
+      dispatch(actions.submitBill(bill));
+      if (onSubmitting) onSubmitting(isBusy);
+      setIsDirty(false);
+    }, [getBillData, dispatch, onSubmitting, isBusy]);
 
     const onVatCheckingChanged = useCallback(
       (checked: boolean) => {
         setHasVat(checked);
         if (checked === true) {
-          billForm.setFieldsValue({ vat: billParams.vat });
+          updateBillFormData({ vat: billParams.vat });
         } else {
-          billForm.setFieldsValue({ vat: undefined });
+          updateBillFormData({ vat: undefined });
         }
+        setShouldRecalculatePurchasePrice(true);
       },
-      [billForm, billParams.vat],
+      [billParams.vat, updateBillFormData],
     );
 
     const onAssignToAccountant = useCallback(() => {
-      dispatch(actions.assignToAccountant());
+      dispatch(actions.assignToAccountant(getSubmitActionParams()));
       if (onSubmitting) onSubmitting(isBusy);
-      // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [onSubmitting, isBusy]);
+      setIsDirty(false);
+    }, [dispatch, getSubmitActionParams, onSubmitting, isBusy]);
 
     const onDeleteBill = useCallback(() => {
       showConfirm(
@@ -241,6 +357,8 @@ export const BillCreateOrUpdate = memo(
 
     const onBillFormValuesChanged = useCallback(
       (changedValues, _allValues) => {
+        setIsDirty(true);
+
         const changedFields = keys(changedValues);
 
         // detect purchase price field changing
@@ -258,7 +376,7 @@ export const BillCreateOrUpdate = memo(
           const customerPaymentAmount = toNumber(
             changedValues['customerPaymentAmount'],
           );
-          billForm.setFieldsValue({
+          updateBillFormData({
             customerPaymentDebt: salePrice - customerPaymentAmount,
           });
         }
@@ -271,12 +389,12 @@ export const BillCreateOrUpdate = memo(
             changedValues['vendorPaymentAmount'],
           );
           const vendorDebt = purchasePrice - vendorPaymentAmount;
-          billForm.setFieldsValue({
+          updateBillFormData({
             vendorPaymentDebt: vendorDebt > 0 ? vendorDebt : 0,
           });
         }
       },
-      [billForm, shouldRecalculatePurchasePrice],
+      [billForm, shouldRecalculatePurchasePrice, updateBillFormData],
     );
 
     const onCalculatePurchasePrice = useCallback(() => {
@@ -292,139 +410,222 @@ export const BillCreateOrUpdate = memo(
         return;
       }
 
+      const submitParams = getSubmitActionParams();
+      const { billFormValues } = submitParams;
+      const {
+        airlineBillId,
+        customerPaymentAmount,
+        vendorPaymentAmount,
+        customerPaymentType,
+        vendorPaymentType,
+        salePrice,
+      } = billFormValues;
+
+      if (
+        isEmpty(airlineBillId) ||
+        isEmpty(customerPaymentType) ||
+        isEmpty(vendorPaymentType) ||
+        customerPaymentAmount < salePrice ||
+        vendorPaymentAmount <
+          toNumber(purchasePriceInfo.purchasePriceAfterVatInVnd)
+      ) {
+        Modal.warning(finalBillWarningModalConfig);
+        return;
+      }
+
       showConfirm(
         'Bill sau khi chốt sẽ không thể chỉnh sửa, bạn có muốn tiếp tục?',
         () => {
-          dispatch(actions.finalBill());
+          dispatch(actions.finalBill(submitParams));
           if (onSubmitting) onSubmitting(isBusy);
+          setIsDirty(false);
         },
       );
-    }, [billForm, dispatch, isBusy, onSubmitting]);
+    }, [
+      billForm,
+      dispatch,
+      getSubmitActionParams,
+      isBusy,
+      onSubmitting,
+      purchasePriceInfo.purchasePriceAfterVatInVnd,
+    ]);
 
     const onAssignToLicense = useCallback(() => {
-      dispatch(actions.assignLicense());
+      dispatch(actions.assignLicense(getSubmitActionParams()));
       if (onSubmitting) onSubmitting(isBusy);
-    }, [dispatch, isBusy, onSubmitting]);
+      setIsDirty(false);
+    }, [dispatch, getSubmitActionParams, isBusy, onSubmitting]);
 
-    const billValidator = useMemo(() => getBillValidator(hasVat, bill.id), [
+    const onVendorWeightChanged = useCallback(
+      (
+        oldWeight: number,
+        newWeight: number,
+        predictPurchasePrice: PurchasePriceCountingResult,
+      ) => {
+        updateBillFormData({ weightInKg: newWeight });
+        dispatch(
+          actions.updateNewWeight({
+            oldWeight,
+            newWeight,
+            predictPurchasePrice,
+          }),
+        );
+      },
+      [dispatch, updateBillFormData],
+    );
+
+    const onRestoreSaleWeight = useCallback(
+      (saleWeight: number, purchasePrice: PurchasePriceCountingResult) => {
+        updateBillFormData({ weightInKg: saleWeight });
+        dispatch(actions.restoreSaleWeight({ saleWeight, purchasePrice }));
+      },
+      [dispatch, updateBillFormData],
+    );
+
+    const onFinishFormFailed = useCallback(() => {
+      toast.error('Vui lòng nhập đầy đủ thông tin');
+    }, []);
+
+    const onCustomerPaymentAmountFocused = useCallback(() => {
+      const customerPaymentAmount = billForm.getFieldValue(
+        'customerPaymentAmount',
+      );
+
+      if (isEmpty(toString(customerPaymentAmount))) {
+        const salePrice = billForm.getFieldValue('salePrice');
+        updateBillFormData({
+          customerPaymentAmount: salePrice,
+          customerPaymentDebt: 0,
+        });
+      }
+    }, [billForm, updateBillFormData]);
+
+    const onVendorPaymentAmountFocused = useCallback(() => {
+      const vendorPaymentAmount = billForm.getFieldValue('vendorPaymentAmount');
+
+      if (isEmpty(toString(vendorPaymentAmount))) {
+        const purchasePrice = purchasePriceInfo.purchasePriceAfterVatInVnd;
+        updateBillFormData({
+          vendorPaymentAmount: purchasePrice,
+          vendorPaymentDebt: 0,
+        });
+      }
+    }, [
+      billForm,
+      purchasePriceInfo.purchasePriceAfterVatInVnd,
+      updateBillFormData,
+    ]);
+
+    const billValidator = useMemo(() => getBillValidator(hasVat, billId), [
       hasVat,
-      bill,
+      billId,
     ]);
 
     return (
-      <Form
-        form={billForm}
-        {...layout}
-        labelAlign="left"
-        size="small"
-        onFinish={onBillSubmit}
-        initialValues={{ isSaveSender: true, isSaveReceiver: true }}
-        onValuesChange={onBillFormValuesChanged}
-      >
-        <StyledDateAndAssigneeContainer>
-          <Form.Item
-            name="date"
-            label=""
-            wrapperCol={{ span: 25 }}
-            rules={billValidator.date}
-          >
-            <DatePicker format="DD-MM-YYYY" />
-          </Form.Item>
-          <div>
-            <BillStatusTag status={bill.status} />
-          </div>
-        </StyledDateAndAssigneeContainer>
-
-        <Divider
-          type="horizontal"
-          orientation="center"
-          style={{ marginTop: 0, marginBottom: 15 }}
-        />
-
-        <ResponsibilityEmp
-          isFetchingUsers={isFetchingUsers}
-          users={users}
-          billValidator={billValidator}
-        />
-
-        <CustomerInfo
-          billValidator={billValidator}
-          onReceiverSelectionChanged={onReceiverSelectionChanged}
-          onSenderSelectionChanged={onSenderSelectionChanged}
-          senderId={senderId}
-          receiverId={receiverId}
-        />
-
-        <PackageInfo
-          isFetchingVendorCountries={isFetchingVendorCountries}
-          isFetchingVendors={isFetchingVendors}
-          vendors={vendors}
-          onVendorSelectionChanged={onVendorSelectionChanged}
-          billValidator={billValidator}
-          vendorCountries={vendorCountries}
-        />
-
-        <FeeAndPrice
-          billValidator={billValidator}
-          onVatCheckingChanged={onVatCheckingChanged}
-          hasVat={hasVat}
-          bill={bill}
-          shouldRecalculatePurchasePrice={shouldRecalculatePurchasePrice}
-          onCalculatePurchasePrice={onCalculatePurchasePrice}
-          isCalculating={isCalculatingPurchasePrice}
-          disabledCalculation={
-            isSubmitting || isAssigningAccountant || isDeletingBill
-          }
-        />
-
-        {authorizeHelper.canRenderWithRole(
-          [Role.ADMIN, Role.ACCOUNTANT],
-          <Payment />,
-        )}
-
-        <Form.Item>
-          <Space>
-            <Button
-              size="large"
-              type="primary"
-              htmlType="submit"
-              loading={isSubmitting}
-              disabled={
-                isAssigningAccountant ||
-                isCalculatingPurchasePrice ||
-                isDeletingBill ||
-                isFinalBill ||
-                isAssigningLicense
-              }
+      <>
+        <Form
+          form={billForm}
+          {...layout}
+          labelAlign="left"
+          size="small"
+          onFinish={onSubmitBill}
+          initialValues={{ isSaveSender: true, isSaveReceiver: true }}
+          onValuesChange={onBillFormValuesChanged}
+          onFinishFailed={onFinishFormFailed}
+        >
+          <StyledDateAndAssigneeContainer>
+            <Form.Item
+              name="date"
+              label=""
+              wrapperCol={{ span: 25 }}
+              rules={billValidator.date}
             >
-              Lưu
-            </Button>
+              <DatePicker format="DD-MM-YYYY" />
+            </Form.Item>
+            <div>
+              <BillStatusTag status={billStatus} />
+            </div>
+          </StyledDateAndAssigneeContainer>
 
-            {bill.id && bill.status === BILL_STATUS.LICENSE && (
-              <Button
-                size="large"
-                type="ghost"
-                htmlType="button"
-                disabled={
-                  isSubmitting ||
-                  isCalculatingPurchasePrice ||
-                  isDeletingBill ||
-                  isFinalBill
-                }
-                loading={isAssigningAccountant}
-                onClick={onAssignToAccountant}
-              >
-                Chuyển cho Kế Toán
-              </Button>
-            )}
+          <Divider
+            type="horizontal"
+            orientation="center"
+            style={{ marginTop: 0, marginBottom: 15 }}
+          />
 
-            {!isEmpty(bill.id) &&
-              bill.status === BILL_STATUS.ACCOUNTANT &&
-              authorizeHelper.canRenderWithRole(
-                [Role.ACCOUNTANT, Role.ADMIN],
-                <>
+          <ResponsibilityEmp
+            isFetchingUsers={isFetchingUsers}
+            users={users}
+            billValidator={billValidator}
+          />
+
+          <CustomerInfo
+            billValidator={billValidator}
+            onReceiverSelectionChanged={onReceiverSelectionChanged}
+            onSenderSelectionChanged={onSenderSelectionChanged}
+            senderId={senderId}
+            receiverId={receiverId}
+          />
+
+          <PackageInfo
+            isFetchingVendorCountries={isFetchingVendorCountries}
+            isFetchingVendors={isFetchingVendors}
+            vendors={vendors}
+            onVendorSelectionChanged={onVendorSelectionChanged}
+            billValidator={billValidator}
+            vendorCountries={vendorCountries}
+            userRole={role}
+            oldWeightInKg={oldWeightInKg}
+            onVendorWeightChanged={onVendorWeightChanged}
+            onRestoreSaleWeight={onRestoreSaleWeight}
+            billId={billId}
+            billForm={billForm.getFieldsValue()}
+            purchasePriceInUsd={purchasePriceInfo.purchasePriceInUsd || 0}
+          />
+
+          <FeeAndPrice
+            billValidator={billValidator}
+            onVatCheckingChanged={onVatCheckingChanged}
+            hasVat={hasVat}
+            purchasePriceInfo={purchasePriceInfo}
+            shouldRecalculatePurchasePrice={shouldRecalculatePurchasePrice}
+            onCalculatePurchasePrice={onCalculatePurchasePrice}
+            isCalculating={isCalculatingPurchasePrice}
+            disabledCalculation={
+              isSubmitting || isAssigningAccountant || isDeletingBill
+            }
+          />
+
+          {authorizeHelper.canRenderWithRole(
+            [Role.ADMIN, Role.ACCOUNTANT],
+            <Payment
+              onCustomerPaymentAmountFocused={onCustomerPaymentAmountFocused}
+              onVendorPaymentAmountFocused={onVendorPaymentAmountFocused}
+            />,
+          )}
+
+          <div style={getStyle(screenMode, collapsedMenu, isFixedCommandBar)}>
+            <Form.Item noStyle>
+              <Space>
+                <Button
+                  size="middle"
+                  type="primary"
+                  htmlType="submit"
+                  loading={isSubmitting}
+                  disabled={
+                    isAssigningAccountant ||
+                    isCalculatingPurchasePrice ||
+                    isDeletingBill ||
+                    isFinalBill ||
+                    isAssigningLicense
+                  }
+                >
+                  Lưu
+                </Button>
+
+                {billId && billStatus === BILL_STATUS.LICENSE && (
                   <Button
-                    size="large"
+                    size="middle"
                     type="ghost"
                     htmlType="button"
                     disabled={
@@ -433,54 +634,85 @@ export const BillCreateOrUpdate = memo(
                       isDeletingBill ||
                       isFinalBill
                     }
-                    loading={isAssigningLicense}
-                    onClick={onAssignToLicense}
+                    loading={isAssigningAccountant}
+                    onClick={onAssignToAccountant}
                   >
-                    Chuyển cho Chứng Từ
+                    Chuyển cho Kế Toán
                   </Button>
-                  <Button
-                    size="large"
-                    type="ghost"
-                    htmlType="button"
-                    onClick={onFinalBill}
-                    loading={isFinalBill}
-                    disabled={
-                      isSubmitting ||
-                      isCalculatingPurchasePrice ||
-                      isAssigningAccountant ||
-                      isDeletingBill ||
-                      isAssigningLicense
-                    }
-                  >
-                    Chốt Bill
-                  </Button>
-                </>,
-              )}
+                )}
 
-            {canDelete &&
-              !isEmpty(bill.id) &&
-              bill.status !== BILL_STATUS.DONE && (
-                <Button
-                  size="large"
-                  type="primary"
-                  htmlType="button"
-                  loading={isDeletingBill}
-                  disabled={
-                    isSubmitting ||
-                    isCalculatingPurchasePrice ||
-                    isAssigningAccountant ||
-                    isFinalBill ||
-                    isAssigningLicense
-                  }
-                  danger
-                  onClick={onDeleteBill}
-                >
-                  Xóa Bill
-                </Button>
-              )}
-          </Space>
-        </Form.Item>
-      </Form>
+                {!isEmpty(billId) &&
+                  billStatus === BILL_STATUS.ACCOUNTANT &&
+                  authorizeHelper.canRenderWithRole(
+                    [Role.ACCOUNTANT, Role.ADMIN],
+                    <>
+                      <Button
+                        size="middle"
+                        type="ghost"
+                        htmlType="button"
+                        disabled={
+                          isSubmitting ||
+                          isCalculatingPurchasePrice ||
+                          isDeletingBill ||
+                          isFinalBill
+                        }
+                        loading={isAssigningLicense}
+                        onClick={onAssignToLicense}
+                      >
+                        Chuyển cho Chứng Từ
+                      </Button>
+                      <Button
+                        size="middle"
+                        type="ghost"
+                        htmlType="button"
+                        onClick={onFinalBill}
+                        loading={isFinalBill}
+                        disabled={
+                          isSubmitting ||
+                          isCalculatingPurchasePrice ||
+                          isAssigningAccountant ||
+                          isDeletingBill ||
+                          isAssigningLicense
+                        }
+                      >
+                        Chốt Bill
+                      </Button>
+                    </>,
+                  )}
+
+                {canDelete &&
+                  !isEmpty(billId) &&
+                  billStatus !== BILL_STATUS.DONE && (
+                    <Button
+                      size="middle"
+                      type="primary"
+                      htmlType="button"
+                      loading={isDeletingBill}
+                      disabled={
+                        isSubmitting ||
+                        isCalculatingPurchasePrice ||
+                        isAssigningAccountant ||
+                        isFinalBill ||
+                        isAssigningLicense
+                      }
+                      danger
+                      onClick={onDeleteBill}
+                    >
+                      Xóa Bill
+                    </Button>
+                  )}
+                {isDirty && (
+                  <Alert
+                    banner
+                    showIcon
+                    message="Có thay đổi dữ liệu, nhớ bấm Lưu hoặc các nút bên cạnh để tránh mất dữ liệu!"
+                  />
+                )}
+              </Space>
+            </Form.Item>
+          </div>
+        </Form>
+      </>
     );
   },
 );

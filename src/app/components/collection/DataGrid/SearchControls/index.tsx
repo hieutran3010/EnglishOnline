@@ -66,6 +66,7 @@ const getLocalColumnSearchProps = (dataIndex: string, searchInput?: any) => ({
     <SearchOutlined style={{ color: filtered ? '#00a651' : undefined }} />
   ),
   onFilter: (value, record) =>
+    record[dataIndex] &&
     record[dataIndex].toString().toLowerCase().includes(value.toLowerCase()),
   onFilterDropdownVisibleChange: visible => {
     if (visible) {

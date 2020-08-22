@@ -32,15 +32,14 @@ import {
 
 import {
   selectBill,
-  selectBillParams,
   selectNumberOfUncheckedVatBills,
   selectNeedToReloadWorkingBills,
 } from './selectors';
 import BillBlock from '../components/BillBlock';
-import BillCreation from './BillCreation';
 import BillView from '../components/BillView';
 import VatPrintedChecking from '../components/VatPrintedChecking';
 import { MyBills, UnassignedBills } from './WorkingBills';
+import { BillCreateOrUpdate } from '../BillCreateOrUpdate';
 
 enum SELECTED_BILL_AREA {
   MY_BILLS = 0,
@@ -73,13 +72,15 @@ export const Workspace = memo(() => {
   const dispatch = useDispatch();
 
   useInjectReducer({ key: sliceKey, reducer: reducer });
-  useInjectSaga({ key: sliceKey, saga: workspaceSaga });
+  useInjectSaga({
+    key: sliceKey,
+    saga: workspaceSaga,
+  });
 
   const screenMode = useSelector(selectScreenMode);
   const collapsedMenu = useSelector(selectCollapsedMenu);
 
   const bill = useSelector(selectBill);
-  const billParams = useSelector(selectBillParams);
   const numberOfUncheckedVatBills = useSelector(
     selectNumberOfUncheckedVatBills,
   );
@@ -91,40 +92,30 @@ export const Workspace = memo(() => {
   >();
 
   useEffect(() => {
-    if (role !== Role.SALE) {
-      dispatch(actions.fetchVendor());
-      dispatch(actions.fetchResponsibilityUsers());
-      dispatch(actions.fetchBillParams());
-    }
-
     if (role === Role.ACCOUNTANT || role === Role.ADMIN) {
       dispatch(actions.fetchNumberOfUncheckedVatBill());
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const onBillSelectionChanged = useCallback(
-    (billsArea: SELECTED_BILL_AREA) => (bill: Bill) => {
-      if (!isEmpty(bill.vendorId)) {
-        dispatch(actions.fetchVendorCountries(bill.vendorId));
-      }
-
-      dispatch(actions.submitBillSuccess(new Bill(bill)));
-      setCurrentBillArea(billsArea);
-    },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [],
-  );
-
   const initNewBill = useCallback(() => {
     dispatch(actions.initNewBill());
-    setCurrentBillArea(undefined);
+    setCurrentBillArea(SELECTED_BILL_AREA.MY_BILLS);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const onCheckNumberOfVatBill = useCallback(() => {
     dispatch(actions.fetchNumberOfUncheckedVatBill());
   }, [dispatch]);
+
+  const onBillSelectionChanged = useCallback(
+    (billsArea: SELECTED_BILL_AREA) => (selectedBill: Bill) => {
+      dispatch(actions.selectBill(selectedBill));
+      setCurrentBillArea(billsArea);
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [],
+  );
 
   const canEdit = canEditBill(role, bill);
 
@@ -236,12 +227,13 @@ export const Workspace = memo(() => {
             </StyledMainToolbar>,
           )}
           {currentRole !== Role.SALE && <div style={{ marginTop: 54 }}></div>}
-          <ContentContainer>
+          <ContentContainer style={{ marginBottom: canEdit ? 65 : 0 }}>
             {canEdit && (
-              <BillCreation
-                bill={bill}
-                billParams={billParams}
+              <BillCreateOrUpdate
+                inputBill={bill}
+                canDelete
                 onSubmitting={onBillSubmitting}
+                isFixedCommandBar
               />
             )}
             {!canEdit && <BillView bill={bill} />}

@@ -33,6 +33,8 @@ const normalFields: string[] = [
   'isArchived',
   'destinationCountry',
   'isPrintedVatBill',
+  'packageStatus',
+  'createdOn',
 ];
 
 const saleExtendFields: string[] = ['vat', 'usdExchangeRate', 'salePrice'];
@@ -57,6 +59,7 @@ const otherFields: string[] = [
   'customerPaymentAmount',
   'vendorPaymentDebt',
   'customerPaymentDebt',
+  'oldWeightInKg',
 ];
 
 const getBillFields = () => {
@@ -105,10 +108,16 @@ export default class BillFetcher extends GraphQLFetcherBase<Bill> {
   };
 
   assignToAccountant = (billId: string) => {
-    return this.executeCustomMutationAsync(
+    return this.executeAsync<Bill>(
       'assignToAccountant',
+      `mutation($billId: GUID!) {
+        bill {
+          assignToAccountant(billId: $billId) {
+            ${getBillFields()}
+          }
+        }
+      }`,
       { billId },
-      { input: 'AssignToAccountantInput!' },
     );
   };
 
@@ -140,6 +149,11 @@ export default class BillFetcher extends GraphQLFetcherBase<Bill> {
               totalDebt
               totalPayment
               totalBill
+              totalSalePrice
+              totalCashPayment
+              totalBankTransferPayment
+              totalProfit
+              totalProfitBeforeTax
           }
         }
       }`,
@@ -155,10 +169,15 @@ export default class BillFetcher extends GraphQLFetcherBase<Bill> {
           getCustomerStatistic(query: $query) {
               senderName
               senderPhone
+              totalPurchase
               totalSalePrice
               totalDebt
               totalPayment
               totalBill
+              totalCashPayment
+              totalBankTransferPayment
+              totalProfit
+              totalProfitBeforeTax
           }
         }
       }`,

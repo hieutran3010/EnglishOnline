@@ -180,6 +180,7 @@ export const BillAdvanceSearch = memo(() => {
           onArchiveBill={onArchiveBill}
           billDataSource={billDataSource}
           onPrintedVatBill={onCheckPrintedVat}
+          dontLoadInitialData={true}
         />
       </RootContainer>
     </>

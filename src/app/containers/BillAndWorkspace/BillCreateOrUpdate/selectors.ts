@@ -31,6 +31,36 @@ export const selectIsSubmitting = createSelector(
   billCreateOrUpdateState => billCreateOrUpdateState.isSubmitting,
 );
 
+export const selectBillId = createSelector(
+  [selectDomain],
+  billCreateOrUpdateState => billCreateOrUpdateState.billId,
+);
+
+export const selectPurchasePriceInfo = createSelector(
+  [selectDomain],
+  billCreateOrUpdateState => billCreateOrUpdateState.purchasePriceInfo,
+);
+
+export const selectOldWeightInKg = createSelector(
+  [selectDomain],
+  billCreateOrUpdateState => billCreateOrUpdateState.oldWeightInKg,
+);
+
+export const selectBillStatus = createSelector(
+  [selectDomain],
+  billCreateOrUpdateState => billCreateOrUpdateState.billStatus,
+);
+
+export const selectSenderId = createSelector(
+  [selectDomain],
+  billCreateOrUpdateState => billCreateOrUpdateState.senderId,
+);
+
+export const selectReceiverId = createSelector(
+  [selectDomain],
+  billCreateOrUpdateState => billCreateOrUpdateState.receiverId,
+);
+
 export const selectBill = createSelector(
   [selectDomain],
   billCreateOrUpdateState => billCreateOrUpdateState.bill,

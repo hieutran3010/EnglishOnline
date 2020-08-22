@@ -20,7 +20,7 @@ import {
   StyledFeeContainer,
   StyledFeeItemContainer,
 } from '../Workspace/styles/StyledIndex';
-import type Bill from 'app/models/bill';
+import { PurchasePriceInfo } from 'app/models/bill';
 import PurchasePrice from './PurchasePrice';
 
 const { Title } = Typography;
@@ -34,21 +34,21 @@ interface Props {
   billValidator: BillValidator;
   onVatCheckingChanged: (checked: boolean) => void;
   hasVat: boolean;
-  bill: Bill;
   shouldRecalculatePurchasePrice?: boolean;
   onCalculatePurchasePrice?: () => void;
   isCalculating?: boolean;
   disabledCalculation?: boolean;
+  purchasePriceInfo: PurchasePriceInfo;
 }
 const FeeAndPrice = ({
   billValidator,
   onVatCheckingChanged,
   hasVat,
-  bill,
   shouldRecalculatePurchasePrice,
   onCalculatePurchasePrice,
   isCalculating,
   disabledCalculation,
+  purchasePriceInfo,
 }: Props) => {
   const onVatHavingChanged = useCallback(
     e => {
@@ -128,7 +128,7 @@ const FeeAndPrice = ({
             </StyledFeeItemContainer>
           </StyledFeeContainer>
           <Form.Item label="Giá mua (USD = VNĐ)">
-            <PurchasePrice bill={bill} />
+            <PurchasePrice info={purchasePriceInfo} />
             <Tooltip title="Tính lại Giá mua">
               <Button
                 size="small"

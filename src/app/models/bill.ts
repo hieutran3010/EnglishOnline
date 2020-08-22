@@ -1,5 +1,7 @@
-import ModelBase from './modelBase';
 import moment from 'moment';
+
+import ModelBase from './modelBase';
+import { PurchasePriceCountingResult } from './purchasePriceCounting';
 
 export enum BILL_STATUS {
   LICENSE = 'LICENSE',
@@ -18,6 +20,60 @@ export enum PARCEL_VENDOR {
   UPS = 'UPS',
   TNT = 'TNT',
   FEDEX = 'FEDEX',
+}
+
+export class PurchasePriceInfo {
+  weightInKg!: number;
+  destinationCountry!: string;
+  quotationPriceInUsd?: number;
+  zoneName?: string;
+  purchasePriceInVnd?: number;
+  purchasePriceAfterVatInUsd?: number;
+  purchasePriceAfterVatInVnd?: number;
+  vendorNetPriceInUsd?: number;
+  vendorOtherFee!: number;
+  vendorFuelChargePercent!: number;
+  vendorFuelChargeFeeInUsd?: number;
+  vendorFuelChargeFeeInVnd?: number;
+  purchasePriceInUsd?: number;
+  vat?: number;
+  usdExchangeRate!: number;
+
+  /**
+   *
+   */
+  constructor(input?: PurchasePriceInfo) {
+    if (input) {
+      this.weightInKg = input.weightInKg;
+      this.destinationCountry = input.destinationCountry;
+      this.quotationPriceInUsd = input.quotationPriceInUsd;
+      this.zoneName = input.zoneName;
+      this.purchasePriceInVnd = input.purchasePriceInVnd;
+      this.purchasePriceInUsd = input.purchasePriceInUsd;
+      this.purchasePriceAfterVatInUsd = input.purchasePriceAfterVatInUsd;
+      this.purchasePriceAfterVatInVnd = input.purchasePriceAfterVatInVnd;
+      this.vendorNetPriceInUsd = input.vendorNetPriceInUsd;
+      this.vendorOtherFee = input.vendorOtherFee;
+      this.vendorFuelChargePercent = input.vendorFuelChargePercent;
+      this.vendorFuelChargeFeeInUsd = input.vendorFuelChargeFeeInUsd;
+      this.vendorFuelChargeFeeInVnd = input.vendorFuelChargeFeeInVnd;
+      this.purchasePriceInUsd = input.purchasePriceInUsd;
+      this.vat = input.vat;
+      this.usdExchangeRate = input.usdExchangeRate;
+    }
+  }
+
+  updatePurchasePriceInfo(result: PurchasePriceCountingResult) {
+    this.purchasePriceInUsd = result.purchasePriceInUsd;
+    this.purchasePriceInVnd = result.purchasePriceInVnd;
+    this.vendorFuelChargeFeeInUsd = result.fuelChargeFeeInUsd;
+    this.vendorFuelChargeFeeInVnd = result.fuelChargeFeeInVnd;
+    this.quotationPriceInUsd = result.quotationPriceInUsd;
+    this.vendorNetPriceInUsd = result.vendorNetPriceInUsd;
+    this.zoneName = result.zoneName;
+    this.purchasePriceAfterVatInUsd = result.purchasePriceAfterVatInUsd;
+    this.purchasePriceAfterVatInVnd = result.purchasePriceAfterVatInVnd;
+  }
 }
 
 export default class Bill extends ModelBase {
@@ -42,6 +98,7 @@ export default class Bill extends ModelBase {
   description!: string;
   destinationCountry!: string;
   weightInKg!: number;
+  oldWeightInKg?: number;
   salePrice?: number;
   purchasePriceInUsd?: number;
   purchasePriceInVnd?: number;
@@ -67,6 +124,7 @@ export default class Bill extends ModelBase {
   purchasePriceAfterVatInUsd?: number;
   purchasePriceAfterVatInVnd?: number;
   isPrintedVatBill!: boolean;
+  packageStatus!: string;
 
   constructor(input?: Bill | any) {
     super(input);
@@ -91,6 +149,7 @@ export default class Bill extends ModelBase {
       this.description = input.description;
       this.destinationCountry = input.destinationCountry;
       this.weightInKg = input.weightInKg;
+      this.oldWeightInKg = input.oldWeightInKg;
       this.salePrice = input.salePrice || 0;
       this.purchasePriceInUsd = input.purchasePriceInUsd;
       this.purchasePriceInVnd = input.purchasePriceInVnd;
@@ -116,6 +175,7 @@ export default class Bill extends ModelBase {
       this.profitBeforeTax = input.profitBeforeTax;
       this.profit = input.profit;
       this.isPrintedVatBill = input.isPrintedVatBill;
+      this.packageStatus = input.packageStatus;
     } else {
       this.status = BILL_STATUS.LICENSE;
       this.vendorOtherFee = 0;
@@ -129,6 +189,38 @@ export default class Bill extends ModelBase {
       this.isPrintedVatBill = false;
     }
   }
+
+  getPurchasePriceInfo(): PurchasePriceInfo {
+    const info = new PurchasePriceInfo();
+    info.weightInKg = this.weightInKg;
+    info.destinationCountry = this.destinationCountry;
+    info.zoneName = this.zoneName;
+    info.quotationPriceInUsd = this.quotationPriceInUsd;
+    info.vendorNetPriceInUsd = this.vendorNetPriceInUsd;
+    info.vendorOtherFee = this.vendorOtherFee;
+    info.vendorFuelChargePercent = this.vendorFuelChargePercent;
+    info.vendorFuelChargeFeeInUsd = this.vendorFuelChargeFeeInUsd;
+    info.vendorFuelChargeFeeInVnd = this.vendorFuelChargeFeeInVnd;
+    info.purchasePriceInUsd = this.purchasePriceInUsd;
+    info.vat = this.vat;
+    info.usdExchangeRate = this.usdExchangeRate;
+    info.purchasePriceAfterVatInVnd = this.purchasePriceAfterVatInVnd;
+    info.purchasePriceAfterVatInUsd = this.purchasePriceAfterVatInUsd;
+    info.purchasePriceInVnd = this.purchasePriceInVnd;
+    return info;
+  }
+
+  updatePurchasePriceInfo(result: PurchasePriceCountingResult) {
+    this.purchasePriceInUsd = result.purchasePriceInUsd;
+    this.purchasePriceInVnd = result.purchasePriceInVnd;
+    this.vendorFuelChargeFeeInUsd = result.fuelChargeFeeInUsd;
+    this.vendorFuelChargeFeeInVnd = result.fuelChargeFeeInVnd;
+    this.quotationPriceInUsd = result.quotationPriceInUsd;
+    this.vendorNetPriceInUsd = result.vendorNetPriceInUsd;
+    this.zoneName = result.zoneName;
+    this.purchasePriceAfterVatInUsd = result.purchasePriceAfterVatInUsd;
+    this.purchasePriceAfterVatInVnd = result.purchasePriceAfterVatInVnd;
+  }
 }
 
 export class VendorStatistic {
@@ -137,14 +229,33 @@ export class VendorStatistic {
   totalPurchase!: number;
   totalDebt!: number;
   totalPayment!: number;
+  totalCashPayment!: number;
+  totalBankTransferPayment!: number;
   totalBill!: number;
+  totalSalePrice!: number;
+  totalProfit!: number;
+  totalProfitBeforeTax!: number;
 }
 
 export class CustomerStatistic {
   senderName!: string;
   senderPhone!: string;
+  totalPurchase!: number;
   totalSalePrice!: number;
   totalDebt!: number;
   totalPayment!: number;
+  totalCashPayment!: number;
+  totalBankTransferPayment!: number;
   totalBill!: number;
+  totalProfit!: number;
+  totalProfitBeforeTax!: number;
+}
+
+export class PurchasePrice {
+  purchasePriceInUsd?: number;
+  purchasePriceInVnd?: number;
+  purchasePriceAfterVatInUsd?: number;
+  purchasePriceAfterVatInVnd?: number;
+  vendorNetPriceInUsd?: number;
+  quotationPriceInUsd?: number;
 }

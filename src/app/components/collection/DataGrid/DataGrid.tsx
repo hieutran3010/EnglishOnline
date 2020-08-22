@@ -34,6 +34,7 @@ interface DataGrid {
   maxHeight: number;
   locale?: TableLocale;
   size: 'large' | 'middle' | 'small';
+  dontLoadInitialData?: boolean;
 }
 export default function DataGrid({
   dataSource,
@@ -43,8 +44,9 @@ export default function DataGrid({
   maxHeight,
   locale,
   size,
+  dontLoadInitialData,
   ...restProps
-}: DataGrid) {
+}: DataGrid & any) {
   const [items, setItems] = useState<any[]>([]);
   const [pagination, setPagination] = useState<TablePaginationConfig>({
     pageSize,
@@ -80,7 +82,7 @@ export default function DataGrid({
 
             if (colConfig) {
               result.push({
-                field: colConfig.dataIndex || '',
+                field: colConfig.dataIndex || colConfig.filterField || '',
                 value: filterValue,
                 operator: colConfig.searchOperator || QueryOperator.C,
               });
@@ -98,7 +100,15 @@ export default function DataGrid({
    */
   const fetchTotalCount = useCallback(
     async (tableFilter?: Record<string, React.Key[] | null>) => {
-      const queryCriteria = getQueryCriteria(tableFilter || antTableFilter);
+      const _filter = tableFilter || antTableFilter;
+      // if (isEmpty(_filter) || all(v => isNil(v))(values(_filter))) {
+      //   if (dontLoadInitialData === true) {
+      //     setItems([]);
+      //     return;
+      //   }
+      // }
+
+      const queryCriteria = getQueryCriteria(_filter);
 
       const totalItem = await dataSource.countAsync(queryCriteria);
       setTotal(totalItem);
@@ -115,6 +125,14 @@ export default function DataGrid({
       inputOrder?: OrderOption,
       inputPagination?: TablePaginationConfig,
     ) => {
+      const _filter = tableFilter || antTableFilter;
+      // if (isEmpty(_filter) || all(v => isNil(v))(values(_filter))) {
+      //   if (dontLoadInitialData === true) {
+      //     setItems([]);
+      //     return;
+      //   }
+      // }
+
       setLoading(true);
 
       const paging = inputPagination || pagination;
@@ -122,7 +140,7 @@ export default function DataGrid({
       const queryParams: QueryParams = {
         pageSize: paging.pageSize,
         page: paging.current,
-        criteria: getQueryCriteria(tableFilter || antTableFilter),
+        criteria: getQueryCriteria(_filter),
         order: inputOrder || order,
       };
 
@@ -132,7 +150,7 @@ export default function DataGrid({
 
       setItems(data);
     },
-    [pagination, getQueryCriteria, antTableFilter, order, dataSource],
+    [antTableFilter, pagination, getQueryCriteria, order, dataSource],
   );
 
   /**
@@ -168,17 +186,22 @@ export default function DataGrid({
    * Fetching total count at initializing
    */
   useEffect(() => {
-    fetchTotalCount();
+    if (!dontLoadInitialData) {
+      fetchTotalCount();
+    }
+
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [dontLoadInitialData]);
 
   /**
    * Fetching data at initializing
    */
   useEffect(() => {
-    fetchData();
+    if (!dontLoadInitialData) {
+      fetchData();
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [dontLoadInitialData]);
 
   const onTableChange = useCallback(
     (
@@ -219,7 +242,6 @@ export default function DataGrid({
 
   return (
     <Table
-      {...restProps}
       scroll={{ y: maxHeight }}
       columns={formattedColumns}
       dataSource={items}
@@ -236,6 +258,7 @@ export default function DataGrid({
       }}
       size={size}
       locale={locale}
+      {...restProps}
     />
   );
 }

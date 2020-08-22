@@ -1,6 +1,6 @@
 import React, { memo } from 'react';
 import { Card, Statistic, Spin, Space } from 'antd';
-import { MoneyCollectOutlined } from '@ant-design/icons';
+import { MoneyCollectOutlined, FieldNumberOutlined } from '@ant-design/icons';
 import { toCurrency } from 'utils/numberFormat';
 import { authStorage } from 'app/services/auth';
 import { Role } from 'app/models/user';
@@ -18,10 +18,15 @@ export interface BillStatisticProps {
   isFetchingTotalProfit: boolean;
   totalProfitBeforeTax: number;
   totalProfit: number;
+  isFetchingTotalRawProfit: boolean;
+  totalRawProfitBeforeTax: number;
+  totalRawProfit: number;
+  totalBillCount: number;
+  isFetchingTotalBillCount: boolean;
 }
 
 interface StatisticBlock {
-  isFetching: boolean;
+  isFetching?: boolean;
   value: number | any;
   title: string;
 }
@@ -53,6 +58,12 @@ const BillStatistic = (props: BillStatisticProps) => {
       return (
         <Space>
           <StatisticBlock
+            title="Tổng số Bill"
+            isFetching={props.isFetchingTotalBillCount}
+            value={props.totalBillCount}
+            prefix={<FieldNumberOutlined />}
+          />
+          <StatisticBlock
             title="Tổng giá bán"
             value={props.totalSalePrice}
             isFetching={props.isFetchingTotalSalePrice}
@@ -63,6 +74,12 @@ const BillStatistic = (props: BillStatisticProps) => {
     case Role.ADMIN: {
       return (
         <Space>
+          <StatisticBlock
+            title="Tổng số Bill"
+            isFetching={props.isFetchingTotalBillCount}
+            value={props.totalBillCount}
+            prefix={<FieldNumberOutlined />}
+          />
           <StatisticBlock
             title="Tổng doanh thu"
             value={props.totalRevenue}
@@ -89,7 +106,13 @@ const BillStatistic = (props: BillStatisticProps) => {
             }
           />
           <StatisticBlock
-            title="Lợi nhuận sau thuế /trước thuế"
+            title="Lợi nhuận thô sau thuế /trước thuế "
+            value={props.totalRawProfit}
+            isFetching={props.isFetchingTotalRawProfit}
+            suffix={`/ ${toCurrency(props.totalRawProfitBeforeTax)}`}
+          />
+          <StatisticBlock
+            title="Lợi nhuận sau thuế /trước thuế theo dữ liệu nhập"
             value={props.totalProfit}
             isFetching={props.isFetchingTotalProfit}
             suffix={`/ ${toCurrency(props.totalProfitBeforeTax)}`}
@@ -100,6 +123,12 @@ const BillStatistic = (props: BillStatisticProps) => {
     case Role.ACCOUNTANT: {
       return (
         <Space>
+          <StatisticBlock
+            title="Tổng số Bill"
+            isFetching={props.isFetchingTotalBillCount}
+            value={props.totalBillCount}
+            prefix={<FieldNumberOutlined />}
+          />
           <StatisticBlock
             title="Tổng nợ của Khách"
             value={props.totalCustomerDebt}
@@ -124,7 +153,16 @@ const BillStatistic = (props: BillStatisticProps) => {
       );
     }
     default:
-      return <></>;
+      return (
+        <Space>
+          <StatisticBlock
+            title="Tổng số Bill"
+            isFetching={props.isFetchingTotalBillCount}
+            value={props.totalBillCount}
+            prefix={<FieldNumberOutlined />}
+          />
+        </Space>
+      );
   }
 };
 
