@@ -8,10 +8,10 @@ import {
   Divider,
   Checkbox,
   Modal,
-  Table as AntDataGrid,
   Typography,
   Menu,
   Dropdown,
+  Empty,
 } from 'antd';
 import { DownOutlined } from '@ant-design/icons';
 import {
@@ -40,11 +40,11 @@ const canEdit = (user: User, bill: Bill) => {
     return false;
   }
 
-  if (user.role === Role.LICENSE) {
+  if (user.role === Role.LICENSE && bill.status === BILL_STATUS.LICENSE) {
     return bill.licenseUserId === user.id;
   }
 
-  if (user.role === Role.ACCOUNTANT) {
+  if (user.role === Role.ACCOUNTANT && bill.status === BILL_STATUS.ACCOUNTANT) {
     return bill.accountantUserId === user.id;
   }
 
@@ -59,6 +59,7 @@ interface Props {
   extendCols?: ColumnDefinition[];
   onPrintedVatBill?: (bill: Bill) => void;
   dontLoadInitialData?: boolean;
+  heightOffset?: number;
 }
 const BillList = ({
   onArchiveBill,
@@ -68,6 +69,7 @@ const BillList = ({
   extendCols,
   onPrintedVatBill,
   dontLoadInitialData,
+  heightOffset,
 }: Props) => {
   const user = authStorage.getUser();
 
@@ -168,6 +170,7 @@ const BillList = ({
         title: 'Tình trạng hàng',
         dataIndex: 'packageStatus',
         key: 'packageStatus',
+        width: 250,
       },
       {
         title: 'Ngày',
@@ -175,6 +178,7 @@ const BillList = ({
         key: 'date',
         type: COLUMN_TYPES.DATE,
         sorter: true,
+        width: 100,
       },
       {
         title: 'Khách Gởi',
@@ -204,6 +208,7 @@ const BillList = ({
         key: 'vendorName',
         type: COLUMN_TYPES.STRING,
         canFilter: true,
+        width: 200,
       },
       {
         title: 'Nước đến',
@@ -213,9 +218,10 @@ const BillList = ({
         canFilter: true,
       },
       {
-        title: 'Trọng lượng (kg)',
+        title: 'TL (kg)',
         key: 'weightInKg',
         type: COLUMN_TYPES.NUMBER,
+        width: 100,
         render: record => {
           const { weightInKg, oldWeightInKg } = record;
           return (
@@ -232,6 +238,7 @@ const BillList = ({
         dataIndex: 'createdOn',
         type: COLUMN_TYPES.DATE_TIME,
         sorter: true,
+        width: 150,
       },
       ...moreCols,
       {
@@ -317,8 +324,9 @@ const BillList = ({
             dataSource={billDataSource}
             columns={columns}
             pageSize={20}
-            scroll={{ x: 1300 }}
+            width="max-content"
             dontLoadInitialData={dontLoadInitialData}
+            heightOffset={heightOffset || 0.35}
           />
           <Modal
             visible={visibleBillView}
@@ -344,7 +352,7 @@ const BillList = ({
           </Modal>
         </>
       )}
-      {isReset && <AntDataGrid columns={columns} scroll={{ x: 1300 }} />}
+      {isReset && <Empty description={false} />}
     </>
   );
 };

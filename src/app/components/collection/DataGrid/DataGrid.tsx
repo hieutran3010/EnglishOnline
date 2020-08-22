@@ -31,7 +31,9 @@ interface DataGrid {
   columns: ColumnDefinition[];
   pageSizeOptions: Array<string>;
   pageSize: number;
-  maxHeight: number;
+  maxHeight?: number;
+  width?: number | boolean | string | 'max-content';
+  heightOffset?: number;
   locale?: TableLocale;
   size: 'large' | 'middle' | 'small';
   dontLoadInitialData?: boolean;
@@ -42,6 +44,8 @@ export default function DataGrid({
   pageSizeOptions,
   pageSize,
   maxHeight,
+  width,
+  heightOffset,
   locale,
   size,
   dontLoadInitialData,
@@ -239,10 +243,22 @@ export default function DataGrid({
   );
 
   const formattedColumns = useMemo(() => formatColumns(columns), [columns]);
+  const _maxHeight = useMemo(() => {
+    if (maxHeight) {
+      return maxHeight;
+    }
+
+    if (heightOffset) {
+      const offset = window.innerHeight * heightOffset;
+      return window.innerHeight - offset;
+    }
+
+    return 400;
+  }, [heightOffset, maxHeight]);
 
   return (
     <Table
-      scroll={{ y: maxHeight }}
+      scroll={{ x: width ?? 'max-content', y: _maxHeight }}
       columns={formattedColumns}
       dataSource={items}
       rowKey={(record: any) => record.id}
@@ -266,6 +282,5 @@ export default function DataGrid({
 DataGrid.defaultProps = {
   pageSizeOptions: ['10', '20', '30', '40'],
   pageSize: 10,
-  maxHeight: 600,
   size: 'middle',
 };

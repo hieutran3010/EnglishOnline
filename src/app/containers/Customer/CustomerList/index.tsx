@@ -183,6 +183,7 @@ export function CustomerList() {
           columns={columns}
           pageSize={20}
           locale={{ emptyText: 'Không tìm thấy khách hàng nào :(' }}
+          heightOffset={0.3}
         />
       </RootContainer>
     </>

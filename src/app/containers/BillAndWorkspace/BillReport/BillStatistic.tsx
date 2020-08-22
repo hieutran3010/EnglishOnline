@@ -73,7 +73,7 @@ const BillStatistic = (props: BillStatisticProps) => {
     }
     case Role.ADMIN: {
       return (
-        <Space>
+        <Space style={{ width: 'max-content' }}>
           <StatisticBlock
             title="Tổng số Bill"
             isFetching={props.isFetchingTotalBillCount}
@@ -122,7 +122,7 @@ const BillStatistic = (props: BillStatisticProps) => {
     }
     case Role.ACCOUNTANT: {
       return (
-        <Space>
+        <Space style={{ width: 'max-content' }}>
           <StatisticBlock
             title="Tổng số Bill"
             isFetching={props.isFetchingTotalBillCount}
