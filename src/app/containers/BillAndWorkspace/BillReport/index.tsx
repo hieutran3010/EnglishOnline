@@ -445,7 +445,14 @@ export const BillReport = memo((props: Props) => {
         </Form>
       }
     >
-      <div style={{ paddingLeft: 20, paddingRight: 20, paddingBottom: 20 }}>
+      <div
+        style={{
+          marginLeft: 20,
+          marginRight: 20,
+          marginBottom: 20,
+          overflow: 'auto',
+        }}
+      >
         <BillStatistic {...billStatisticProps} />
       </div>
 
@@ -491,6 +498,7 @@ export const BillReport = memo((props: Props) => {
           isReset={isReset}
           excludeFields={['isArchived']}
           extendCols={getAdminCols()}
+          heightOffset={user.role === Role.ADMIN ? 0.54 : 0.5}
         />
       )}
       {adminBillListType === BillListType.GroupByVendor && !isReset && (

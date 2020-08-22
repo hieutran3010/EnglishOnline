@@ -143,6 +143,7 @@ export const VendorList = memo(() => {
           columns={columns}
           pageSize={20}
           locale={{ emptyText: 'Không tìm thấy nhà cung cấp nào :(' }}
+          heightOffset={0.3}
         />
       </RootContainer>
     </>
