@@ -60,6 +60,10 @@ const otherFields: string[] = [
   'vendorPaymentDebt',
   'customerPaymentDebt',
   'oldWeightInKg',
+  'oldPurchasePriceInUsd',
+  'oldPurchasePriceInVnd',
+  'oldPurchasePriceAfterVatInUsd',
+  'oldPurchasePriceAfterVatInVnd',
 ];
 
 const getBillFields = () => {
