@@ -181,7 +181,7 @@ export const BillAdvanceSearch = memo(() => {
           billDataSource={billDataSource}
           onPrintedVatBill={onCheckPrintedVat}
           dontLoadInitialData={true}
-          heightOffset={0.37}
+          heightOffset={0.35}
         />
       </RootContainer>
     </>

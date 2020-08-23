@@ -66,4 +66,8 @@ export const GlobalStyle = createGlobalStyle`
   .ant-pagination-item-link svg {
     margin-bottom: 5px;
   }
+
+  .ant-table-tbody > tr .ant-table-wrapper:only-child .ant-table td {
+    background-color: white;
+  }
 `;

@@ -20,28 +20,34 @@ const columns = [
     title: 'Tên NCC',
     dataIndex: 'vendorName',
     key: 'vendorName',
+    width: 200,
+    fixed: true,
     ...getLocalColumnSearchProps('vendorName'),
   },
   {
-    title: 'Tổng Số Bill',
+    title: 'Tổng Bill',
     dataIndex: 'totalBill',
     key: 'totalBill',
+    width: 100,
   },
   {
     title: 'Tổng Giá Mua',
     dataIndex: 'totalPurchase',
     key: 'totalPurchase',
+    width: 150,
     render: value => <span>{toCurrency(value)}</span>,
   },
   {
     title: 'Tổng Giá Bán',
     dataIndex: 'totalSalePrice',
     key: 'totalSalePrice',
+    width: 150,
     render: value => <span>{toCurrency(value)}</span>,
   },
   {
     title: 'Đã Thanh Toán',
     key: 'totalPayment',
+    width: 450,
     render: record => {
       const {
         totalPayment,
@@ -60,11 +66,13 @@ const columns = [
     title: 'Còn Nợ',
     dataIndex: 'totalDebt',
     key: 'totalDebt',
+    width: 150,
     render: value => <span>{toCurrency(value)}</span>,
   },
   {
     title: 'Lợi nhuận thô sau/trước thuế',
     key: 'profit',
+    width: 350,
     render: record => {
       const { totalProfit, totalProfitBeforeTax } = record;
       return (
@@ -109,6 +117,7 @@ const VendorGroupingTable = ({
             isReset={isClear}
             excludeFields={['isArchived']}
             extendCols={getAdminCols()}
+            heightOffset={0.7}
           />
         );
       }
@@ -116,12 +125,19 @@ const VendorGroupingTable = ({
     [dateRange],
   );
 
+  const getMaxHeight = useCallback(() => {
+    const offset = window.innerHeight * 0.51;
+    return window.innerHeight - offset;
+  }, []);
+
   return (
     <Table
+      size="small"
       className="components-table-demo-nested"
       columns={columns}
       expandable={{ expandedRowRender: NestedBillsVendorGrouping }}
       rowKey={(record: any) => record.vendorId}
+      scroll={{ x: 1300, y: getMaxHeight() }}
       {...restProps}
     />
   );

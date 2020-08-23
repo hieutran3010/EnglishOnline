@@ -35,7 +35,6 @@ interface DataGrid {
   width?: number | boolean | string | 'max-content';
   heightOffset?: number;
   locale?: TableLocale;
-  size: 'large' | 'middle' | 'small';
   dontLoadInitialData?: boolean;
 }
 export default function DataGrid({
@@ -47,7 +46,6 @@ export default function DataGrid({
   width,
   heightOffset,
   locale,
-  size,
   dontLoadInitialData,
   ...restProps
 }: DataGrid & any) {
@@ -272,7 +270,6 @@ export default function DataGrid({
         current: pagination.current,
         total,
       }}
-      size={size}
       locale={locale}
       {...restProps}
     />
@@ -282,5 +279,4 @@ export default function DataGrid({
 DataGrid.defaultProps = {
   pageSizeOptions: ['10', '20', '30', '40'],
   pageSize: 10,
-  size: 'middle',
 };
