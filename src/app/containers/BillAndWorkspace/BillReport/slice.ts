@@ -163,7 +163,16 @@ const billReportSlice = createSlice({
     downloadBills() {},
 
     reset(state) {
-      state = { ...initialState };
+      state.totalSalePriceOfSale = initialState.totalSalePriceOfSale;
+      state.totalCustomerDebt = 0;
+      state.totalProfit = 0;
+      state.totalProfitBeforeTax = 0;
+      state.totalRevenue = 0;
+      state.totalVendorDebt = 0;
+      state.totalBillCount = 0;
+      state.totalFinalBill = 0;
+      state.billsGroupedByCustomer = [];
+      state.billsGroupedByVendor = [];
     },
   },
 });

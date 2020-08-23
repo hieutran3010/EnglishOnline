@@ -17,34 +17,41 @@ const columns = [
     title: 'Tên Khách Gởi',
     dataIndex: 'senderName',
     key: 'senderName',
+    width: 250,
+    fixed: true,
     ...getLocalColumnSearchProps('senderName'),
   },
   {
-    title: 'Số ĐT Khách Gởi',
+    title: 'SĐT Khách Gởi',
     dataIndex: 'senderPhone',
     key: 'senderPhone',
+    width: 150,
     ...getLocalColumnSearchProps('senderPhone'),
   },
   {
-    title: 'Tổng Số Bill',
+    title: 'Tổng Bill',
     dataIndex: 'totalBill',
     key: 'totalBill',
+    width: 100,
   },
   {
     title: 'Tổng Giá Mua',
     dataIndex: 'totalPurchase',
     key: 'totalPurchase',
+    width: 150,
     render: value => <span>{toCurrency(value)}</span>,
   },
   {
     title: 'Tổng Giá Bán',
     dataIndex: 'totalSalePrice',
     key: 'totalSalePrice',
+    width: 150,
     render: value => <span>{toCurrency(value)}</span>,
   },
   {
     title: 'Đã Trả',
     key: 'totalPayment',
+    width: 450,
     render: record => {
       const {
         totalPayment,
@@ -63,11 +70,13 @@ const columns = [
     title: 'Còn Nợ',
     dataIndex: 'totalDebt',
     key: 'totalDebt',
+    width: 150,
     render: value => <span>{toCurrency(value)}</span>,
   },
   {
     title: 'Lợi nhuận thô sau/trước thuế',
     key: 'profit',
+    width: 350,
     render: record => {
       const { totalProfit, totalProfitBeforeTax } = record;
       return (
@@ -121,18 +130,27 @@ const SenderGroupingTable = ({
             isReset={isClear}
             excludeFields={['isArchived']}
             extendCols={getAdminCols()}
+            heightOffset={0.7}
           />
         );
       }
     },
     [dateRange],
   );
+
+  const getMaxHeight = useCallback(() => {
+    const offset = window.innerHeight * 0.51;
+    return window.innerHeight - offset;
+  }, []);
+
   return (
     <Table
+      size="small"
       className="components-table-demo-nested"
       columns={columns}
       expandable={{ expandedRowRender: NestedBillsCustomerGrouping }}
       rowKey={(record: any) => record.senderPhone}
+      scroll={{ x: 1300, y: getMaxHeight() }}
       {...restProps}
     />
   );

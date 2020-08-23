@@ -64,6 +64,7 @@ interface Props {
   onPrintedVatBill?: (bill: Bill) => void;
   dontLoadInitialData?: boolean;
   heightOffset?: number;
+  width?: number;
 }
 const BillList = ({
   onArchiveBill,
@@ -74,6 +75,7 @@ const BillList = ({
   onPrintedVatBill,
   dontLoadInitialData,
   heightOffset,
+  width,
 }: Props) => {
   const user = authStorage.getUser();
 
@@ -328,9 +330,10 @@ const BillList = ({
             dataSource={billDataSource}
             columns={columns}
             pageSize={20}
-            width="max-content"
+            width={width ?? 'max-content'}
             dontLoadInitialData={dontLoadInitialData}
-            heightOffset={heightOffset || 0.35}
+            heightOffset={heightOffset || 0.32}
+            size="small"
           />
           <Modal
             visible={visibleBillView}

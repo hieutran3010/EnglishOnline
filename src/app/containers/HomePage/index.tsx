@@ -96,6 +96,7 @@ const menus: MenuItem[] = [
     displayName: 'Cài Đặt',
     icon: <SettingOutlined />,
     index: 7,
+    allowRoles: [Role.ADMIN, Role.ACCOUNTANT],
   },
 ];
 

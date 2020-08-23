@@ -41,6 +41,7 @@ const getAdminCols = (): ColumnDefinition[] => {
         title: 'Lợi Nhuận',
         key: 'profit',
         dataIndex: 'profit',
+        width: 150,
         render: (value: number) => {
           return (
             <span style={{ color: value <= 0 ? '#cf1322' : '#3f8600' }}>

@@ -496,9 +496,9 @@ export const BillReport = memo((props: Props) => {
             marginRight: 20,
           }}
         >
-          <Text strong>{`Báo cáo từ ngày ${dateRange[0].format(
+          <Text strong>{`Báo cáo từ ${dateRange[0].format(
             'DD-MM-YYYY 00:00',
-          )} đến ngày ${dateRange[1].format('DD-MM-YYYY 23:59')}`}</Text>
+          )} đến ${dateRange[1].format('DD-MM-YYYY 23:59')}`}</Text>
           {authorizeHelper.canRenderWithRole(
             [Role.ACCOUNTANT],
             <Space>
@@ -521,7 +521,7 @@ export const BillReport = memo((props: Props) => {
           isReset={isReset}
           excludeFields={['isArchived']}
           extendCols={getAdminCols()}
-          heightOffset={user.role === Role.ADMIN ? 0.54 : 0.5}
+          heightOffset={user.role === Role.ADMIN ? 0.51 : 0.47}
         />
       )}
       {adminBillListType === BillListType.GroupByVendor && !isReset && (
