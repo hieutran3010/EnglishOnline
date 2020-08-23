@@ -48,7 +48,11 @@ const canEdit = (user: User, bill: Bill) => {
     return bill.accountantUserId === user.id;
   }
 
-  return true; // for admin
+  if (user.role === Role.ADMIN) {
+    return true;
+  }
+
+  return false;
 };
 
 interface Props {
@@ -121,11 +125,11 @@ const BillList = ({
     (bill: Bill) => (
       <Menu>
         <Menu.Item key="0">
-          <Link to={`/billUpdating/${bill.id}`}>Sửa full thông tin</Link>
+          <Link to={`/billUpdating/${bill.id}`}>Sửa thông tin</Link>
         </Menu.Item>
         <Menu.Item key="1">
           <Link to={`/billUpdating/${bill.id}`} target="_blank">
-            Sửa full thông tin ở Tab mới
+            Sửa thông tin ở Tab mới
           </Link>
         </Menu.Item>
         {authorizeHelper.canRenderWithRole(

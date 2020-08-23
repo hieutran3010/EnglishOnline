@@ -63,7 +63,7 @@ const columns = [
     render: value => <span>{toCurrency(value)}</span>,
   },
   {
-    title: 'Lợi nhuận thô sau thuế/trước thuế',
+    title: 'Lợi nhuận thô sau/trước thuế',
     key: 'profit',
     render: record => {
       const { totalProfit, totalProfitBeforeTax } = record;

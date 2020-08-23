@@ -51,7 +51,7 @@ const updatePurchasePrice = (
   purchasePrice: PurchasePriceCountingResult,
 ) => {
   const newPurchasePriceInfo = new PurchasePriceInfo(state.purchasePriceInfo);
-  newPurchasePriceInfo.updatePurchasePriceInfo(purchasePrice);
+  newPurchasePriceInfo.updateFromCountingResult(purchasePrice);
   state.purchasePriceInfo = newPurchasePriceInfo;
 };
 
@@ -178,6 +178,10 @@ const billCreateOrUpdateSlice = createSlice({
     },
     setReceiverId(state, action: PayloadAction<string | undefined>) {
       state.receiverId = action.payload;
+    },
+    setPurchasePriceManually(state, action: PayloadAction<PurchasePriceInfo>) {
+      const newPurchasePriceInfo = new PurchasePriceInfo(action.payload);
+      state.purchasePriceInfo = newPurchasePriceInfo;
     },
 
     resetState(state) {

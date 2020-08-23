@@ -39,6 +39,8 @@ interface Props {
   isCalculating?: boolean;
   disabledCalculation?: boolean;
   purchasePriceInfo: PurchasePriceInfo;
+  userRole: Role;
+  onPurchasePriceManuallyChanged?: (price: PurchasePriceInfo) => void;
 }
 const FeeAndPrice = ({
   billValidator,
@@ -49,6 +51,8 @@ const FeeAndPrice = ({
   isCalculating,
   disabledCalculation,
   purchasePriceInfo,
+  userRole,
+  onPurchasePriceManuallyChanged,
 }: Props) => {
   const onVatHavingChanged = useCallback(
     e => {
@@ -128,7 +132,11 @@ const FeeAndPrice = ({
             </StyledFeeItemContainer>
           </StyledFeeContainer>
           <Form.Item label="Giá mua (USD = VNĐ)">
-            <PurchasePrice info={purchasePriceInfo} />
+            <PurchasePrice
+              info={purchasePriceInfo}
+              userRole={userRole}
+              onPurchasePriceChanged={onPurchasePriceManuallyChanged}
+            />
             <Tooltip title="Tính lại Giá mua">
               <Button
                 size="small"

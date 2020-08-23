@@ -38,6 +38,10 @@ export class PurchasePriceInfo {
   purchasePriceInUsd?: number;
   vat?: number;
   usdExchangeRate!: number;
+  oldPurchasePriceInUsd?: number;
+  oldPurchasePriceInVnd?: number;
+  oldPurchasePriceAfterVatInUsd?: number;
+  oldPurchasePriceAfterVatInVnd?: number;
 
   /**
    *
@@ -60,10 +64,14 @@ export class PurchasePriceInfo {
       this.purchasePriceInUsd = input.purchasePriceInUsd;
       this.vat = input.vat;
       this.usdExchangeRate = input.usdExchangeRate;
+      this.oldPurchasePriceInUsd = input.oldPurchasePriceInUsd;
+      this.oldPurchasePriceInVnd = input.oldPurchasePriceInVnd;
+      this.oldPurchasePriceAfterVatInUsd = input.oldPurchasePriceAfterVatInUsd;
+      this.oldPurchasePriceAfterVatInVnd = input.oldPurchasePriceAfterVatInVnd;
     }
   }
 
-  updatePurchasePriceInfo(result: PurchasePriceCountingResult) {
+  updateFromCountingResult(result: PurchasePriceCountingResult) {
     this.purchasePriceInUsd = result.purchasePriceInUsd;
     this.purchasePriceInVnd = result.purchasePriceInVnd;
     this.vendorFuelChargeFeeInUsd = result.fuelChargeFeeInUsd;
@@ -73,6 +81,10 @@ export class PurchasePriceInfo {
     this.zoneName = result.zoneName;
     this.purchasePriceAfterVatInUsd = result.purchasePriceAfterVatInUsd;
     this.purchasePriceAfterVatInVnd = result.purchasePriceAfterVatInVnd;
+    this.oldPurchasePriceInUsd = undefined;
+    this.oldPurchasePriceInVnd = undefined;
+    this.oldPurchasePriceAfterVatInUsd = undefined;
+    this.oldPurchasePriceAfterVatInVnd = undefined;
   }
 }
 
@@ -125,6 +137,10 @@ export default class Bill extends ModelBase {
   purchasePriceAfterVatInVnd?: number;
   isPrintedVatBill!: boolean;
   packageStatus!: string;
+  oldPurchasePriceInUsd?: number;
+  oldPurchasePriceInVnd?: number;
+  oldPurchasePriceAfterVatInUsd?: number;
+  oldPurchasePriceAfterVatInVnd?: number;
 
   constructor(input?: Bill | any) {
     super(input);
@@ -176,6 +192,10 @@ export default class Bill extends ModelBase {
       this.profit = input.profit;
       this.isPrintedVatBill = input.isPrintedVatBill;
       this.packageStatus = input.packageStatus;
+      this.oldPurchasePriceInUsd = input.oldPurchasePriceInUsd;
+      this.oldPurchasePriceInVnd = input.oldPurchasePriceInVnd;
+      this.oldPurchasePriceAfterVatInUsd = input.oldPurchasePriceAfterVatInUsd;
+      this.oldPurchasePriceAfterVatInVnd = input.oldPurchasePriceAfterVatInVnd;
     } else {
       this.status = BILL_STATUS.LICENSE;
       this.vendorOtherFee = 0;
@@ -207,19 +227,27 @@ export default class Bill extends ModelBase {
     info.purchasePriceAfterVatInVnd = this.purchasePriceAfterVatInVnd;
     info.purchasePriceAfterVatInUsd = this.purchasePriceAfterVatInUsd;
     info.purchasePriceInVnd = this.purchasePriceInVnd;
+    info.oldPurchasePriceInUsd = this.oldPurchasePriceInUsd;
+    info.oldPurchasePriceInVnd = this.oldPurchasePriceInVnd;
+    info.oldPurchasePriceAfterVatInUsd = this.oldPurchasePriceAfterVatInUsd;
+    info.oldPurchasePriceAfterVatInVnd = this.oldPurchasePriceAfterVatInVnd;
     return info;
   }
 
-  updatePurchasePriceInfo(result: PurchasePriceCountingResult) {
+  updatePurchasePriceInfo(result: PurchasePriceInfo) {
     this.purchasePriceInUsd = result.purchasePriceInUsd;
     this.purchasePriceInVnd = result.purchasePriceInVnd;
-    this.vendorFuelChargeFeeInUsd = result.fuelChargeFeeInUsd;
-    this.vendorFuelChargeFeeInVnd = result.fuelChargeFeeInVnd;
+    this.vendorFuelChargeFeeInUsd = result.vendorFuelChargeFeeInVnd;
+    this.vendorFuelChargeFeeInVnd = result.vendorFuelChargeFeeInVnd;
     this.quotationPriceInUsd = result.quotationPriceInUsd;
     this.vendorNetPriceInUsd = result.vendorNetPriceInUsd;
     this.zoneName = result.zoneName;
     this.purchasePriceAfterVatInUsd = result.purchasePriceAfterVatInUsd;
     this.purchasePriceAfterVatInVnd = result.purchasePriceAfterVatInVnd;
+    this.oldPurchasePriceInUsd = result.oldPurchasePriceInUsd;
+    this.oldPurchasePriceInVnd = result.oldPurchasePriceInVnd;
+    this.oldPurchasePriceAfterVatInUsd = result.oldPurchasePriceAfterVatInUsd;
+    this.oldPurchasePriceAfterVatInVnd = result.oldPurchasePriceAfterVatInVnd;
   }
 }
 

@@ -62,7 +62,11 @@ import FeeAndPrice from '../components/FeeAndPrice';
 import PackageInfo from '../components/PackageInfo';
 import CustomerInfo from '../components/CustomerInfo';
 import ResponsibilityEmp from '../components/ResponsibilityEmp';
-import Bill, { BILL_STATUS, PAYMENT_TYPE } from 'app/models/bill';
+import Bill, {
+  BILL_STATUS,
+  PAYMENT_TYPE,
+  PurchasePriceInfo,
+} from 'app/models/bill';
 import BillStatusTag from '../components/BillStatusTag';
 import Payment from '../components/Payment';
 import { useInjectReducer, useInjectSaga } from 'utils/redux-injectors';
@@ -193,6 +197,9 @@ export const BillCreateOrUpdate = memo(
 
     useEffect(() => {
       return function reset() {
+        setIsDirty(false);
+        setShouldRecalculatePurchasePrice(false);
+
         dispatch(actions.resetState());
       };
     }, [dispatch]);
@@ -218,14 +225,19 @@ export const BillCreateOrUpdate = memo(
       const user = authStorage.getUser();
       switch (user.role) {
         case Role.LICENSE: {
-          if (!inputBill.licenseUserId || isEmpty(inputBill.licenseUserId)) {
+          if (isEmpty(inputBill.licenseUserId)) {
             formData.licenseUserId = user.id;
           }
           break;
         }
         case Role.ACCOUNTANT: {
-          if (isEmpty(inputBill.id) && isEmpty(inputBill.accountantUserId)) {
+          if (isEmpty(inputBill.accountantUserId)) {
             formData.accountantUserId = user.id;
+            if (!isEmpty(inputBill.id)) {
+              toast.info(
+                'Phần mềm đã tự động chỉ định bạn là kế toán của bill này, bấm Lưu để lưu lại!',
+              );
+            }
           }
           break;
         }
@@ -400,6 +412,7 @@ export const BillCreateOrUpdate = memo(
     const onCalculatePurchasePrice = useCallback(() => {
       dispatch(actions.calculatePurchasePrice(getBillData()));
       setShouldRecalculatePurchasePrice(false);
+      setIsDirty(true);
     }, [dispatch, getBillData]);
 
     const onFinalBill = useCallback(async () => {
@@ -472,6 +485,14 @@ export const BillCreateOrUpdate = memo(
         );
       },
       [dispatch, updateBillFormData],
+    );
+
+    const onPurchasePriceManuallyChanged = useCallback(
+      (manuallyPurchasePrice: PurchasePriceInfo) => {
+        dispatch(actions.setPurchasePriceManually(manuallyPurchasePrice));
+        setIsDirty(true);
+      },
+      [dispatch],
     );
 
     const onRestoreSaleWeight = useCallback(
@@ -594,6 +615,8 @@ export const BillCreateOrUpdate = memo(
             disabledCalculation={
               isSubmitting || isAssigningAccountant || isDeletingBill
             }
+            userRole={role}
+            onPurchasePriceManuallyChanged={onPurchasePriceManuallyChanged}
           />
 
           {authorizeHelper.canRenderWithRole(

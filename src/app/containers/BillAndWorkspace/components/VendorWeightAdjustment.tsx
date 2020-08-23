@@ -136,7 +136,9 @@ const VendorWeightAdjustment = ({
         const submitBill = new Bill(bill);
         submitBill.oldWeightInKg = submitBill.weightInKg;
         submitBill.weightInKg = _newWeight;
-        submitBill.updatePurchasePriceInfo(predictPurchasePrice);
+        const purchasePriceInfo = submitBill.getPurchasePriceInfo();
+        purchasePriceInfo.updateFromCountingResult(predictPurchasePrice);
+        submitBill.updatePurchasePriceInfo(purchasePriceInfo);
 
         const billFetcher = new BillFetcher();
         await billFetcher.updateAsync(submitBill.id, submitBill);
@@ -182,7 +184,9 @@ const VendorWeightAdjustment = ({
             const submitBill = new Bill(bill);
             submitBill.oldWeightInKg = undefined;
             submitBill.weightInKg = oldWeightInKg || 0;
-            submitBill.updatePurchasePriceInfo(predictPurchasePrice);
+            const purchasePriceInfo = submitBill.getPurchasePriceInfo();
+            purchasePriceInfo.updateFromCountingResult(predictPurchasePrice);
+            submitBill.updatePurchasePriceInfo(purchasePriceInfo);
 
             const billFetcher = new BillFetcher();
             await billFetcher.updateAsync(submitBill.id, submitBill);

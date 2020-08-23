@@ -1,9 +1,9 @@
 import React, { memo, useMemo } from 'react';
-import { Typography, Form, Select } from 'antd';
+import { Typography, Form, Select, Space } from 'antd';
 import filter from 'lodash/fp/filter';
 import map from 'lodash/fp/map';
 
-import { authorizeHelper } from 'app/services/auth';
+import { authorizeHelper, authStorage } from 'app/services/auth';
 import User, { Role } from 'app/models/user';
 
 import {
@@ -13,7 +13,7 @@ import {
 } from '../Workspace/styles/StyledIndex';
 import { BillValidator } from 'app/models/validators/billValidator';
 
-const { Title } = Typography;
+const { Title, Text } = Typography;
 
 const { Option } = Select;
 
@@ -33,6 +33,7 @@ const ResponsibilityEmp = ({
   isFetchingUsers,
   billValidator,
 }: Props) => {
+  const user = authStorage.getUser();
   const adminUsers = useMemo(() => {
     return filter((u: User) => u.roles.includes(Role.ADMIN))(users);
   }, [users]);
@@ -43,22 +44,29 @@ const ResponsibilityEmp = ({
   }, [adminUsers, users]);
 
   const licenseUserOptions = useMemo(() => {
+    if (user.role === Role.LICENSE) {
+      return [];
+    }
     const licenseUsers = filter((u: User) => u.roles.includes(Role.LICENSE))(
       users,
     );
     return map((u: User) => renderUserOption(u))(
       licenseUsers.concat(adminUsers),
     );
-  }, [adminUsers, users]);
+  }, [adminUsers, user.role, users]);
 
   const accountantUserOptions = useMemo(() => {
+    if (user.role === Role.ACCOUNTANT) {
+      return [];
+    }
+
     const accountantUsers = filter((u: User) =>
       u.roles.includes(Role.ACCOUNTANT),
     )(users);
     return map((u: User) => renderUserOption(u))(
       accountantUsers.concat(adminUsers),
     );
-  }, [adminUsers, users]);
+  }, [adminUsers, user.role, users]);
 
   return (
     <>
@@ -78,30 +86,64 @@ const ResponsibilityEmp = ({
           </Form.Item>
         </StyledEmpItemContainer>
         <StyledEmpCenterItemContainer>
-          <Form.Item
-            name="licenseUserId"
-            label="Chứng từ"
-            labelAlign="right"
-            labelCol={{ span: 6 }}
-            wrapperCol={{ span: 15 }}
-            rules={billValidator.licenseUserId}
-          >
-            <Select loading={isFetchingUsers}>{licenseUserOptions}</Select>
-          </Form.Item>
+          {user.role !== Role.LICENSE ? (
+            <Form.Item
+              name="licenseUserId"
+              label="Chứng từ"
+              labelAlign="right"
+              labelCol={{ span: 6 }}
+              wrapperCol={{ span: 15 }}
+              rules={billValidator.licenseUserId}
+            >
+              <Select loading={isFetchingUsers}>{licenseUserOptions}</Select>
+            </Form.Item>
+          ) : (
+            <div style={{ display: 'flex' }}>
+              <Form.Item
+                hidden
+                name="licenseUserId"
+                style={{ position: 'absolute' }}
+              >
+                <Text />
+              </Form.Item>
+              <Space>
+                <Text>Chứng từ: </Text>
+                <Text strong>{user.displayName}</Text>
+              </Space>
+            </div>
+          )}
         </StyledEmpCenterItemContainer>
         {authorizeHelper.canRenderWithRole(
           [Role.ACCOUNTANT],
           <StyledEmpItemContainer>
-            <Form.Item
-              name="accountantUserId"
-              label="Kế toán"
-              labelAlign="right"
-              labelCol={{ span: 6 }}
-              wrapperCol={{ span: 15 }}
-              rules={billValidator.accountantUserId}
-            >
-              <Select loading={isFetchingUsers}>{accountantUserOptions}</Select>
-            </Form.Item>
+            {user.role !== Role.ACCOUNTANT ? (
+              <Form.Item
+                name="accountantUserId"
+                label="Kế toán"
+                labelAlign="right"
+                labelCol={{ span: 6 }}
+                wrapperCol={{ span: 15 }}
+                rules={billValidator.accountantUserId}
+              >
+                <Select loading={isFetchingUsers}>
+                  {accountantUserOptions}
+                </Select>
+              </Form.Item>
+            ) : (
+              <div style={{ display: 'flex' }}>
+                <Form.Item
+                  hidden
+                  name="accountantUserId"
+                  style={{ position: 'absolute' }}
+                >
+                  <Text />
+                </Form.Item>
+                <Space>
+                  <Text>Kế toán: </Text>
+                  <Text strong>{user.displayName}</Text>
+                </Space>
+              </div>
+            )}
           </StyledEmpItemContainer>,
         )}
       </StyledEmpContainer>

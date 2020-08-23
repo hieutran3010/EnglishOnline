@@ -106,13 +106,13 @@ const BillStatistic = (props: BillStatisticProps) => {
             }
           />
           <StatisticBlock
-            title="Lợi nhuận thô sau thuế /trước thuế "
+            title="Lợi nhuận thô sau/trước thuế "
             value={props.totalRawProfit}
             isFetching={props.isFetchingTotalRawProfit}
             suffix={`/ ${toCurrency(props.totalRawProfitBeforeTax)}`}
           />
           <StatisticBlock
-            title="Lợi nhuận sau thuế /trước thuế theo dữ liệu nhập"
+            title="Lợi nhuận sau/trước thuế trên bill đã chốt"
             value={props.totalProfit}
             isFetching={props.isFetchingTotalProfit}
             suffix={`/ ${toCurrency(props.totalProfitBeforeTax)}`}

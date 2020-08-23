@@ -34,6 +34,9 @@ export interface BillReportState {
 
   checkingExportSession: boolean;
   exportSession?: ExportSession;
+
+  isFetchingTotalFinalBill: boolean;
+  totalFinalBill: number;
 }
 
 export type ContainerState = BillReportState;
