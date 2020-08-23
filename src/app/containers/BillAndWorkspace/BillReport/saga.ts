@@ -3,7 +3,11 @@ import { actions } from './slice';
 import { PayloadAction } from '@reduxjs/toolkit';
 import BillFetcher from 'app/fetchers/billFetcher';
 import { MathResult } from 'graphql-door-client/lib/types';
-import { VendorStatistic, CustomerStatistic } from 'app/models/bill';
+import {
+  VendorStatistic,
+  CustomerStatistic,
+  BILL_STATUS,
+} from 'app/models/bill';
 import ExportSessionFetcher from 'app/fetchers/exportSessionFetcher';
 import ExportFetcher from 'app/fetchers/exportFetcher';
 import { toast } from 'react-toastify';
@@ -93,6 +97,15 @@ export function* fetchTotalBillCountTask(action: PayloadAction<string>) {
   yield put(actions.fetchTotalBillCountCompleted(totalBillCount));
 }
 
+export function* fetchTotalFinalBillTask(action: PayloadAction<string>) {
+  const query = action.payload;
+  const totalFinalBillCount = yield call(
+    billFetcher.countAsync,
+    `${query} && Status = "${BILL_STATUS.DONE}"`,
+  );
+  yield put(actions.fetchTotalFinalBillCompleted(totalFinalBillCount));
+}
+
 export function* fetchBillsGroupedByVendorTask(action: PayloadAction<string>) {
   const query = action.payload;
 
@@ -176,6 +189,7 @@ export function* billReportSaga() {
   yield takeLatest(actions.fetchProfit.type, fetchProfitTask);
   yield takeLatest(actions.fetchRawProfit.type, fetchRawProfitTask);
   yield takeLatest(actions.fetchTotalBillCount.type, fetchTotalBillCountTask);
+  yield takeLatest(actions.fetchTotalFinalBill.type, fetchTotalFinalBillTask);
   yield takeLatest(
     actions.fetchBillsGroupedByVendor.type,
     fetchBillsGroupedByVendorTask,

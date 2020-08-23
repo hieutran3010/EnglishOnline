@@ -18,6 +18,7 @@ import {
   Descriptions,
   Alert,
   Typography,
+  Badge,
 } from 'antd';
 
 import isEmpty from 'lodash/fp/isEmpty';
@@ -59,6 +60,8 @@ import {
   selectTotalRawProfit,
   selectTotalRawProfitBeforeTax,
   selectIsFetchingTotalRawProfit,
+  selectTotalFinalBill,
+  selectIsFetchingTotalFinalBill,
 } from './selectors';
 import BillList from '../components/BillList';
 import BillStatistic, { BillStatisticProps } from './BillStatistic';
@@ -117,6 +120,9 @@ export const BillReport = memo((props: Props) => {
 
   const totalBillCount = useSelector(selectTotalBillCount);
   const isFetchingTotalBillCount = useSelector(selectIsFetchingTotalBillCount);
+
+  const totalFinalBill = useSelector(selectTotalFinalBill);
+  const isFetchingTotalFinalBill = useSelector(selectIsFetchingTotalFinalBill);
 
   const isFetchingBillsVendorGrouping = useSelector(
     selectIsFetchingVendorGroupingList,
@@ -261,11 +267,13 @@ export const BillReport = memo((props: Props) => {
         dispatch(actions.fetchVendorDebt(query));
         dispatch(actions.fetchProfit(query));
         dispatch(actions.fetchRawProfit(query));
+        dispatch(actions.fetchTotalFinalBill(query));
         break;
       }
       case Role.ACCOUNTANT: {
         dispatch(actions.fetchCustomerDebt(query));
         dispatch(actions.fetchVendorDebt(query));
+        dispatch(actions.fetchTotalFinalBill(query));
         break;
       }
     }
@@ -481,15 +489,30 @@ export const BillReport = memo((props: Props) => {
         <div
           style={{
             display: 'flex',
-            width: '100%',
-            justifyContent: 'center',
             alignItems: 'center',
+            justifyContent: 'space-between',
             marginBottom: 10,
+            marginLeft: 20,
+            marginRight: 20,
           }}
         >
           <Text strong>{`Báo cáo từ ngày ${dateRange[0].format(
             'DD-MM-YYYY 00:00',
           )} đến ngày ${dateRange[1].format('DD-MM-YYYY 23:59')}`}</Text>
+          {authorizeHelper.canRenderWithRole(
+            [Role.ACCOUNTANT],
+            <Space>
+              {isFetchingTotalFinalBill ? (
+                <Spin size="small" />
+              ) : (
+                <Badge
+                  count={totalFinalBill}
+                  style={{ backgroundColor: '#52c41a', marginBottom: 2 }}
+                />
+              )}
+              <Text>bill đã chốt</Text>
+            </Space>,
+          )}
         </div>
       )}
       {(adminBillListType === BillListType.Normal || isReset) && (

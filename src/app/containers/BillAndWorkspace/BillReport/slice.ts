@@ -16,6 +16,7 @@ export const initialState: ContainerState = {
   totalSalePriceOfSale: 0,
   totalVendorDebt: 0,
   totalBillCount: 0,
+  totalFinalBill: 0,
   isFetchingTotalCustomerDebt: false,
   isFetchingTotalProfit: false,
   isFetchingTotalRevenue: false,
@@ -23,6 +24,7 @@ export const initialState: ContainerState = {
   isFetchingTotalVendorDebt: false,
   isFetchingTotalBillCount: false,
   isFetchingTotalRawProfit: false,
+  isFetchingTotalFinalBill: false,
 
   isFetchingCustomerGroupingList: false,
   billsGroupedByCustomer: [],
@@ -106,6 +108,14 @@ const billReportSlice = createSlice({
       state.totalBillCount = action.payload;
     },
 
+    fetchTotalFinalBill(state, action: PayloadAction<string>) {
+      state.isFetchingTotalFinalBill = true;
+    },
+    fetchTotalFinalBillCompleted(state, action: PayloadAction<number>) {
+      state.isFetchingTotalFinalBill = false;
+      state.totalFinalBill = action.payload;
+    },
+
     fetchBillsGroupedByVendor(state, action: PayloadAction<string>) {
       state.isFetchingVendorGroupingList = true;
     },
@@ -153,15 +163,7 @@ const billReportSlice = createSlice({
     downloadBills() {},
 
     reset(state) {
-      state.totalSalePriceOfSale = initialState.totalSalePriceOfSale;
-      state.totalCustomerDebt = 0;
-      state.totalProfit = 0;
-      state.totalProfitBeforeTax = 0;
-      state.totalRevenue = 0;
-      state.totalVendorDebt = 0;
-      state.totalBillCount = 0;
-      state.billsGroupedByCustomer = [];
-      state.billsGroupedByVendor = [];
+      state = { ...initialState };
     },
   },
 });

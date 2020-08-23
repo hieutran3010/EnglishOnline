@@ -76,6 +76,16 @@ export const selectTotalBillCount = createSelector(
   billReportState => billReportState.totalBillCount,
 );
 
+export const selectIsFetchingTotalFinalBill = createSelector(
+  [selectDomain],
+  billReportState => billReportState.isFetchingTotalFinalBill,
+);
+
+export const selectTotalFinalBill = createSelector(
+  [selectDomain],
+  billReportState => billReportState.totalFinalBill,
+);
+
 export const selectTotalVendorDebt = createSelector(
   [selectDomain],
   billReportState => billReportState.totalVendorDebt,
