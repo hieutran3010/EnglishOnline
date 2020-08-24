@@ -300,6 +300,7 @@ const BillList = ({
     return result;
   }, [
     _onArchiveBill,
+    disableFilterFields,
     excludeFields,
     extendCols,
     getMenu,
