@@ -509,7 +509,7 @@ export const BillCreateOrUpdate = memo(
         (salePrice > 0 &&
           (customerPaymentAmount <= 0 || customerPaymentAmount > salePrice)) ||
         (purchasePrice > 0 &&
-          (vendorPaymentAmount <= 0 || vendorPaymentAmount > salePrice))
+          (vendorPaymentAmount <= 0 || vendorPaymentAmount > purchasePrice))
       ) {
         Modal.warning(finalBillWarningModalConfig);
         return;
