@@ -92,19 +92,23 @@ const finalBillWarningModalConfig = {
     <div>
       <Space>
         <CheckOutlined style={{ marginBottom: 6 }} />
-        <Text>Mã bill hãng bay</Text>
+        <Text>Phải có Mã bill hãng bay hoặc Mã bill con</Text>
       </Space>
       <Space>
         <CheckOutlined style={{ marginBottom: 6 }} />
-        <Text>Hàng đi Sing phải có Bill con</Text>
+        <Text>
+          {
+            'Thanh toán của khách: Phải chọn hình thức thanh toán và Số tiền trả <= Giá bán'
+          }
+        </Text>
       </Space>
       <Space>
         <CheckOutlined style={{ marginBottom: 6 }} />
-        <Text>{'Số tiền thanh toán của khách <= Giá bán'}</Text>
-      </Space>
-      <Space>
-        <CheckOutlined style={{ marginBottom: 6 }} />
-        <Text>{'Số tiền trả NCC <= Giá mua'}</Text>
+        <Text>
+          {
+            'Thanh toán NCC: Phải chọn hình thức thanh toán và Số tiền trả <= Giá mua'
+          }
+        </Text>
       </Space>
     </div>
   ),
@@ -493,21 +497,19 @@ export const BillCreateOrUpdate = memo(
         customerPaymentType,
         vendorPaymentType,
         salePrice,
-        destinationCountry,
       } = billFormValues;
 
       const purchasePrice = toNumber(
         purchasePriceInfo.purchasePriceAfterVatInVnd,
       );
       if (
-        isEmpty(airlineBillId) ||
+        (isEmpty(airlineBillId) && isEmpty(childBillId)) ||
         isEmpty(customerPaymentType) ||
         isEmpty(vendorPaymentType) ||
         (salePrice > 0 &&
           (customerPaymentAmount <= 0 || customerPaymentAmount > salePrice)) ||
         (purchasePrice > 0 &&
-          (vendorPaymentAmount <= 0 || vendorPaymentAmount > salePrice)) ||
-        (destinationCountry === 'Singapore - SG' && isEmpty(childBillId))
+          (vendorPaymentAmount <= 0 || vendorPaymentAmount > salePrice))
       ) {
         Modal.warning(finalBillWarningModalConfig);
         return;
