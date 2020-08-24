@@ -6,7 +6,6 @@ import {
   Space,
   Button,
   Divider,
-  Checkbox,
   Modal,
   Typography,
   Menu,
@@ -25,9 +24,9 @@ import { IDataSource } from 'app/components/collection/types';
 import { authorizeHelper, authStorage } from 'app/services/auth';
 import User, { Role } from 'app/models/user';
 
-import BillStatusTag from './BillStatusTag';
 import BillView from './BillView';
 import VendorWeightAdjustment from './VendorWeightAdjustment';
+import UserAvatar from 'app/containers/Auth/components/UserAvatar';
 
 const { Text } = Typography;
 
@@ -162,6 +161,7 @@ const BillList = ({
         type: COLUMN_TYPES.STRING,
         width: 170,
         fixed: 'left',
+        render: value => <span>{value ?? '<Chưa có bill hãng bay>'}</span>,
       },
       {
         title: 'Bill con',
@@ -177,7 +177,7 @@ const BillList = ({
         key: 'date',
         type: COLUMN_TYPES.DATE,
         sorter: true,
-        width: 100,
+        width: 130,
       },
       {
         title: 'Tên Khách Gởi',
@@ -190,6 +190,7 @@ const BillList = ({
       {
         title: 'Tên Người Nhận',
         key: 'receiverName',
+        dataIndex: 'receiverName',
         canFilter: true,
         type: COLUMN_TYPES.STRING,
         width: 200,
@@ -238,8 +239,8 @@ const BillList = ({
         dataIndex: 'licenseUserId',
         key: 'licenseUserId',
         type: COLUMN_TYPES.STRING,
-        canFilter: true,
-        width: 200,
+        width: 150,
+        render: value => <UserAvatar userId={value} type="displayName" />,
       },
       ...moreCols,
       {

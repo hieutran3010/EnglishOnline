@@ -237,7 +237,7 @@ export function* finalBillTask(action: PayloadAction<SubmitBillAction>) {
   try {
     yield call(billFetcher.finalBill, billId);
     toast.success('Đã chốt bill!');
-    yield put(actions.finalBillCompleted(new Bill()));
+    yield put(actions.finalBillCompleted());
   } catch (error) {
     Sentry.captureException(error);
     toast.error('Chưa chốt được bill, vui lòng thử lại!');

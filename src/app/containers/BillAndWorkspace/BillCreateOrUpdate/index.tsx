@@ -86,7 +86,7 @@ const { Text } = Typography;
 
 const finalBillWarningModalConfig = {
   title:
-    'Có vẻ bạn đang thiếu thông tin bắt buộc khi Chốt Bill, kiểm tra lại nhé:',
+    'Có vẻ bạn đang thiếu thông tin bắt buộc khi Chốt Bill, kiểm tra lại theo các mục sau nhé:',
   content: (
     <div>
       <Space>
@@ -95,11 +95,15 @@ const finalBillWarningModalConfig = {
       </Space>
       <Space>
         <CheckOutlined />
-        <Text>Thông tin thanh toán khách hàng</Text>
+        <Text>Hàng đi Sing phải có Bill con</Text>
       </Space>
       <Space>
         <CheckOutlined />
-        <Text>Thông tin thanh toán cho nhà cung cấp</Text>
+        <Text>{'Số tiền thanh toán của khách <= Giá bán'}</Text>
+      </Space>
+      <Space>
+        <CheckOutlined />
+        <Text>{'Số tiền trả NCC <= Giá mua'}</Text>
       </Space>
     </div>
   ),
@@ -271,17 +275,16 @@ export const BillCreateOrUpdate = memo(
     }, [billForm]);
 
     const getSubmitActionParams = useCallback(async (): Promise<
-      SubmitBillAction
+      SubmitBillAction | undefined
     > => {
       try {
         await billForm.validateFields();
+        const billData = getBillData();
+        return { billFormValues: billData, isDirty };
       } catch {
         toast.error('Vui lòng nhập đầy đủ thông tin');
-        Promise.reject();
+        return undefined;
       }
-
-      const billData = getBillData();
-      return { billFormValues: billData, isDirty };
     }, [billForm, getBillData, isDirty]);
 
     const updateBillFormData = useCallback(
@@ -362,6 +365,10 @@ export const BillCreateOrUpdate = memo(
 
     const onAssignToAccountant = useCallback(async () => {
       const submitParams = await getSubmitActionParams();
+      if (!submitParams) {
+        return;
+      }
+
       dispatch(actions.assignToAccountant(submitParams));
       if (onSubmitting) onSubmitting(isBusy);
       setIsDirty(false);
@@ -427,23 +434,34 @@ export const BillCreateOrUpdate = memo(
 
     const onFinalBill = useCallback(async () => {
       const submitParams = await getSubmitActionParams();
+      if (!submitParams) {
+        return;
+      }
+
       const { billFormValues } = submitParams;
       const {
         airlineBillId,
+        childBillId,
         customerPaymentAmount,
         vendorPaymentAmount,
         customerPaymentType,
         vendorPaymentType,
         salePrice,
+        destinationCountry,
       } = billFormValues;
 
+      const purchasePrice = toNumber(
+        purchasePriceInfo.purchasePriceAfterVatInVnd,
+      );
       if (
         isEmpty(airlineBillId) ||
         isEmpty(customerPaymentType) ||
         isEmpty(vendorPaymentType) ||
-        (salePrice > 0 && customerPaymentAmount <= 0) ||
-        (toNumber(purchasePriceInfo.purchasePriceAfterVatInVnd) > 0 &&
-          vendorPaymentAmount < 0)
+        (salePrice > 0 &&
+          (customerPaymentAmount <= 0 || customerPaymentAmount > salePrice)) ||
+        (purchasePrice > 0 &&
+          (vendorPaymentAmount <= 0 || vendorPaymentAmount > salePrice)) ||
+        (destinationCountry === 'Singapore - SG' && isEmpty(childBillId))
       ) {
         Modal.warning(finalBillWarningModalConfig);
         return;
@@ -467,6 +485,10 @@ export const BillCreateOrUpdate = memo(
 
     const onAssignToLicense = useCallback(async () => {
       const submitParams = await getSubmitActionParams();
+      if (!submitParams) {
+        return;
+      }
+
       dispatch(actions.assignLicense(submitParams));
       if (onSubmitting) onSubmitting(isBusy);
       setIsDirty(false);

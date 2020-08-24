@@ -1,18 +1,24 @@
 import React, { memo, useState, useEffect } from 'react';
-import { Popover, Avatar, Spin } from 'antd';
+import { Popover, Avatar, Spin, Typography } from 'antd';
 import { UserOutlined } from '@ant-design/icons';
+import isEmpty from 'lodash/fp/isEmpty';
 import { PopoverProps } from 'antd/lib/popover';
+import { AvatarProps } from 'antd/lib/avatar';
+
 import User from 'app/models/user';
 import { authService } from 'app/services/auth';
-import { AvatarProps } from 'antd/lib/avatar';
+
+const { Text } = Typography;
 
 interface Props {
   title?: string;
   userId?: string;
+  type?: 'avatar' | 'displayName';
 }
 const UserAvatar = ({
   title,
   userId,
+  type,
   ...restProps
 }: Props & PopoverProps & AvatarProps) => {
   const { placement } = restProps;
@@ -22,6 +28,10 @@ const UserAvatar = ({
 
   useEffect(() => {
     async function getUserAsync() {
+      if (isEmpty(userId)) {
+        return;
+      }
+
       setLoading(true);
       const c = await authService.getUserById(userId);
       setUser(c);
@@ -39,16 +49,21 @@ const UserAvatar = ({
     >
       {loading ? (
         <Spin size="small" />
-      ) : (
+      ) : type === 'avatar' ? (
         <Avatar
           icon={<UserOutlined />}
           size="small"
           src={user?.avatarUrl}
           {...restProps}
         />
+      ) : (
+        <Text>{user?.displayName}</Text>
       )}
     </Popover>
   );
 };
 
+UserAvatar.defaultProps = {
+  type: 'avatar',
+};
 export default memo(UserAvatar);
