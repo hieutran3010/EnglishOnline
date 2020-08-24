@@ -23,6 +23,7 @@ import isEmpty from 'lodash/fp/isEmpty';
 import keys from 'lodash/fp/keys';
 import some from 'lodash/fp/some';
 import toString from 'lodash/fp/toString';
+import isUndefined from 'lodash/fp/isUndefined';
 
 import type Customer from 'app/models/customer';
 import type Vendor from 'app/models/vendor';
@@ -90,20 +91,40 @@ const finalBillWarningModalConfig = {
   content: (
     <div>
       <Space>
-        <CheckOutlined />
+        <CheckOutlined style={{ marginBottom: 6 }} />
         <Text>Mã bill hãng bay</Text>
       </Space>
       <Space>
-        <CheckOutlined />
+        <CheckOutlined style={{ marginBottom: 6 }} />
         <Text>Hàng đi Sing phải có Bill con</Text>
       </Space>
       <Space>
-        <CheckOutlined />
+        <CheckOutlined style={{ marginBottom: 6 }} />
         <Text>{'Số tiền thanh toán của khách <= Giá bán'}</Text>
       </Space>
       <Space>
-        <CheckOutlined />
+        <CheckOutlined style={{ marginBottom: 6 }} />
         <Text>{'Số tiền trả NCC <= Giá mua'}</Text>
+      </Space>
+    </div>
+  ),
+};
+
+const countPurchasePriceWarningConfig = {
+  title: 'Để tính được Giá mua, vui lòng nhập ít nhất các thông tin sau đây:',
+  content: (
+    <div style={{ display: 'flex', flexDirection: 'column' }}>
+      <Space>
+        <CheckOutlined style={{ marginBottom: 6 }} />
+        <Text>Nước Đến</Text>
+      </Space>
+      <Space>
+        <CheckOutlined style={{ marginBottom: 6 }} />
+        <Text>Trọng Lượng</Text>
+      </Space>
+      <Space>
+        <CheckOutlined style={{ marginBottom: 6 }} />
+        <Text>Tỷ Giá đồng USD</Text>
       </Space>
     </div>
   ),
@@ -266,6 +287,18 @@ export const BillCreateOrUpdate = memo(
       // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [inputBill, role]);
 
+    useEffect(() => {
+      if (isEmpty(inputBill.id)) {
+        const usdExchangeRate = billForm.getFieldValue('usdExchangeRate');
+        if (!usdExchangeRate) {
+          billForm.setFieldsValue({
+            usdExchangeRate: billParams.usdExchangeRate,
+          });
+        }
+      }
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [billParams.usdExchangeRate]);
+
     const getBillData = useCallback(() => {
       const bill = billForm.getFieldsValue();
       bill.salePrice = toNumber(bill.salePrice);
@@ -427,7 +460,20 @@ export const BillCreateOrUpdate = memo(
     );
 
     const onCalculatePurchasePrice = useCallback(() => {
-      dispatch(actions.calculatePurchasePrice(getBillData()));
+      const billData = getBillData();
+
+      const { destinationCountry, weightInKg, usdExchangeRate } = billData;
+      if (
+        isEmpty(destinationCountry) ||
+        isUndefined(weightInKg) ||
+        isEmpty(usdExchangeRate) ||
+        isUndefined(usdExchangeRate)
+      ) {
+        Modal.warning(countPurchasePriceWarningConfig);
+        return;
+      }
+
+      dispatch(actions.calculatePurchasePrice(billData));
       setShouldRecalculatePurchasePrice(false);
       setIsDirty(true);
     }, [dispatch, getBillData]);
