@@ -170,13 +170,6 @@ const BillList = ({
         canFilter: true,
         type: COLUMN_TYPES.STRING,
         width: 150,
-        fixed: 'left',
-      },
-      {
-        title: 'Tình trạng hàng',
-        dataIndex: 'packageStatus',
-        key: 'packageStatus',
-        width: 250,
       },
       {
         title: 'Ngày',
@@ -187,26 +180,19 @@ const BillList = ({
         width: 100,
       },
       {
-        title: 'Khách Gởi',
-        key: 'sender',
+        title: 'Tên Khách Gởi',
+        key: 'senderName',
+        dataIndex: 'senderName',
         canFilter: true,
-        filterField: 'senderName',
         type: COLUMN_TYPES.STRING,
-        render: (record: Bill) => (
-          <span>{[record.senderName, record.senderPhone].join(' - ')}</span>
-        ),
+        width: 200,
       },
       {
-        title: 'Người Nhận',
-        key: 'receiver',
+        title: 'Tên Người Nhận',
+        key: 'receiverName',
         canFilter: true,
-        filterField: 'receiverName',
         type: COLUMN_TYPES.STRING,
-        render: (record: Bill) => (
-          <span>
-            {[record.receiverName, record.receiverAddress].join(' - ')}
-          </span>
-        ),
+        width: 200,
       },
       {
         title: 'NCC',
@@ -217,11 +203,20 @@ const BillList = ({
         width: 200,
       },
       {
+        title: 'Loại Hàng',
+        dataIndex: 'description',
+        key: 'description',
+        type: COLUMN_TYPES.STRING,
+        canFilter: true,
+        width: 200,
+      },
+      {
         title: 'Nước đến',
         dataIndex: 'destinationCountry',
         key: 'destinationCountry',
         type: COLUMN_TYPES.STRING,
         canFilter: true,
+        width: 200,
       },
       {
         title: 'TL (kg)',
@@ -239,28 +234,14 @@ const BillList = ({
         },
       },
       {
-        title: 'Ngày Tạo Bill',
-        key: 'createdOn',
-        dataIndex: 'createdOn',
-        type: COLUMN_TYPES.DATE_TIME,
-        sorter: true,
-        width: 150,
+        title: 'Tên Chứng Từ',
+        dataIndex: 'licenseUserId',
+        key: 'licenseUserId',
+        type: COLUMN_TYPES.STRING,
+        canFilter: true,
+        width: 200,
       },
       ...moreCols,
-      {
-        title: 'Trạng Thái',
-        dataIndex: 'status',
-        key: 'status',
-        render: (value: any) => <BillStatusTag status={value} />,
-        width: 100,
-      },
-      {
-        title: 'Hủy?',
-        dataIndex: 'isArchived',
-        key: 'isArchived',
-        width: 50,
-        render: (value: boolean) => <Checkbox disabled checked={value} />,
-      },
       {
         title: 'Tác Vụ',
         key: 'action',

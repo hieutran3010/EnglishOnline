@@ -270,10 +270,19 @@ export const BillCreateOrUpdate = memo(
       return bill as any;
     }, [billForm]);
 
-    const getSubmitActionParams = useCallback((): SubmitBillAction => {
+    const getSubmitActionParams = useCallback(async (): Promise<
+      SubmitBillAction
+    > => {
+      try {
+        await billForm.validateFields();
+      } catch {
+        toast.error('Vui lòng nhập đầy đủ thông tin');
+        Promise.reject();
+      }
+
       const billData = getBillData();
       return { billFormValues: billData, isDirty };
-    }, [getBillData, isDirty]);
+    }, [billForm, getBillData, isDirty]);
 
     const updateBillFormData = useCallback(
       (data: any, skipSetDirty: boolean = false) => {
@@ -351,8 +360,9 @@ export const BillCreateOrUpdate = memo(
       [billParams.vat, updateBillFormData],
     );
 
-    const onAssignToAccountant = useCallback(() => {
-      dispatch(actions.assignToAccountant(getSubmitActionParams()));
+    const onAssignToAccountant = useCallback(async () => {
+      const submitParams = await getSubmitActionParams();
+      dispatch(actions.assignToAccountant(submitParams));
       if (onSubmitting) onSubmitting(isBusy);
       setIsDirty(false);
     }, [dispatch, getSubmitActionParams, onSubmitting, isBusy]);
@@ -416,14 +426,7 @@ export const BillCreateOrUpdate = memo(
     }, [dispatch, getBillData]);
 
     const onFinalBill = useCallback(async () => {
-      try {
-        await billForm.validateFields();
-      } catch {
-        toast.error('Vui lòng nhập đầy đủ thông tin trước khi chốt Bill');
-        return;
-      }
-
-      const submitParams = getSubmitActionParams();
+      const submitParams = await getSubmitActionParams();
       const { billFormValues } = submitParams;
       const {
         airlineBillId,
@@ -438,9 +441,9 @@ export const BillCreateOrUpdate = memo(
         isEmpty(airlineBillId) ||
         isEmpty(customerPaymentType) ||
         isEmpty(vendorPaymentType) ||
-        customerPaymentAmount < salePrice ||
-        vendorPaymentAmount <
-          toNumber(purchasePriceInfo.purchasePriceAfterVatInVnd)
+        (salePrice > 0 && customerPaymentAmount <= 0) ||
+        (toNumber(purchasePriceInfo.purchasePriceAfterVatInVnd) > 0 &&
+          vendorPaymentAmount < 0)
       ) {
         Modal.warning(finalBillWarningModalConfig);
         return;
@@ -455,7 +458,6 @@ export const BillCreateOrUpdate = memo(
         },
       );
     }, [
-      billForm,
       dispatch,
       getSubmitActionParams,
       isBusy,
@@ -463,8 +465,9 @@ export const BillCreateOrUpdate = memo(
       purchasePriceInfo.purchasePriceAfterVatInVnd,
     ]);
 
-    const onAssignToLicense = useCallback(() => {
-      dispatch(actions.assignLicense(getSubmitActionParams()));
+    const onAssignToLicense = useCallback(async () => {
+      const submitParams = await getSubmitActionParams();
+      dispatch(actions.assignLicense(submitParams));
       if (onSubmitting) onSubmitting(isBusy);
       setIsDirty(false);
     }, [dispatch, getSubmitActionParams, isBusy, onSubmitting]);
