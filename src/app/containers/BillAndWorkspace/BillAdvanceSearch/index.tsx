@@ -91,7 +91,7 @@ export const BillAdvanceSearch = memo(() => {
     filterForm => {
       const submittedFilters: QueryCriteria[] = [];
 
-      const { dateRange, senderPhone, receiverAddress } = filterForm;
+      const { dateRange, senderName, receiverName } = filterForm;
       const [fromDate, toDate] = dateRange || [];
 
       if (!isEmpty(fromDate)) {
@@ -110,19 +110,19 @@ export const BillAdvanceSearch = memo(() => {
         });
       }
 
-      if (!isEmpty(senderPhone)) {
+      if (!isEmpty(senderName)) {
         submittedFilters.push({
-          field: 'SenderPhone',
+          field: 'SenderName',
           operator: GRAPHQL_QUERY_OPERATOR.CONTAINS,
-          value: senderPhone,
+          value: senderName,
         });
       }
 
-      if (!isEmpty(receiverAddress)) {
+      if (!isEmpty(receiverName)) {
         submittedFilters.push({
-          field: 'ReceiverAddress',
+          field: 'ReceiverName',
           operator: GRAPHQL_QUERY_OPERATOR.CONTAINS,
-          value: receiverAddress,
+          value: receiverName,
         });
       }
 
@@ -140,8 +140,6 @@ export const BillAdvanceSearch = memo(() => {
       <RootContainer title="Tìm kiếm Bill">
         <Form
           style={{ marginLeft: 20, marginRight: 20, marginBottom: 20 }}
-          name="advanced_search"
-          className="ant-advanced-search-form"
           form={form}
           onFinish={onSubmitFilter}
           layout="inline"
@@ -154,15 +152,15 @@ export const BillAdvanceSearch = memo(() => {
             <RangePicker format="DD-MM-YYYY" />
           </Form.Item>
           <Form.Item
-            label="Số điện thoại người gởi"
-            name="senderPhone"
+            label="Tên khách gởi"
+            name="senderName"
             labelCol={{ span: 12 }}
           >
             <Input />
           </Form.Item>
           <Form.Item
-            label="Địa chỉ người nhận"
-            name="receiverAddress"
+            label="Tên người nhận"
+            name="receiverName"
             labelCol={{ span: 12 }}
           >
             <Input />
@@ -182,6 +180,7 @@ export const BillAdvanceSearch = memo(() => {
           onPrintedVatBill={onCheckPrintedVat}
           dontLoadInitialData={true}
           heightOffset={0.35}
+          disableFilterFields={['senderName', 'receiverName']}
         />
       </RootContainer>
     </>

@@ -64,6 +64,7 @@ interface Props {
   dontLoadInitialData?: boolean;
   heightOffset?: number;
   width?: number;
+  disableFilterFields?: string[];
 }
 const BillList = ({
   onArchiveBill,
@@ -75,6 +76,7 @@ const BillList = ({
   dontLoadInitialData,
   heightOffset,
   width,
+  disableFilterFields,
 }: Props) => {
   const user = authStorage.getUser();
 
@@ -183,7 +185,8 @@ const BillList = ({
         title: 'Tên Khách Gởi',
         key: 'senderName',
         dataIndex: 'senderName',
-        canFilter: true,
+        canFilter:
+          !disableFilterFields || !disableFilterFields.includes('senderName'),
         type: COLUMN_TYPES.STRING,
         width: 200,
       },
@@ -191,7 +194,8 @@ const BillList = ({
         title: 'Tên Người Nhận',
         key: 'receiverName',
         dataIndex: 'receiverName',
-        canFilter: true,
+        canFilter:
+          !disableFilterFields || !disableFilterFields.includes('receiverName'),
         type: COLUMN_TYPES.STRING,
         width: 200,
       },
