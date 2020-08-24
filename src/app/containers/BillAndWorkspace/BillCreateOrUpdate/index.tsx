@@ -23,6 +23,7 @@ import isEmpty from 'lodash/fp/isEmpty';
 import keys from 'lodash/fp/keys';
 import some from 'lodash/fp/some';
 import toString from 'lodash/fp/toString';
+import isUndefined from 'lodash/fp/isUndefined';
 
 import type Customer from 'app/models/customer';
 import type Vendor from 'app/models/vendor';
@@ -86,20 +87,44 @@ const { Text } = Typography;
 
 const finalBillWarningModalConfig = {
   title:
-    'Có vẻ bạn đang thiếu thông tin bắt buộc khi Chốt Bill, kiểm tra lại nhé:',
+    'Có vẻ bạn đang thiếu thông tin bắt buộc khi Chốt Bill, kiểm tra lại theo các mục sau nhé:',
   content: (
     <div>
       <Space>
-        <CheckOutlined />
+        <CheckOutlined style={{ marginBottom: 6 }} />
         <Text>Mã bill hãng bay</Text>
       </Space>
       <Space>
-        <CheckOutlined />
-        <Text>Thông tin thanh toán khách hàng</Text>
+        <CheckOutlined style={{ marginBottom: 6 }} />
+        <Text>Hàng đi Sing phải có Bill con</Text>
       </Space>
       <Space>
-        <CheckOutlined />
-        <Text>Thông tin thanh toán cho nhà cung cấp</Text>
+        <CheckOutlined style={{ marginBottom: 6 }} />
+        <Text>{'Số tiền thanh toán của khách <= Giá bán'}</Text>
+      </Space>
+      <Space>
+        <CheckOutlined style={{ marginBottom: 6 }} />
+        <Text>{'Số tiền trả NCC <= Giá mua'}</Text>
+      </Space>
+    </div>
+  ),
+};
+
+const countPurchasePriceWarningConfig = {
+  title: 'Để tính được Giá mua, vui lòng nhập ít nhất các thông tin sau đây:',
+  content: (
+    <div style={{ display: 'flex', flexDirection: 'column' }}>
+      <Space>
+        <CheckOutlined style={{ marginBottom: 6 }} />
+        <Text>Nước Đến</Text>
+      </Space>
+      <Space>
+        <CheckOutlined style={{ marginBottom: 6 }} />
+        <Text>Trọng Lượng</Text>
+      </Space>
+      <Space>
+        <CheckOutlined style={{ marginBottom: 6 }} />
+        <Text>Tỷ Giá đồng USD</Text>
       </Space>
     </div>
   ),
@@ -262,6 +287,18 @@ export const BillCreateOrUpdate = memo(
       // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [inputBill, role]);
 
+    useEffect(() => {
+      if (isEmpty(inputBill.id)) {
+        const usdExchangeRate = billForm.getFieldValue('usdExchangeRate');
+        if (!usdExchangeRate) {
+          billForm.setFieldsValue({
+            usdExchangeRate: billParams.usdExchangeRate,
+          });
+        }
+      }
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [billParams.usdExchangeRate]);
+
     const getBillData = useCallback(() => {
       const bill = billForm.getFieldsValue();
       bill.salePrice = toNumber(bill.salePrice);
@@ -270,10 +307,18 @@ export const BillCreateOrUpdate = memo(
       return bill as any;
     }, [billForm]);
 
-    const getSubmitActionParams = useCallback((): SubmitBillAction => {
-      const billData = getBillData();
-      return { billFormValues: billData, isDirty };
-    }, [getBillData, isDirty]);
+    const getSubmitActionParams = useCallback(async (): Promise<
+      SubmitBillAction | undefined
+    > => {
+      try {
+        await billForm.validateFields();
+        const billData = getBillData();
+        return { billFormValues: billData, isDirty };
+      } catch {
+        toast.error('Vui lòng nhập đầy đủ thông tin');
+        return undefined;
+      }
+    }, [billForm, getBillData, isDirty]);
 
     const updateBillFormData = useCallback(
       (data: any, skipSetDirty: boolean = false) => {
@@ -351,8 +396,13 @@ export const BillCreateOrUpdate = memo(
       [billParams.vat, updateBillFormData],
     );
 
-    const onAssignToAccountant = useCallback(() => {
-      dispatch(actions.assignToAccountant(getSubmitActionParams()));
+    const onAssignToAccountant = useCallback(async () => {
+      const submitParams = await getSubmitActionParams();
+      if (!submitParams) {
+        return;
+      }
+
+      dispatch(actions.assignToAccountant(submitParams));
       if (onSubmitting) onSubmitting(isBusy);
       setIsDirty(false);
     }, [dispatch, getSubmitActionParams, onSubmitting, isBusy]);
@@ -410,37 +460,54 @@ export const BillCreateOrUpdate = memo(
     );
 
     const onCalculatePurchasePrice = useCallback(() => {
-      dispatch(actions.calculatePurchasePrice(getBillData()));
+      const billData = getBillData();
+
+      const { destinationCountry, weightInKg, usdExchangeRate } = billData;
+      if (
+        isEmpty(destinationCountry) ||
+        isUndefined(weightInKg) ||
+        isEmpty(usdExchangeRate) ||
+        isUndefined(usdExchangeRate)
+      ) {
+        Modal.warning(countPurchasePriceWarningConfig);
+        return;
+      }
+
+      dispatch(actions.calculatePurchasePrice(billData));
       setShouldRecalculatePurchasePrice(false);
       setIsDirty(true);
     }, [dispatch, getBillData]);
 
     const onFinalBill = useCallback(async () => {
-      try {
-        await billForm.validateFields();
-      } catch {
-        toast.error('Vui lòng nhập đầy đủ thông tin trước khi chốt Bill');
+      const submitParams = await getSubmitActionParams();
+      if (!submitParams) {
         return;
       }
 
-      const submitParams = getSubmitActionParams();
       const { billFormValues } = submitParams;
       const {
         airlineBillId,
+        childBillId,
         customerPaymentAmount,
         vendorPaymentAmount,
         customerPaymentType,
         vendorPaymentType,
         salePrice,
+        destinationCountry,
       } = billFormValues;
 
+      const purchasePrice = toNumber(
+        purchasePriceInfo.purchasePriceAfterVatInVnd,
+      );
       if (
         isEmpty(airlineBillId) ||
         isEmpty(customerPaymentType) ||
         isEmpty(vendorPaymentType) ||
-        customerPaymentAmount < salePrice ||
-        vendorPaymentAmount <
-          toNumber(purchasePriceInfo.purchasePriceAfterVatInVnd)
+        (salePrice > 0 &&
+          (customerPaymentAmount <= 0 || customerPaymentAmount > salePrice)) ||
+        (purchasePrice > 0 &&
+          (vendorPaymentAmount <= 0 || vendorPaymentAmount > salePrice)) ||
+        (destinationCountry === 'Singapore - SG' && isEmpty(childBillId))
       ) {
         Modal.warning(finalBillWarningModalConfig);
         return;
@@ -455,7 +522,6 @@ export const BillCreateOrUpdate = memo(
         },
       );
     }, [
-      billForm,
       dispatch,
       getSubmitActionParams,
       isBusy,
@@ -463,8 +529,13 @@ export const BillCreateOrUpdate = memo(
       purchasePriceInfo.purchasePriceAfterVatInVnd,
     ]);
 
-    const onAssignToLicense = useCallback(() => {
-      dispatch(actions.assignLicense(getSubmitActionParams()));
+    const onAssignToLicense = useCallback(async () => {
+      const submitParams = await getSubmitActionParams();
+      if (!submitParams) {
+        return;
+      }
+
+      dispatch(actions.assignLicense(submitParams));
       if (onSubmitting) onSubmitting(isBusy);
       setIsDirty(false);
     }, [dispatch, getSubmitActionParams, isBusy, onSubmitting]);

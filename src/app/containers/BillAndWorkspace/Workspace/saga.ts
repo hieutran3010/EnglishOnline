@@ -30,6 +30,11 @@ export function* assignLicenseOrAccountantCompletedTask(
   yield put(actions.selectBill(action.payload));
 }
 
+export function* onFinalBillTask() {
+  yield call(setNeedToRefreshBillListTask);
+  yield put(actions.selectBill(new Bill()));
+}
+
 export function* workspaceSaga() {
   yield takeLatest(
     actions.fetchNumberOfUncheckedVatBill.type,
@@ -41,7 +46,7 @@ export function* workspaceSaga() {
   );
   yield takeLatest(
     billCreateOrUpdateActions.finalBillCompleted,
-    setNeedToRefreshBillListTask,
+    onFinalBillTask,
   );
   yield takeLatest(
     billCreateOrUpdateActions.assignLicenseCompleted,

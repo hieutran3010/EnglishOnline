@@ -6,7 +6,6 @@ import {
   Space,
   Button,
   Divider,
-  Checkbox,
   Modal,
   Typography,
   Menu,
@@ -25,9 +24,9 @@ import { IDataSource } from 'app/components/collection/types';
 import { authorizeHelper, authStorage } from 'app/services/auth';
 import User, { Role } from 'app/models/user';
 
-import BillStatusTag from './BillStatusTag';
 import BillView from './BillView';
 import VendorWeightAdjustment from './VendorWeightAdjustment';
+import UserAvatar from 'app/containers/Auth/components/UserAvatar';
 
 const { Text } = Typography;
 
@@ -65,6 +64,7 @@ interface Props {
   dontLoadInitialData?: boolean;
   heightOffset?: number;
   width?: number;
+  disableFilterFields?: string[];
 }
 const BillList = ({
   onArchiveBill,
@@ -76,6 +76,7 @@ const BillList = ({
   dontLoadInitialData,
   heightOffset,
   width,
+  disableFilterFields,
 }: Props) => {
   const user = authStorage.getUser();
 
@@ -162,6 +163,7 @@ const BillList = ({
         type: COLUMN_TYPES.STRING,
         width: 170,
         fixed: 'left',
+        render: value => <span>{value ?? '<Chưa có bill hãng bay>'}</span>,
       },
       {
         title: 'Bill con',
@@ -170,13 +172,6 @@ const BillList = ({
         canFilter: true,
         type: COLUMN_TYPES.STRING,
         width: 150,
-        fixed: 'left',
-      },
-      {
-        title: 'Tình trạng hàng',
-        dataIndex: 'packageStatus',
-        key: 'packageStatus',
-        width: 250,
       },
       {
         title: 'Ngày',
@@ -184,29 +179,25 @@ const BillList = ({
         key: 'date',
         type: COLUMN_TYPES.DATE,
         sorter: true,
-        width: 100,
+        width: 130,
       },
       {
-        title: 'Khách Gởi',
-        key: 'sender',
-        canFilter: true,
-        filterField: 'senderName',
+        title: 'Tên Khách Gởi',
+        key: 'senderName',
+        dataIndex: 'senderName',
+        canFilter:
+          !disableFilterFields || !disableFilterFields.includes('senderName'),
         type: COLUMN_TYPES.STRING,
-        render: (record: Bill) => (
-          <span>{[record.senderName, record.senderPhone].join(' - ')}</span>
-        ),
+        width: 200,
       },
       {
-        title: 'Người Nhận',
-        key: 'receiver',
-        canFilter: true,
-        filterField: 'receiverName',
+        title: 'Tên Người Nhận',
+        key: 'receiverName',
+        dataIndex: 'receiverName',
+        canFilter:
+          !disableFilterFields || !disableFilterFields.includes('receiverName'),
         type: COLUMN_TYPES.STRING,
-        render: (record: Bill) => (
-          <span>
-            {[record.receiverName, record.receiverAddress].join(' - ')}
-          </span>
-        ),
+        width: 200,
       },
       {
         title: 'NCC',
@@ -217,11 +208,20 @@ const BillList = ({
         width: 200,
       },
       {
+        title: 'Loại Hàng',
+        dataIndex: 'description',
+        key: 'description',
+        type: COLUMN_TYPES.STRING,
+        canFilter: true,
+        width: 200,
+      },
+      {
         title: 'Nước đến',
         dataIndex: 'destinationCountry',
         key: 'destinationCountry',
         type: COLUMN_TYPES.STRING,
         canFilter: true,
+        width: 200,
       },
       {
         title: 'TL (kg)',
@@ -239,28 +239,14 @@ const BillList = ({
         },
       },
       {
-        title: 'Ngày Tạo Bill',
-        key: 'createdOn',
-        dataIndex: 'createdOn',
-        type: COLUMN_TYPES.DATE_TIME,
-        sorter: true,
+        title: 'Tên Chứng Từ',
+        dataIndex: 'licenseUserId',
+        key: 'licenseUserId',
+        type: COLUMN_TYPES.STRING,
         width: 150,
+        render: value => <UserAvatar userId={value} type="displayName" />,
       },
       ...moreCols,
-      {
-        title: 'Trạng Thái',
-        dataIndex: 'status',
-        key: 'status',
-        render: (value: any) => <BillStatusTag status={value} />,
-        width: 100,
-      },
-      {
-        title: 'Hủy?',
-        dataIndex: 'isArchived',
-        key: 'isArchived',
-        width: 50,
-        render: (value: boolean) => <Checkbox disabled checked={value} />,
-      },
       {
         title: 'Tác Vụ',
         key: 'action',

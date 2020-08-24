@@ -147,7 +147,7 @@ const FeeAndPrice = ({
                 onClick={onCalculatePurchasePrice}
                 loading={isCalculating}
                 disabled={disabledCalculation}
-              ></Button>
+              />
             </Tooltip>
           </Form.Item>
           <Form.Item
