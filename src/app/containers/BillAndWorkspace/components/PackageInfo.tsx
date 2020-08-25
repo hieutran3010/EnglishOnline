@@ -148,9 +148,6 @@ const PackageInfo = ({
       >
         <Input />
       </Form.Item>
-      <Form.Item name="packageStatus" label="Tình trạng hàng">
-        <Input />
-      </Form.Item>
     </>
   );
 };

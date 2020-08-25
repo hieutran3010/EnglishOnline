@@ -165,7 +165,6 @@ export default class Bill extends ModelBase {
   purchasePriceAfterVatInUsd?: number;
   purchasePriceAfterVatInVnd?: number;
   isPrintedVatBill!: boolean;
-  packageStatus!: string;
   oldPurchasePriceInUsd?: number;
   oldPurchasePriceInVnd?: number;
   oldPurchasePriceAfterVatInUsd?: number;
@@ -220,7 +219,6 @@ export default class Bill extends ModelBase {
       this.profitBeforeTax = input.profitBeforeTax;
       this.profit = input.profit;
       this.isPrintedVatBill = input.isPrintedVatBill;
-      this.packageStatus = input.packageStatus;
       this.oldPurchasePriceInUsd = input.oldPurchasePriceInUsd;
       this.oldPurchasePriceInVnd = input.oldPurchasePriceInVnd;
       this.oldPurchasePriceAfterVatInUsd = input.oldPurchasePriceAfterVatInUsd;
@@ -308,11 +306,16 @@ export class CustomerStatistic {
   totalProfitBeforeTax!: number;
 }
 
-export class PurchasePrice {
-  purchasePriceInUsd?: number;
-  purchasePriceInVnd?: number;
-  purchasePriceAfterVatInUsd?: number;
-  purchasePriceAfterVatInVnd?: number;
-  vendorNetPriceInUsd?: number;
-  quotationPriceInUsd?: number;
+export class BillDeliveryHistory {
+  date?: Date;
+  time?: Date;
+  status!: string;
+
+  constructor(input?: any) {
+    if (input) {
+      this.date = input.date;
+      this.time = input.time;
+      this.status = input.status;
+    }
+  }
 }

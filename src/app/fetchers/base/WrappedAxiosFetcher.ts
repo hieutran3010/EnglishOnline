@@ -15,9 +15,9 @@ export default class WrappedAxiosFetcher<T> {
     return axios.post(route || '', model, defaultConfig);
   };
 
-  patch = async (model: T, route?: string) => {
+  patch = async (patch: any, route?: string) => {
     const defaultConfig = await this._getDefaultConfig();
-    return axios.patch(route || '', model, defaultConfig);
+    return axios.patch(route || '', patch, defaultConfig);
   };
 
   getMany = async (route?: string, queryParams?: any): Promise<T[]> => {

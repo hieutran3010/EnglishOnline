@@ -1,21 +1,53 @@
-import React, { memo, useCallback } from 'react';
+import React, { memo, useCallback, useState } from 'react';
 import moment from 'moment';
 import type Bill from 'app/models/bill';
 import { Card, Typography, Tooltip, Space, Tag } from 'antd';
-import { EyeOutlined, EyeTwoTone } from '@ant-design/icons';
+import {
+  EyeOutlined,
+  EyeTwoTone,
+  DoubleRightOutlined,
+  HistoryOutlined,
+} from '@ant-design/icons';
 import BillStatusTag from './BillStatusTag';
+import { Role } from 'app/models/user';
 
 const { Text } = Typography;
 
+export enum BILL_BLOCK_ACTION_TYPE {
+  EDIT_OR_VIEW = 1,
+  HISTORY,
+}
+
 interface Props {
   bill: Bill;
-  onEdit: (bill: Bill) => void;
+  onSelect: (bill: Bill) => void;
+  onSelectForDeliveryHistory?: (bill: Bill) => void;
   selectedBillId?: string;
+  userRole: Role;
 }
-const BillBlock = ({ bill, onEdit, selectedBillId }: Props) => {
-  const _onEdit = useCallback(() => {
-    onEdit(bill);
-  }, [bill, onEdit]);
+const BillBlock = ({
+  bill,
+  onSelect,
+  onSelectForDeliveryHistory,
+  selectedBillId,
+  userRole,
+}: Props) => {
+  const [actionType, setActionType] = useState<
+    BILL_BLOCK_ACTION_TYPE | undefined
+  >();
+
+  const _onSelected = useCallback(() => {
+    onSelect(bill);
+    setActionType(BILL_BLOCK_ACTION_TYPE.EDIT_OR_VIEW);
+  }, [bill, onSelect]);
+
+  const _onGoToHistory = useCallback(() => {
+    if (onSelectForDeliveryHistory) {
+      onSelectForDeliveryHistory(bill);
+    }
+
+    setActionType(BILL_BLOCK_ACTION_TYPE.HISTORY);
+  }, [bill, onSelectForDeliveryHistory]);
 
   return (
     <Card
@@ -23,10 +55,23 @@ const BillBlock = ({ bill, onEdit, selectedBillId }: Props) => {
       actions={[
         <BillStatusTag status={bill.status} />,
         <>
-          {bill.id === selectedBillId ? (
+          {bill.id === selectedBillId &&
+          actionType === BILL_BLOCK_ACTION_TYPE.EDIT_OR_VIEW ? (
             <EyeTwoTone twoToneColor="#52c41a" />
           ) : (
-            <EyeOutlined key="edit" onClick={_onEdit} />
+            <EyeOutlined key="edit" onClick={_onSelected} />
+          )}
+        </>,
+        <>
+          {[Role.ADMIN, Role.LICENSE].includes(userRole) && (
+            <Tooltip title="Xem/Cập nhật tình trạng hàng">
+              {bill.id === selectedBillId &&
+              actionType === BILL_BLOCK_ACTION_TYPE.HISTORY ? (
+                <HistoryOutlined style={{ color: '#52c41a' }} />
+              ) : (
+                <HistoryOutlined key="history" onClick={_onGoToHistory} />
+              )}
+            </Tooltip>
           )}
         </>,
       ]}
@@ -54,10 +99,14 @@ const BillBlock = ({ bill, onEdit, selectedBillId }: Props) => {
         <Tooltip title="Bill con">
           <Text>{bill.childBillId || '<Chưa có Bill con>'}</Text>
         </Tooltip>
-        <Tooltip title="Khách gởi">
-          <Text>
-            {bill.senderName} - {bill.senderPhone}
-          </Text>
+        <Tooltip title="Tên khách gởi >> Tên người nhận">
+          <Space>
+            <Text>{bill.senderName || '<Không có>'}</Text>
+            <DoubleRightOutlined
+              style={{ marginBottom: 5, color: '#00a651' }}
+            />
+            <Text>{bill.receiverName || '<Không có>'}</Text>
+          </Space>
         </Tooltip>
       </div>
     </Card>

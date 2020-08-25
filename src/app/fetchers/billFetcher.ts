@@ -1,5 +1,9 @@
-import { GraphQLFetcherBase } from './base';
-import Bill, { VendorStatistic, CustomerStatistic } from 'app/models/bill';
+import { GraphQLFetcherBase, RestfulFetcherBase } from './base';
+import Bill, {
+  VendorStatistic,
+  CustomerStatistic,
+  BillDeliveryHistory,
+} from 'app/models/bill';
 import type {
   PurchasePriceCountingParams,
   PurchasePriceCountingResult,
@@ -33,7 +37,6 @@ const normalFields: string[] = [
   'isArchived',
   'destinationCountry',
   'isPrintedVatBill',
-  'packageStatus',
   'createdOn',
 ];
 
@@ -207,5 +210,18 @@ export default class BillFetcher extends GraphQLFetcherBase<Bill> {
       }`,
       { billId },
     );
+  };
+}
+
+export class BillPatchExecutor extends RestfulFetcherBase<Bill> {
+  constructor() {
+    super('bill');
+  }
+
+  updateDeliveryHistory = (
+    billId: string,
+    histories: BillDeliveryHistory[],
+  ) => {
+    return this.patch(histories, `updateDeliveryHistory/${billId}`);
   };
 }

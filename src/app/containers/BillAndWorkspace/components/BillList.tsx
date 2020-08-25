@@ -164,7 +164,7 @@ const BillList = ({
         type: COLUMN_TYPES.STRING,
         width: 170,
         fixed: 'left',
-        render: value => <span>{value ?? '<Chưa có bill hãng bay>'}</span>,
+        render: value => <span>{value ?? '<Không có>'}</span>,
       },
       {
         title: 'Bill con',
@@ -173,6 +173,7 @@ const BillList = ({
         canFilter: true,
         type: COLUMN_TYPES.STRING,
         width: 150,
+        render: value => <span>{value ?? '<Không có>'}</span>,
       },
       {
         title: 'Tình trạng hàng',
