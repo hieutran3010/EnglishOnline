@@ -245,14 +245,6 @@ const BillList = ({
           );
         },
       },
-      {
-        title: 'Tên Chứng Từ',
-        dataIndex: 'licenseUserId',
-        key: 'licenseUserId',
-        type: COLUMN_TYPES.STRING,
-        width: 150,
-        render: value => <UserAvatar userId={value} type="displayName" />,
-      },
       ...moreCols,
       {
         title: 'Tên Chứng Từ',
