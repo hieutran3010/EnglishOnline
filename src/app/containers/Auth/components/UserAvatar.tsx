@@ -27,6 +27,7 @@ const UserAvatar = ({
   const [loading, setLoading] = useState<boolean>(false);
 
   useEffect(() => {
+    let didCancel = false;
     async function getUserAsync() {
       if (isEmpty(userId)) {
         return;
@@ -34,11 +35,17 @@ const UserAvatar = ({
 
       setLoading(true);
       const c = await authService.getUserById(userId);
-      setUser(c);
-      setLoading(false);
+      if (!didCancel) {
+        setUser(c);
+        setLoading(false);
+      }
     }
 
     getUserAsync();
+
+    return function cleanUp() {
+      didCancel = true;
+    };
   }, [userId]);
 
   return (

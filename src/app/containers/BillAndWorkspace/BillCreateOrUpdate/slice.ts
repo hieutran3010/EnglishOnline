@@ -185,7 +185,26 @@ const billCreateOrUpdateSlice = createSlice({
     },
 
     resetState(state) {
-      state = { ...initialState };
+      state.vendorCountries = [];
+      state.isFetchingVendor = false;
+      state.vendors = [];
+
+      state.isFetchingVendorCountries = false;
+      state.vendorCountries = [];
+
+      state.isSubmitting = false;
+      state.bill = new Bill();
+      state.billId = '';
+      state.purchasePriceInfo = new PurchasePriceInfo();
+      state.oldWeightInKg = undefined;
+      state.billStatus = BILL_STATUS.LICENSE;
+      state.isFetchingResponsibilityUsers = false;
+      state.users = [];
+      state.isDeletingBill = false;
+      state.isAssigningAccountant = false;
+      state.isCalculatingPurchasePrice = false;
+      state.isFinalBill = false;
+      state.isAssigningLicense = false;
     },
   },
 });

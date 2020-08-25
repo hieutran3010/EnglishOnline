@@ -240,6 +240,9 @@ export const BillCreateOrUpdate = memo(
         dispatch(actions.fetchVendor());
         dispatch(actions.fetchResponsibilityUsers());
         dispatch(actions.fetchBillParams());
+        if (!isEmpty(inputBill.id) && !isEmpty(inputBill.vendorId)) {
+          dispatch(actions.fetchVendorCountries(inputBill.vendorId));
+        }
       }
 
       dispatch(actions.setBill(inputBill));
@@ -300,8 +303,7 @@ export const BillCreateOrUpdate = memo(
           });
         }
       }
-      // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [billParams.usdExchangeRate]);
+    }, [billForm, billParams.usdExchangeRate, inputBill.id]);
 
     const getBillData = useCallback(() => {
       const bill = billForm.getFieldsValue();
@@ -470,7 +472,6 @@ export const BillCreateOrUpdate = memo(
       if (
         isEmpty(destinationCountry) ||
         isUndefined(weightInKg) ||
-        isEmpty(usdExchangeRate) ||
         isUndefined(usdExchangeRate)
       ) {
         Modal.warning(countPurchasePriceWarningConfig);
