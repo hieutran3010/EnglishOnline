@@ -27,6 +27,7 @@ import User, { Role } from 'app/models/user';
 import BillView from './BillView';
 import VendorWeightAdjustment from './VendorWeightAdjustment';
 import UserAvatar from 'app/containers/Auth/components/UserAvatar';
+import BillStatusTag from './BillStatusTag';
 
 const { Text } = Typography;
 
@@ -174,6 +175,12 @@ const BillList = ({
         width: 150,
       },
       {
+        title: 'Tình trạng hàng',
+        dataIndex: 'packageStatus',
+        key: 'packageStatus',
+        width: 250,
+      },
+      {
         title: 'Ngày',
         dataIndex: 'date',
         key: 'date',
@@ -247,6 +254,21 @@ const BillList = ({
         render: value => <UserAvatar userId={value} type="displayName" />,
       },
       ...moreCols,
+      {
+        title: 'Tên Chứng Từ',
+        dataIndex: 'licenseUserId',
+        key: 'licenseUserId',
+        type: COLUMN_TYPES.STRING,
+        width: 150,
+        render: value => <UserAvatar userId={value} type="displayName" />,
+      },
+      {
+        title: 'Trạng Thái',
+        dataIndex: 'status',
+        key: 'status',
+        render: (value: any) => <BillStatusTag status={value} />,
+        width: 100,
+      },
       {
         title: 'Tác Vụ',
         key: 'action',
