@@ -24,6 +24,7 @@ import keys from 'lodash/fp/keys';
 import some from 'lodash/fp/some';
 import toString from 'lodash/fp/toString';
 import isUndefined from 'lodash/fp/isUndefined';
+import isNil from 'lodash/fp/isNil';
 
 import type Customer from 'app/models/customer';
 import type Vendor from 'app/models/vendor';
@@ -472,7 +473,9 @@ export const BillCreateOrUpdate = memo(
       if (
         isEmpty(destinationCountry) ||
         isUndefined(weightInKg) ||
-        isUndefined(usdExchangeRate)
+        isNil(weightInKg) ||
+        isUndefined(usdExchangeRate) ||
+        isNil(usdExchangeRate)
       ) {
         Modal.warning(countPurchasePriceWarningConfig);
         return;
