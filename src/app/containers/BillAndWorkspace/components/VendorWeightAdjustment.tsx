@@ -16,6 +16,7 @@ import { toast } from 'react-toastify';
 import { InfoCircleOutlined } from '@ant-design/icons';
 import isUndefined from 'lodash/fp/isUndefined';
 import isNil from 'lodash/fp/isNil';
+import moment from 'moment';
 
 import Bill from 'app/models/bill';
 import { toCurrency } from 'utils/numberFormat';
@@ -136,6 +137,10 @@ const VendorWeightAdjustment = ({
         const submitBill = new Bill(bill);
         submitBill.oldWeightInKg = submitBill.weightInKg;
         submitBill.weightInKg = _newWeight;
+        submitBill.date = moment(submitBill.date)
+          .hour(23)
+          .minute(0)
+          .format('YYYY-MM-DD HH:mm');
         const purchasePriceInfo = submitBill.getPurchasePriceInfo();
         purchasePriceInfo.updateFromCountingResult(predictPurchasePrice);
         submitBill.updatePurchasePriceInfo(purchasePriceInfo);
@@ -184,6 +189,10 @@ const VendorWeightAdjustment = ({
             const submitBill = new Bill(bill);
             submitBill.oldWeightInKg = undefined;
             submitBill.weightInKg = oldWeightInKg || 0;
+            submitBill.date = moment(submitBill.date)
+              .hour(23)
+              .minute(0)
+              .format('YYYY-MM-DD HH:mm');
             const purchasePriceInfo = submitBill.getPurchasePriceInfo();
             purchasePriceInfo.updateFromCountingResult(predictPurchasePrice);
             submitBill.updatePurchasePriceInfo(purchasePriceInfo);

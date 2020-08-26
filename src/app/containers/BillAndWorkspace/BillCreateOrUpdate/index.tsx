@@ -309,7 +309,7 @@ export const BillCreateOrUpdate = memo(
     const getBillData = useCallback(() => {
       const bill = billForm.getFieldsValue();
       bill.salePrice = toNumber(bill.salePrice);
-      bill.date = bill.date.format('YYYY-MM-DD HH:mm:ss');
+      bill.date = bill.date.hour(23).minute(0).format('YYYY-MM-DD HH:mm');
 
       return bill as any;
     }, [billForm]);

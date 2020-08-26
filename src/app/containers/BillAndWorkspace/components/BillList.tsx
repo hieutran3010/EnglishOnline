@@ -12,7 +12,7 @@ import {
   Dropdown,
   Empty,
 } from 'antd';
-import { DownOutlined } from '@ant-design/icons';
+import { DownOutlined, CheckOutlined } from '@ant-design/icons';
 import {
   COLUMN_TYPES,
   ColumnDefinition,
@@ -260,6 +260,18 @@ const BillList = ({
         key: 'status',
         render: (value: any) => <BillStatusTag status={value} />,
         width: 100,
+      },
+      {
+        title: 'Hủy?',
+        dataIndex: 'isArchived',
+        key: 'isArchived',
+        width: 50,
+        render: (value: boolean) =>
+          value === true ? (
+            <CheckOutlined style={{ color: 'red', marginBottom: 5 }} />
+          ) : (
+            <></>
+          ),
       },
       {
         title: 'Tác Vụ',
