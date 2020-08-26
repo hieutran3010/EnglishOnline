@@ -6,7 +6,15 @@
 
 import React, { memo, useEffect, useState, useCallback } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { Timeline, Typography, Space, Button, Tooltip } from 'antd';
+import {
+  Timeline,
+  Typography,
+  Space,
+  Button,
+  Tooltip,
+  Empty,
+  Alert,
+} from 'antd';
 import {
   PlusOutlined,
   EditOutlined,
@@ -17,14 +25,21 @@ import {
 import moment from 'moment';
 import map from 'lodash/fp/map';
 import uniqueId from 'lodash/fp/uniqueId';
+import isEmpty from 'lodash/fp/isEmpty';
 
 import { ContentContainer } from 'app/components/Layout';
 import Bill, { BillDeliveryHistory } from 'app/models/bill';
 import useBillDeliveryHistory from './hook';
 import { actions } from './slice';
-import { selectIsFetchingHistories, selectHistories } from './selectors';
+import {
+  selectIsFetchingHistories,
+  selectHistories,
+  selectIsDirty,
+  selectIsSaving,
+} from './selectors';
 import { GroupedHistory } from './types';
 import DeliveryHistoryModal from './DeliveryHistoryModal';
+import { showConfirm } from 'app/components/Modal/utils';
 
 const { Text } = Typography;
 
@@ -44,24 +59,82 @@ export const BillDeliveryHistoryPage = memo(
       false,
     );
 
+    const [selectedHistory, setSelectedHistory] = useState<
+      BillDeliveryHistory | undefined
+    >();
+
     useEffect(() => {
       dispatch(actions.fetchBillDeliveryHistories(bill.id));
     }, [bill, dispatch]);
 
     const isFetching = useSelector(selectIsFetchingHistories);
     const histories = useSelector(selectHistories);
+    const isDirty = useSelector(selectIsDirty);
+    const isSaving = useSelector(selectIsSaving);
 
-    const onAddNew = useCallback(() => {
+    const onVisibleModal = useCallback(() => {
       setVisibleCreateOrEditModal(true);
     }, []);
 
+    const onAddNewAtADate = useCallback(
+      (groupedHistoryItem: GroupedHistory) => () => {
+        setSelectedHistory({ date: groupedHistoryItem.rawDate });
+        onVisibleModal();
+      },
+      [onVisibleModal],
+    );
+
+    const onEdit = useCallback(
+      (history: BillDeliveryHistory) => () => {
+        setSelectedHistory(history);
+        onVisibleModal();
+      },
+      [onVisibleModal],
+    );
+
     const onCloseModal = useCallback(() => {
       setVisibleCreateOrEditModal(false);
+      setSelectedHistory(undefined);
     }, []);
 
-    const onDeliverySubmitted = useCallback((history: BillDeliveryHistory) => {
-      console.log(history);
-    }, []);
+    const onDeliverySubmitted = useCallback(
+      (history: any) => {
+        const { id } = history;
+        if (isEmpty(id)) {
+          dispatch(actions.addNew(history));
+        } else {
+          dispatch(actions.update(history));
+        }
+      },
+      [dispatch],
+    );
+
+    const onDelete = useCallback(
+      (history: BillDeliveryHistory) => () => {
+        const { id } = history;
+        if (id) {
+          dispatch(actions.delete(id));
+        }
+      },
+      [dispatch],
+    );
+
+    const onRestore = useCallback(() => {
+      if (isDirty) {
+        showConfirm(
+          'Dữ liệu chưa được lưu, bạn có chắc muốn trả lại trạng thái lúc đâu?',
+          () => {
+            dispatch(actions.restore());
+          },
+        );
+      }
+    }, [dispatch, isDirty]);
+
+    const onSave = useCallback(() => {
+      dispatch(actions.save(bill.id));
+    }, [bill.id, dispatch]);
+
+    const maxHeight = window.innerHeight - window.innerHeight * 0.3;
 
     return (
       <ContentContainer
@@ -78,80 +151,117 @@ export const BillDeliveryHistoryPage = memo(
                 type="primary"
                 shape="circle"
                 size="small"
-                onClick={onAddNew}
+                onClick={onVisibleModal}
                 icon={<PlusOutlined />}
+                disabled={isSaving}
               />
             </Tooltip>
+            {isDirty && (
+              <Alert
+                banner
+                showIcon
+                message="Có thay đổi dữ liệu, nhớ bấm Lưu để tránh mất dữ liệu"
+              />
+            )}
           </Space>
         }
         size={size}
         loading={isFetching}
         actions={[
-          <Button type="ghost" icon={<SaveOutlined />} style={{ border: 0 }}>
+          <Button
+            type="ghost"
+            icon={<SaveOutlined />}
+            style={{ border: 0 }}
+            loading={isSaving}
+            onClick={onSave}
+          >
             Lưu thay đổi
           </Button>,
-          <Button type="ghost" icon={<ClearOutlined />} style={{ border: 0 }}>
+          <Button
+            type="ghost"
+            icon={<ClearOutlined />}
+            style={{ border: 0 }}
+            onClick={onRestore}
+            disabled={isSaving}
+          >
             Hủy thay đổi
           </Button>,
         ]}
       >
-        {map((groupedHistory: GroupedHistory) => {
-          return (
-            <div key={uniqueId('gh_')}>
-              <div
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'flex-start',
-                  marginBottom: 20,
-                }}
-              >
-                <Space>
-                  <Text strong>{groupedHistory.date || '<Không có ngày>'}</Text>
-                  <Tooltip title="Thêm tình trạng hàng vào ngày này">
-                    <Button
-                      size="small"
-                      shape="circle"
-                      type="primary"
-                      ghost
-                      icon={<PlusOutlined />}
-                    />
-                  </Tooltip>
-                </Space>
-              </div>
+        <div style={{ maxHeight, overflow: 'auto' }}>
+          {isEmpty(histories) ? (
+            <Empty description="Chưa có thông tin tình trạng hàng" />
+          ) : (
+            map((groupedHistory: GroupedHistory) => {
+              return (
+                <div key={uniqueId('gh_')}>
+                  <div
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'flex-start',
+                      marginBottom: 20,
+                    }}
+                  >
+                    <Space>
+                      <Text strong>
+                        {groupedHistory.date || '<Không có ngày>'}
+                      </Text>
+                      <Tooltip title="Thêm tình trạng hàng vào ngày này">
+                        <Button
+                          size="small"
+                          shape="circle"
+                          type="primary"
+                          ghost
+                          icon={<PlusOutlined />}
+                          onClick={onAddNewAtADate(groupedHistory)}
+                          disabled={isSaving}
+                        />
+                      </Tooltip>
+                    </Space>
+                  </div>
 
-              <Timeline>
-                {map((history: BillDeliveryHistory) => {
-                  const { time, status } = history;
-                  return (
-                    <Timeline.Item key={uniqueId('gh_tl_')}>
-                      <div style={{ display: 'flex', alignItems: 'center' }}>
-                        {time && (
-                          <Text strong style={{ marginRight: 5 }}>
-                            {moment(time).format('HH:mm')}:
-                          </Text>
-                        )}
-                        <Text style={{ marginRight: 5 }}>{status}</Text>
-                        <EditOutlined
-                          style={{ cursor: 'pointer', marginRight: 5 }}
-                        />
-                        <DeleteOutlined
-                          style={{ cursor: 'pointer', color: 'red' }}
-                        />
-                      </div>
-                    </Timeline.Item>
-                  );
-                })(groupedHistory.histories)}
-              </Timeline>
-            </div>
-          );
-        })(histories)}
+                  <Timeline>
+                    {map((history: BillDeliveryHistory) => {
+                      const { time, status } = history;
+                      return (
+                        <Timeline.Item key={uniqueId('gh_tl_')}>
+                          <div
+                            style={{ display: 'flex', alignItems: 'center' }}
+                          >
+                            {time && (
+                              <Text strong style={{ marginRight: 5 }}>
+                                {moment(time).format('HH:mm')}:
+                              </Text>
+                            )}
+                            <Text style={{ marginRight: 5 }}>{status}</Text>
+                            <EditOutlined
+                              style={{ cursor: 'pointer', marginRight: 5 }}
+                              onClick={onEdit(history)}
+                              disabled={isSaving}
+                            />
+                            <DeleteOutlined
+                              style={{ cursor: 'pointer', color: 'red' }}
+                              onClick={onDelete(history)}
+                              disabled={isSaving}
+                            />
+                          </div>
+                        </Timeline.Item>
+                      );
+                    })(groupedHistory.histories)}
+                  </Timeline>
+                </div>
+              );
+            })(histories)
+          )}
+        </div>
         <DeliveryHistoryModal
           visible={visibleCreateOrEditModal}
           onClose={onCloseModal}
           airLineBillId={bill.airlineBillId}
           childBillId={bill.childBillId}
           onSubmitted={onDeliverySubmitted}
+          selectedHistory={selectedHistory}
         />
       </ContentContainer>
     );

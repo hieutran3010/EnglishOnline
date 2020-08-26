@@ -1,4 +1,5 @@
 import moment from 'moment';
+import { v4 as uuidV4 } from 'uuid';
 
 import ModelBase from './modelBase';
 import { PurchasePriceCountingResult } from './purchasePriceCounting';
@@ -307,14 +308,16 @@ export class CustomerStatistic {
 }
 
 export class BillDeliveryHistory {
-  date?: Date;
-  time?: Date;
-  status!: string;
+  id?: string;
+  date?: any;
+  time?: any;
+  status?: string;
 
   constructor(input?: any) {
+    this.id = uuidV4();
     if (input) {
-      this.date = input.date;
-      this.time = input.time;
+      this.date = input.date ?? null;
+      this.time = input.time ?? null;
       this.status = input.status;
     }
   }

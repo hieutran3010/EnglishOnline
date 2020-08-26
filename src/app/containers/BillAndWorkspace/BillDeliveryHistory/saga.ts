@@ -1,19 +1,15 @@
 import { call, put, select, takeLatest } from 'redux-saga/effects';
-import isEmpty from 'lodash/fp/isEmpty';
-import groupBy from 'lodash/fp/groupBy';
-import keys from 'lodash/fp/keys';
-import orderBy from 'lodash/fp/orderBy';
-import map from 'lodash/fp/map';
-import moment from 'moment';
+import * as Sentry from '@sentry/react';
 
 import { PayloadAction } from '@reduxjs/toolkit';
-import BillFetcher from 'app/fetchers/billFetcher';
+import BillFetcher, { BillPatchExecutor } from 'app/fetchers/billFetcher';
 
 import { actions } from './slice';
-import { BillDeliveryHistory } from 'app/models/bill';
-import { GroupedHistory } from './types';
+import { selectHistories } from './selectors';
+import { toast } from 'react-toastify';
 
 const billFetcher = new BillFetcher();
+const billBatchExecutor = new BillPatchExecutor();
 
 export function* fetchBillDeliveryHistoriesTask(action: PayloadAction<string>) {
   const billId = action.payload;
@@ -26,35 +22,23 @@ export function* fetchBillDeliveryHistoriesTask(action: PayloadAction<string>) {
   );
 
   const { billDeliveryHistories } = bill;
-  if (!isEmpty(billDeliveryHistories)) {
-    const orderedHistories = orderBy('date')('desc')(billDeliveryHistories);
+  yield put(actions.fetchBillDeliveryHistoriesCompleted(billDeliveryHistories));
+}
 
-    const groupedByDate = groupBy((bdh: BillDeliveryHistory) => bdh.date)(
-      orderedHistories,
-    );
+export function* saveTask(action: PayloadAction<string>) {
+  const billId = action.payload;
+  yield put(actions.setIsSaving(true));
 
-    const dates = keys(groupedByDate);
-    const groupedHistories: GroupedHistory[] = map(
-      (groupedKey: string): GroupedHistory => {
-        const values = groupedByDate[groupedKey];
-
-        const date =
-          isEmpty(groupedKey) || groupedKey === 'null'
-            ? null
-            : moment(groupedKey).format('DD-MM-YYYY');
-
-        const historyValues = orderBy('time')('desc')(
-          values,
-        ) as BillDeliveryHistory[];
-
-        return { date: date, histories: historyValues };
-      },
-    )(dates);
-
-    yield put(actions.fetchBillDeliveryHistoriesCompleted(groupedHistories));
-  } else {
-    yield put(actions.fetchBillDeliveryHistoriesCompleted([]));
+  const data = yield select(selectHistories);
+  try {
+    yield call(billBatchExecutor.updateDeliveryHistory, billId, data);
+    yield put(actions.setIsSaving(false));
+  } catch (error) {
+    Sentry.captureException(error);
+    toast.error('Chưa lưu được, vui lòng thử lại');
   }
+
+  yield put(actions.setIsSaving(false));
 }
 
 export function* billDeliveryHistorySaga() {
@@ -62,4 +46,6 @@ export function* billDeliveryHistorySaga() {
     actions.fetchBillDeliveryHistories.type,
     fetchBillDeliveryHistoriesTask,
   );
+
+  yield takeLatest(actions.save.type, saveTask);
 }

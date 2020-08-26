@@ -13,5 +13,20 @@ export const selectIsFetchingHistories = createSelector(
 
 export const selectHistories = createSelector(
   [selectDomain],
+  billDeliveryHistoryState => billDeliveryHistoryState.groupedHistories,
+);
+
+export const selectIsDirty = createSelector(
+  [selectDomain],
+  billDeliveryHistoryState => billDeliveryHistoryState.isDirty,
+);
+
+export const selectLastChangeData = createSelector(
+  [selectDomain],
   billDeliveryHistoryState => billDeliveryHistoryState.histories,
+);
+
+export const selectIsSaving = createSelector(
+  [selectDomain],
+  billDeliveryHistoryState => billDeliveryHistoryState.isSaving,
 );

@@ -1,15 +1,18 @@
-import React, { memo, useCallback } from 'react';
+import React, { memo, useCallback, useEffect } from 'react';
 import { Modal, Form, DatePicker, Input, Space, Typography } from 'antd';
 import { BillDeliveryHistory } from 'app/models/bill';
+import moment from 'moment';
+import { isNil } from 'lodash';
 
 const { Text } = Typography;
 
 interface Props {
   visible: boolean;
   onClose: () => void;
-  onSubmitted: (history: BillDeliveryHistory) => void;
+  onSubmitted: (history: any) => void;
   airLineBillId?: string;
   childBillId?: string;
+  selectedHistory?: BillDeliveryHistory;
 }
 const DeliveryHistoryModal = ({
   visible,
@@ -17,26 +20,45 @@ const DeliveryHistoryModal = ({
   airLineBillId,
   childBillId,
   onSubmitted,
+  selectedHistory,
 }: Props) => {
   const [form] = Form.useForm();
 
-  const onSubmit = useCallback(
-    formData => {
-      const history = new BillDeliveryHistory(formData);
-      onSubmitted(history);
-      onClose();
-    },
-    [onClose, onSubmitted],
-  );
+  const { date, time, status } = selectedHistory || {};
 
-  const onOk = useCallback(() => {
-    form.submit();
-  }, [form]);
+  useEffect(() => {
+    form.setFieldsValue({
+      date: !isNil(date) ? moment(date) : undefined,
+      time,
+      status,
+    });
+  }, [date, form, selectedHistory, status, time]);
 
   const _onClose = useCallback(() => {
     form.resetFields();
     onClose();
   }, [form, onClose]);
+
+  const onSubmit = useCallback(
+    formData => {
+      if (!selectedHistory) {
+        onSubmitted(formData);
+      } else {
+        const submitted = { ...selectedHistory };
+        submitted.date = formData.date;
+        submitted.time = formData.time;
+        submitted.status = formData.status;
+        onSubmitted(submitted);
+      }
+
+      _onClose();
+    },
+    [_onClose, onSubmitted, selectedHistory],
+  );
+
+  const onOk = useCallback(() => {
+    form.submit();
+  }, [form]);
 
   return (
     <Modal
@@ -45,7 +67,7 @@ const DeliveryHistoryModal = ({
       onOk={onOk}
       title={
         <Space>
-          <Text>Thêm tình trạng hàng - Bill</Text>
+          <Text>Tình trạng hàng - Bill</Text>
           <Text strong>
             {airLineBillId || childBillId || '<Chưa có mã bill>'}
           </Text>
