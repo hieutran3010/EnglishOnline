@@ -199,12 +199,6 @@ const BillList = ({
         render: value => <span>{value ?? '<Không có>'}</span>,
       },
       {
-        title: 'Tình trạng hàng',
-        dataIndex: 'packageStatus',
-        key: 'packageStatus',
-        width: 250,
-      },
-      {
         title: 'Ngày',
         dataIndex: 'date',
         key: 'date',
