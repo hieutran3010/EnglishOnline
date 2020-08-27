@@ -6,27 +6,13 @@
 
 import React, { memo, useEffect, useState, useCallback, useMemo } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import {
-  Timeline,
-  Typography,
-  Space,
-  Button,
-  Tooltip,
-  Empty,
-  Alert,
-  Spin,
-} from 'antd';
+import { Typography, Space, Button, Tooltip, Empty, Alert, Spin } from 'antd';
 import {
   PlusOutlined,
-  EditOutlined,
-  DeleteOutlined,
   SaveOutlined,
   ClearOutlined,
   EyeOutlined,
 } from '@ant-design/icons';
-import moment from 'moment';
-import map from 'lodash/fp/map';
-import uniqueId from 'lodash/fp/uniqueId';
 import isEmpty from 'lodash/fp/isEmpty';
 
 import { ContentContainer } from 'app/components/Layout';
@@ -43,12 +29,12 @@ import {
   selectViewableBill,
   selectIsFetchingBillToView,
 } from './selectors';
-import { GroupedHistory } from './types';
 import DeliveryHistoryModal from './DeliveryHistoryModal';
 import { showConfirm } from 'app/components/Modal/utils';
 import { useParams } from 'react-router-dom';
 import BillView from '../components/BillView';
 import Modal from 'antd/lib/modal/Modal';
+import DeliveryTimeline from './DeliveryTimeline';
 
 const { Text } = Typography;
 
@@ -113,15 +99,15 @@ export const BillDeliveryHistoryPage = memo(
     }, []);
 
     const onAddNewAtADate = useCallback(
-      (groupedHistoryItem: GroupedHistory) => () => {
-        setSelectedHistory({ date: groupedHistoryItem.rawDate });
+      (date: any) => {
+        setSelectedHistory({ date });
         onVisibleModal();
       },
       [onVisibleModal],
     );
 
     const onEdit = useCallback(
-      (history: BillDeliveryHistory) => () => {
+      (history: BillDeliveryHistory) => {
         setSelectedHistory(history);
         onVisibleModal();
       },
@@ -146,7 +132,7 @@ export const BillDeliveryHistoryPage = memo(
     );
 
     const onDelete = useCallback(
-      (history: BillDeliveryHistory) => () => {
+      (history: BillDeliveryHistory) => {
         const { id } = history;
         if (id) {
           dispatch(actions.delete(id));
@@ -270,73 +256,14 @@ export const BillDeliveryHistoryPage = memo(
           {isEmpty(histories) ? (
             <Empty description="Chưa có thông tin tình trạng hàng" />
           ) : (
-            map((groupedHistory: GroupedHistory) => {
-              return (
-                <div key={uniqueId('gh_')}>
-                  <div
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'flex-start',
-                      marginBottom: 20,
-                    }}
-                  >
-                    <Space>
-                      <Text strong>
-                        {groupedHistory.date || '<Không có ngày>'}
-                      </Text>
-                      {!isReadOnly && (
-                        <Tooltip title="Thêm tình trạng hàng vào ngày này">
-                          <Button
-                            size="small"
-                            shape="circle"
-                            type="primary"
-                            ghost
-                            icon={<PlusOutlined />}
-                            onClick={onAddNewAtADate(groupedHistory)}
-                            disabled={isSaving}
-                          />
-                        </Tooltip>
-                      )}
-                    </Space>
-                  </div>
-
-                  <Timeline>
-                    {map((history: BillDeliveryHistory) => {
-                      const { time, status } = history;
-                      return (
-                        <Timeline.Item key={uniqueId('gh_tl_')}>
-                          <div
-                            style={{ display: 'flex', alignItems: 'center' }}
-                          >
-                            {time && (
-                              <Text strong style={{ marginRight: 5 }}>
-                                {moment(time).format('HH:mm')}:
-                              </Text>
-                            )}
-                            <Text style={{ marginRight: 5 }}>{status}</Text>
-                            {!isReadOnly && (
-                              <>
-                                <EditOutlined
-                                  style={{ cursor: 'pointer', marginRight: 5 }}
-                                  onClick={onEdit(history)}
-                                  disabled={isSaving}
-                                />
-                                <DeleteOutlined
-                                  style={{ cursor: 'pointer', color: 'red' }}
-                                  onClick={onDelete(history)}
-                                  disabled={isSaving}
-                                />
-                              </>
-                            )}
-                          </div>
-                        </Timeline.Item>
-                      );
-                    })(groupedHistory.histories)}
-                  </Timeline>
-                </div>
-              );
-            })(histories)
+            <DeliveryTimeline
+              isReadOnly={isReadOnly}
+              onAddNewAtADate={onAddNewAtADate}
+              onEdit={onEdit}
+              onDelete={onDelete}
+              histories={histories}
+              isSaving={isSaving}
+            />
           )}
         </div>
         <DeliveryHistoryModal

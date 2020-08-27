@@ -11,17 +11,12 @@ export const selectIsFetchingHistories = createSelector(
   billDeliveryHistoryState => billDeliveryHistoryState.isFetchingHistories,
 );
 
-export const selectHistories = createSelector(
-  [selectDomain],
-  billDeliveryHistoryState => billDeliveryHistoryState.groupedHistories,
-);
-
 export const selectIsDirty = createSelector(
   [selectDomain],
   billDeliveryHistoryState => billDeliveryHistoryState.isDirty,
 );
 
-export const selectLastChangeData = createSelector(
+export const selectHistories = createSelector(
   [selectDomain],
   billDeliveryHistoryState => billDeliveryHistoryState.histories,
 );

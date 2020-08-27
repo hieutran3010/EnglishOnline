@@ -5,7 +5,7 @@ import { PayloadAction } from '@reduxjs/toolkit';
 import BillFetcher, { BillPatchExecutor } from 'app/fetchers/billFetcher';
 
 import { actions } from './slice';
-import { selectLastChangeData, selectViewableBill } from './selectors';
+import { selectHistories, selectViewableBill } from './selectors';
 import { toast } from 'react-toastify';
 import Bill from 'app/models/bill';
 
@@ -36,7 +36,7 @@ export function* saveTask(action: PayloadAction<string>) {
   const billId = action.payload;
   yield put(actions.setIsSaving(true));
 
-  const data = yield select(selectLastChangeData);
+  const data = yield select(selectHistories);
   try {
     yield call(billBatchExecutor.updateDeliveryHistory, billId, data);
 

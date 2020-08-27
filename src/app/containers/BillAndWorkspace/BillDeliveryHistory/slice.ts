@@ -1,67 +1,17 @@
-import isEmpty from 'lodash/fp/isEmpty';
-import orderBy from 'lodash/fp/orderBy';
-import groupBy from 'lodash/fp/groupBy';
-import keys from 'lodash/fp/keys';
 import map from 'lodash/fp/map';
 import findIndex from 'lodash/fp/findIndex';
 import remove from 'lodash/fp/remove';
 import equals from 'lodash/fp/equals';
-import moment from 'moment';
 
 import { PayloadAction } from '@reduxjs/toolkit';
 import { createSlice } from 'utils/@reduxjs/toolkit';
 import Bill, { BillDeliveryHistory } from 'app/models/bill';
 
-import {
-  ContainerState,
-  GroupedHistory,
-  FetchHistoriesCompletedAction,
-} from './types';
-
-const groupHistory = (histories: BillDeliveryHistory[]): GroupedHistory[] => {
-  if (!isEmpty(histories)) {
-    const orderedHistories = orderBy('date')('desc')(histories);
-
-    const groupedByDate = groupBy((bdh: BillDeliveryHistory) => bdh.date)(
-      orderedHistories,
-    );
-
-    const dates = keys(groupedByDate);
-    const groupedHistories: GroupedHistory[] = map(
-      (groupedKey: string): GroupedHistory => {
-        const values = groupedByDate[groupedKey];
-
-        const isValidDate =
-          groupedKey !== null &&
-          groupedKey !== undefined &&
-          groupedKey !== 'null' &&
-          groupedKey !== 'undefined';
-        const date = isValidDate
-          ? moment(groupedKey).format('DD-MM-YYYY')
-          : null;
-
-        const historyValues = orderBy('time')('desc')(
-          values,
-        ) as BillDeliveryHistory[];
-
-        return {
-          date,
-          histories: historyValues,
-          rawDate: isValidDate ? groupedKey : undefined,
-        };
-      },
-    )(dates);
-
-    return groupedHistories;
-  }
-
-  return [];
-};
+import { ContainerState, FetchHistoriesCompletedAction } from './types';
 
 // The initial state of the BillDeliveryHistory container
 export const initialState: ContainerState = {
   isFetchingHistories: false,
-  groupedHistories: [],
 
   histories: [],
   cachedHistories: [],
@@ -90,7 +40,6 @@ const billDeliveryHistorySlice = createSlice({
 
       state.histories = newHistories;
       state.cachedHistories = newHistories;
-      state.groupedHistories = groupHistory(state.histories);
       state.isDirty = false;
       state.isFetchingHistories = false;
       state.airlineBillId = airlineBillId;
@@ -111,7 +60,6 @@ const billDeliveryHistorySlice = createSlice({
         );
       }
       state.histories.push(newHistory);
-      state.groupedHistories = groupHistory(state.histories);
       checkIsDirty(state);
     },
 
@@ -133,7 +81,6 @@ const billDeliveryHistorySlice = createSlice({
           );
         }
         state.histories.splice(existedIndex, 1, history);
-        state.groupedHistories = groupHistory(state.histories);
         checkIsDirty(state);
       }
     },
@@ -144,13 +91,11 @@ const billDeliveryHistorySlice = createSlice({
         state.histories,
       );
 
-      state.groupedHistories = groupHistory(state.histories);
       checkIsDirty(state);
     },
 
     restore(state) {
       state.histories = state.cachedHistories;
-      state.groupedHistories = groupHistory(state.histories);
       state.isDirty = false;
     },
     setIsSaving(state, action: PayloadAction<boolean>) {
@@ -171,7 +116,6 @@ const billDeliveryHistorySlice = createSlice({
 
     reset(state) {
       state.isFetchingHistories = false;
-      state.groupedHistories = [];
 
       state.histories = [];
       state.cachedHistories = [];

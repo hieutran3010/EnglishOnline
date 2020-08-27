@@ -3,7 +3,6 @@ import Bill, { BillDeliveryHistory } from 'app/models/bill';
 /* --- STATE --- */
 export interface BillDeliveryHistoryState {
   isFetchingHistories: boolean;
-  groupedHistories: GroupedHistory[];
   histories: BillDeliveryHistory[];
   isDirty: boolean;
   cachedHistories: BillDeliveryHistory[];
