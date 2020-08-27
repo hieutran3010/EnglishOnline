@@ -11,6 +11,7 @@ import {
   Menu,
   Dropdown,
   Empty,
+  Tabs,
 } from 'antd';
 import { DownOutlined, CheckOutlined } from '@ant-design/icons';
 import {
@@ -29,6 +30,7 @@ import VendorWeightAdjustment from './VendorWeightAdjustment';
 import UserAvatar from 'app/containers/Auth/components/UserAvatar';
 import BillStatusTag from './BillStatusTag';
 
+const { TabPane } = Tabs;
 const { Text } = Typography;
 
 const canEdit = (user: User, bill: Bill) => {
@@ -384,15 +386,20 @@ const BillList = ({
               </Button>,
             ]}
           >
-            <div style={{ paddingTop: 20 }}>
-              <BillView
-                bill={selectedBill}
-                onArchiveBill={
-                  onArchiveBill ? onArchiveBillFromViewMode : undefined
-                }
-                onPrintedVat={onPrintedVatBill}
-              />
-            </div>
+            <Tabs type="card" defaultActiveKey="1">
+              <TabPane tab="Thông tin bill" key="1">
+                <BillView
+                  bill={selectedBill}
+                  onArchiveBill={
+                    onArchiveBill ? onArchiveBillFromViewMode : undefined
+                  }
+                  onPrintedVat={onPrintedVatBill}
+                />
+              </TabPane>
+              <TabPane tab="Tình trạng hàng" key="2">
+                Content of Tab Pane 2
+              </TabPane>
+            </Tabs>
           </Modal>
         </>
       )}
