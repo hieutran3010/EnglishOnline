@@ -5,7 +5,7 @@ import { PayloadAction } from '@reduxjs/toolkit';
 import BillFetcher, { BillPatchExecutor } from 'app/fetchers/billFetcher';
 
 import { actions } from './slice';
-import { selectHistories } from './selectors';
+import { selectLastChangeData } from './selectors';
 import { toast } from 'react-toastify';
 
 const billFetcher = new BillFetcher();
@@ -29,10 +29,12 @@ export function* saveTask(action: PayloadAction<string>) {
   const billId = action.payload;
   yield put(actions.setIsSaving(true));
 
-  const data = yield select(selectHistories);
+  const data = yield select(selectLastChangeData);
   try {
     yield call(billBatchExecutor.updateDeliveryHistory, billId, data);
-    yield put(actions.setIsSaving(false));
+
+    yield put(actions.saveCompleted());
+    toast.success('Đã lưu!');
   } catch (error) {
     Sentry.captureException(error);
     toast.error('Chưa lưu được, vui lòng thử lại');
