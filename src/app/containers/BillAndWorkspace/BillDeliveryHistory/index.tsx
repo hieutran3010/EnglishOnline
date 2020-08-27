@@ -131,8 +131,10 @@ export const BillDeliveryHistoryPage = memo(
     }, [dispatch, isDirty]);
 
     const onSave = useCallback(() => {
-      dispatch(actions.save(bill.id));
-    }, [bill.id, dispatch]);
+      if (isDirty) {
+        dispatch(actions.save(bill.id));
+      }
+    }, [bill.id, dispatch, isDirty]);
 
     const maxHeight = window.innerHeight - window.innerHeight * 0.3;
 
@@ -174,6 +176,7 @@ export const BillDeliveryHistoryPage = memo(
             style={{ border: 0 }}
             loading={isSaving}
             onClick={onSave}
+            disabled={!isDirty}
           >
             Lưu thay đổi
           </Button>,
@@ -182,7 +185,7 @@ export const BillDeliveryHistoryPage = memo(
             icon={<ClearOutlined />}
             style={{ border: 0 }}
             onClick={onRestore}
-            disabled={isSaving}
+            disabled={isSaving || !isDirty}
           >
             Hủy thay đổi
           </Button>,
