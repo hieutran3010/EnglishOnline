@@ -264,7 +264,13 @@ export const Workspace = memo(() => {
             </ContentContainer>
           )}
           {billBlockActionType === BILL_BLOCK_ACTION_TYPE.HISTORY && (
-            <BillDeliveryHistoryPage size="small" bill={bill} />
+            <BillDeliveryHistoryPage
+              size="small"
+              inputBillId={bill.id}
+              isReadOnly={role === Role.ACCOUNTANT}
+              delegateControl
+              notAbleToViewBillInfo
+            />
           )}
         </StyledRightContainer>
       </StyledContainer>

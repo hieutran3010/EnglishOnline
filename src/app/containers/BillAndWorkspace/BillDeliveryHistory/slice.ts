@@ -10,9 +10,13 @@ import moment from 'moment';
 
 import { PayloadAction } from '@reduxjs/toolkit';
 import { createSlice } from 'utils/@reduxjs/toolkit';
-import { BillDeliveryHistory } from 'app/models/bill';
+import Bill, { BillDeliveryHistory } from 'app/models/bill';
 
-import { ContainerState, GroupedHistory } from './types';
+import {
+  ContainerState,
+  GroupedHistory,
+  FetchHistoriesCompletedAction,
+} from './types';
 
 const groupHistory = (histories: BillDeliveryHistory[]): GroupedHistory[] => {
   if (!isEmpty(histories)) {
@@ -63,6 +67,8 @@ export const initialState: ContainerState = {
   cachedHistories: [],
   isDirty: false,
   isSaving: false,
+  billId: '',
+  isFetchingBillToView: false,
 };
 
 const billDeliveryHistorySlice = createSlice({
@@ -71,13 +77,15 @@ const billDeliveryHistorySlice = createSlice({
   reducers: {
     fetchBillDeliveryHistories(state, action: PayloadAction<string>) {
       state.isFetchingHistories = true;
+      state.billId = action.payload;
     },
     fetchBillDeliveryHistoriesCompleted(
       state,
-      action: PayloadAction<BillDeliveryHistory[]>,
+      action: PayloadAction<FetchHistoriesCompletedAction>,
     ) {
+      const { histories, airlineBillId, childBillId } = action.payload;
       const newHistories = map(history => new BillDeliveryHistory(history))(
-        action.payload,
+        histories,
       );
 
       state.histories = newHistories;
@@ -85,6 +93,8 @@ const billDeliveryHistorySlice = createSlice({
       state.groupedHistories = groupHistory(state.histories);
       state.isDirty = false;
       state.isFetchingHistories = false;
+      state.airlineBillId = airlineBillId;
+      state.childBillId = childBillId;
     },
 
     addNew(state, action: PayloadAction<any>) {
@@ -150,6 +160,28 @@ const billDeliveryHistorySlice = createSlice({
     saveCompleted(state) {
       state.cachedHistories = state.histories;
       state.isDirty = false;
+    },
+    fetchBillToView(state, action: PayloadAction<string>) {
+      state.isFetchingBillToView = true;
+    },
+    fetchBillToViewCompleted(state, action: PayloadAction<Bill | undefined>) {
+      state.bill = action.payload;
+      state.isFetchingBillToView = false;
+    },
+
+    reset(state) {
+      state.isFetchingHistories = false;
+      state.groupedHistories = [];
+
+      state.histories = [];
+      state.cachedHistories = [];
+      state.isDirty = false;
+      state.isSaving = false;
+      state.billId = '';
+      state.airlineBillId = undefined;
+      state.childBillId = undefined;
+      state.bill = undefined;
+      state.isFetchingBillToView = false;
     },
   },
 });

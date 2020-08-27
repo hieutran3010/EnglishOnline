@@ -5,8 +5,9 @@ import { PayloadAction } from '@reduxjs/toolkit';
 import BillFetcher, { BillPatchExecutor } from 'app/fetchers/billFetcher';
 
 import { actions } from './slice';
-import { selectLastChangeData } from './selectors';
+import { selectLastChangeData, selectViewableBill } from './selectors';
 import { toast } from 'react-toastify';
+import Bill from 'app/models/bill';
 
 const billFetcher = new BillFetcher();
 const billBatchExecutor = new BillPatchExecutor();
@@ -18,11 +19,17 @@ export function* fetchBillDeliveryHistoriesTask(action: PayloadAction<string>) {
     {
       query: `Id = "${billId}"`,
     },
-    ['billDeliveryHistories { date time status }'],
+    ['airlineBillId, childBillId, billDeliveryHistories { date time status }'],
   );
 
-  const { billDeliveryHistories } = bill;
-  yield put(actions.fetchBillDeliveryHistoriesCompleted(billDeliveryHistories));
+  const { billDeliveryHistories, airlineBillId, childBillId } = bill;
+  yield put(
+    actions.fetchBillDeliveryHistoriesCompleted({
+      airlineBillId,
+      childBillId,
+      histories: billDeliveryHistories,
+    }),
+  );
 }
 
 export function* saveTask(action: PayloadAction<string>) {
@@ -43,6 +50,27 @@ export function* saveTask(action: PayloadAction<string>) {
   yield put(actions.setIsSaving(false));
 }
 
+export function* fetchBillToViewTask(action: PayloadAction<string>) {
+  const billId = action.payload;
+  const currentViewableBill = yield select(selectViewableBill);
+
+  let bill: Bill | undefined = undefined;
+  try {
+    if (!currentViewableBill || currentViewableBill.id !== billId) {
+      bill = yield call(billFetcher.queryOneAsync, {
+        query: `Id = "${billId}"`,
+      });
+    } else {
+      bill = currentViewableBill;
+    }
+  } catch (error) {
+    Sentry.captureException(error);
+    toast.error('Không thể tải bill');
+  }
+
+  yield put(actions.fetchBillToViewCompleted(bill));
+}
+
 export function* billDeliveryHistorySaga() {
   yield takeLatest(
     actions.fetchBillDeliveryHistories.type,
@@ -50,4 +78,5 @@ export function* billDeliveryHistorySaga() {
   );
 
   yield takeLatest(actions.save.type, saveTask);
+  yield takeLatest(actions.fetchBillToView.type, fetchBillToViewTask);
 }

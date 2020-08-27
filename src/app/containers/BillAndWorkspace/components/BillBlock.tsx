@@ -62,18 +62,14 @@ const BillBlock = ({
             <EyeOutlined key="edit" onClick={_onSelected} />
           )}
         </>,
-        <>
-          {[Role.ADMIN, Role.LICENSE].includes(userRole) && (
-            <Tooltip title="Xem/Cập nhật tình trạng hàng">
-              {bill.id === selectedBillId &&
-              actionType === BILL_BLOCK_ACTION_TYPE.HISTORY ? (
-                <HistoryOutlined style={{ color: '#52c41a' }} />
-              ) : (
-                <HistoryOutlined key="history" onClick={_onGoToHistory} />
-              )}
-            </Tooltip>
+        <Tooltip title="Xem/Cập nhật tình trạng hàng">
+          {bill.id === selectedBillId &&
+          actionType === BILL_BLOCK_ACTION_TYPE.HISTORY ? (
+            <HistoryOutlined style={{ color: '#52c41a' }} />
+          ) : (
+            <HistoryOutlined key="history" onClick={_onGoToHistory} />
           )}
-        </>,
+        </Tooltip>,
       ]}
       style={{
         marginBottom: 10,

@@ -30,3 +30,23 @@ export const selectIsSaving = createSelector(
   [selectDomain],
   billDeliveryHistoryState => billDeliveryHistoryState.isSaving,
 );
+
+export const selectAirlineBillId = createSelector(
+  [selectDomain],
+  billDeliveryHistoryState => billDeliveryHistoryState.airlineBillId,
+);
+
+export const selectChildBillId = createSelector(
+  [selectDomain],
+  billDeliveryHistoryState => billDeliveryHistoryState.childBillId,
+);
+
+export const selectViewableBill = createSelector(
+  [selectDomain],
+  billDeliveryHistoryState => billDeliveryHistoryState.bill,
+);
+
+export const selectIsFetchingBillToView = createSelector(
+  [selectDomain],
+  billDeliveryHistoryState => billDeliveryHistoryState.isFetchingBillToView,
+);

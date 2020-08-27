@@ -1,4 +1,4 @@
-import React, { memo, useMemo, useCallback, useState } from 'react';
+import React, { memo, useMemo, useCallback, useState, ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import isEmpty from 'lodash/fp/isEmpty';
 import filter from 'lodash/fp/filter';
@@ -125,20 +125,31 @@ const BillList = ({
     billDataSource.onReloadData();
   }, [billDataSource]);
 
-  const getMenu = useCallback(
-    (bill: Bill) => (
-      <Menu>
-        <Menu.Item key="0">
-          <Link to={`/billUpdating/${bill.id}`}>Sửa thông tin</Link>
-        </Menu.Item>
-        <Menu.Item key="1">
-          <Link to={`/billUpdating/${bill.id}`} target="_blank">
-            Sửa thông tin ở Tab mới
-          </Link>
-        </Menu.Item>
-        {authorizeHelper.canRenderWithRole(
-          [Role.ACCOUNTANT, Role.ADMIN],
-          <Menu.Item key="2">
+  const getUpdateMenuItems = useCallback(
+    (bill: Bill): ReactNode[] => {
+      const MenuItems: ReactNode[] = [];
+      const isAbleToEditInfo = canEdit(user, bill);
+      const userRole = user.role as Role;
+
+      if (isAbleToEditInfo) {
+        MenuItems.push(
+          <Menu.Item key={0}>
+            <Link to={`/billUpdating/${bill.id}`}>Sửa thông tin</Link>
+          </Menu.Item>,
+          <Menu.Item key={1}>
+            <Link to={`/billUpdating/${bill.id}`} target="_blank">
+              Sửa thông tin ở Tab mới
+            </Link>
+          </Menu.Item>,
+        );
+      }
+
+      if (
+        isAbleToEditInfo &&
+        [Role.ACCOUNTANT, Role.ADMIN].includes(userRole)
+      ) {
+        MenuItems.push(
+          <Menu.Item key={2}>
             <VendorWeightAdjustment
               bill={bill}
               oldWeightInKg={bill.oldWeightInKg}
@@ -147,10 +158,22 @@ const BillList = ({
               onSubmitSucceeded={onSubmitWeightSucceeded}
             />
           </Menu.Item>,
-        )}
-      </Menu>
-    ),
-    [onSubmitWeightSucceeded],
+        );
+      }
+
+      if (userRole !== Role.ACCOUNTANT) {
+        MenuItems.push(
+          <Menu.Item key={3}>
+            <Link to={`/billStatusUpdating/${bill.id}`}>
+              Cập nhật tình trạng hàng
+            </Link>
+          </Menu.Item>,
+        );
+      }
+
+      return MenuItems;
+    },
+    [onSubmitWeightSucceeded, user],
   );
 
   const columns = useMemo((): ColumnDefinition[] => {
@@ -279,42 +302,49 @@ const BillList = ({
         key: 'action',
         width: 150,
         fixed: 'right',
-        render: (record: Bill) => (
-          <Space size={1}>
-            <Button size="small" type="link" onClick={onViewBill(record)}>
-              Xem
-            </Button>
+        render: (record: Bill) => {
+          const updateMenuItems = getUpdateMenuItems(record);
 
-            {onArchiveBill &&
-              record.status === BILL_STATUS.DONE &&
-              !record.isArchived &&
-              authorizeHelper.canRenderWithRole(
-                [Role.ADMIN, Role.ACCOUNTANT],
+          return (
+            <Space size={1}>
+              <Button size="small" type="link" onClick={onViewBill(record)}>
+                Xem
+              </Button>
+
+              {onArchiveBill &&
+                record.status === BILL_STATUS.DONE &&
+                !record.isArchived &&
+                authorizeHelper.canRenderWithRole(
+                  [Role.ADMIN, Role.ACCOUNTANT],
+                  <>
+                    <Divider type="vertical" />
+                    <Button
+                      size="small"
+                      type="link"
+                      danger
+                      onClick={_onArchiveBill(record)}
+                    >
+                      Hủy
+                    </Button>
+                  </>,
+                )}
+
+              {!isEmpty(updateMenuItems) && (
                 <>
                   <Divider type="vertical" />
-                  <Button
-                    size="small"
-                    type="link"
-                    danger
-                    onClick={_onArchiveBill(record)}
+                  <Dropdown
+                    overlay={<Menu>{updateMenuItems}</Menu>}
+                    trigger={['click']}
                   >
-                    Hủy
-                  </Button>
-                </>,
+                    <Button type="link" style={{ paddingLeft: 8 }}>
+                      Sửa <DownOutlined />
+                    </Button>
+                  </Dropdown>
+                </>
               )}
-
-            {canEdit(user, record) && (
-              <>
-                <Divider type="vertical" />
-                <Dropdown overlay={getMenu(record)} trigger={['click']}>
-                  <Button type="link" style={{ paddingLeft: 8 }}>
-                    Sửa <DownOutlined />
-                  </Button>
-                </Dropdown>
-              </>
-            )}
-          </Space>
-        ),
+            </Space>
+          );
+        },
       },
     ];
 
@@ -330,10 +360,9 @@ const BillList = ({
     disableFilterFields,
     excludeFields,
     extendCols,
-    getMenu,
+    getUpdateMenuItems,
     onArchiveBill,
     onViewBill,
-    user,
   ]);
 
   return (

@@ -235,6 +235,7 @@ export const BillCreateOrUpdate = memo(
     }, [dispatch]);
 
     useEffect(() => {
+      billForm.resetFields();
       setIsDirty(false);
 
       if (role !== Role.SALE) {
