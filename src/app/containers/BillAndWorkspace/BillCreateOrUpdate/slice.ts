@@ -46,15 +46,6 @@ const extractBillInfo = (state: ContainerState, billInfo: any) => {
   state.bill = bill;
 };
 
-const updatePurchasePrice = (
-  state: ContainerState,
-  purchasePrice: PurchasePriceCountingResult,
-) => {
-  const newPurchasePriceInfo = new PurchasePriceInfo(state.purchasePriceInfo);
-  newPurchasePriceInfo.updateFromCountingResult(purchasePrice);
-  state.purchasePriceInfo = newPurchasePriceInfo;
-};
-
 const billCreateOrUpdateSlice = createSlice({
   name: 'billCreateOrUpdate',
   initialState,

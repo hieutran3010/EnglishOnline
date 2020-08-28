@@ -90,27 +90,12 @@ export class PurchasePriceInfo {
     this.oldPurchasePriceAfterVatInUsd = this.purchasePriceAfterVatInUsd;
     this.oldPurchasePriceAfterVatInVnd = this.purchasePriceAfterVatInVnd;
 
-    this.purchasePriceInUsd = result.purchasePriceInUsd;
-    this.purchasePriceInVnd = result.purchasePriceInVnd;
-    this.vendorFuelChargeFeeInUsd = result.fuelChargeFeeInUsd;
-    this.vendorFuelChargeFeeInVnd = result.fuelChargeFeeInVnd;
-    this.quotationPriceInUsd = result.quotationPriceInUsd;
-    this.vendorNetPriceInUsd = result.vendorNetPriceInUsd;
-    this.zoneName = result.zoneName;
-    this.purchasePriceAfterVatInUsd = result.purchasePriceAfterVatInUsd;
-    this.purchasePriceAfterVatInVnd = result.purchasePriceAfterVatInVnd;
+    this.updateFromCountingResult(result);
   }
 
   restoreOldWeightPurchasePrice(result: PurchasePriceCountingResult) {
-    this.purchasePriceInUsd = result.purchasePriceInUsd;
-    this.purchasePriceInVnd = result.purchasePriceInVnd;
-    this.vendorFuelChargeFeeInUsd = result.fuelChargeFeeInUsd;
-    this.vendorFuelChargeFeeInVnd = result.fuelChargeFeeInVnd;
-    this.quotationPriceInUsd = result.quotationPriceInUsd;
-    this.vendorNetPriceInUsd = result.vendorNetPriceInUsd;
-    this.zoneName = result.zoneName;
-    this.purchasePriceAfterVatInUsd = result.purchasePriceAfterVatInUsd;
-    this.purchasePriceAfterVatInVnd = result.purchasePriceAfterVatInVnd;
+    this.updateFromCountingResult(result);
+
     this.oldPurchasePriceInUsd = undefined;
     this.oldPurchasePriceInVnd = undefined;
     this.oldPurchasePriceAfterVatInUsd = undefined;
