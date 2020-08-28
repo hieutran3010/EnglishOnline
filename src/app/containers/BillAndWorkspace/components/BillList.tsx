@@ -29,6 +29,7 @@ import BillView from './BillView';
 import VendorWeightAdjustment from './VendorWeightAdjustment';
 import UserAvatar from 'app/containers/Auth/components/UserAvatar';
 import BillStatusTag from './BillStatusTag';
+import DeliveryTimeline from '../BillDeliveryHistory/DeliveryTimeline';
 
 const { TabPane } = Tabs;
 const { Text } = Typography;
@@ -307,6 +308,20 @@ const BillList = ({
                 Xem
               </Button>
 
+              {!isEmpty(updateMenuItems) && (
+                <>
+                  <Divider type="vertical" />
+                  <Dropdown
+                    overlay={<Menu>{updateMenuItems}</Menu>}
+                    trigger={['click']}
+                  >
+                    <Button type="link" style={{ paddingLeft: 8 }}>
+                      Sửa <DownOutlined />
+                    </Button>
+                  </Dropdown>
+                </>
+              )}
+
               {onArchiveBill &&
                 record.status === BILL_STATUS.DONE &&
                 !record.isArchived &&
@@ -324,20 +339,6 @@ const BillList = ({
                     </Button>
                   </>,
                 )}
-
-              {!isEmpty(updateMenuItems) && (
-                <>
-                  <Divider type="vertical" />
-                  <Dropdown
-                    overlay={<Menu>{updateMenuItems}</Menu>}
-                    trigger={['click']}
-                  >
-                    <Button type="link" style={{ paddingLeft: 8 }}>
-                      Sửa <DownOutlined />
-                    </Button>
-                  </Dropdown>
-                </>
-              )}
             </Space>
           );
         },
@@ -397,7 +398,7 @@ const BillList = ({
                 />
               </TabPane>
               <TabPane tab="Tình trạng hàng" key="2">
-                Content of Tab Pane 2
+                <DeliveryTimeline histories={[]} isReadOnly />
               </TabPane>
             </Tabs>
           </Modal>

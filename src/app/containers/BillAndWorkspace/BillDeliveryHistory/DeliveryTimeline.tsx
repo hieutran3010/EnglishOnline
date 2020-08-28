@@ -16,11 +16,11 @@ const { Text } = Typography;
 
 interface Props {
   isReadOnly?: boolean;
-  isSaving: boolean;
+  isSaving?: boolean;
   histories: BillDeliveryHistory[];
-  onEdit: (history: BillDeliveryHistory) => void;
-  onDelete: (history: BillDeliveryHistory) => void;
-  onAddNewAtADate: (date: any) => void;
+  onEdit?: (history: BillDeliveryHistory) => void;
+  onDelete?: (history: BillDeliveryHistory) => void;
+  onAddNewAtADate?: (date: any) => void;
 }
 const DeliveryTimeline = ({
   isReadOnly,
