@@ -153,8 +153,8 @@ const billCreateOrUpdateSlice = createSlice({
       state.isFinalBill = action.payload;
     },
     finalBill(state, action: PayloadAction<SubmitBillAction>) {},
-    finalBillCompleted(state) {
-      extractBillInfo(state, new Bill());
+    finalBillCompleted(state, action: PayloadAction<Bill>) {
+      extractBillInfo(state, action.payload);
     },
 
     setIsAssigningLicense(state, action: PayloadAction<boolean>) {

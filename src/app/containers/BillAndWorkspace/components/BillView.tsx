@@ -1,6 +1,16 @@
 import React, { memo, useState, useCallback, useMemo } from 'react';
 import moment from 'moment';
-import { Divider, Typography, Descriptions, Button, Space, Tag } from 'antd';
+import {
+  Divider,
+  Typography,
+  Descriptions,
+  Button,
+  Space,
+  Tag,
+  Tooltip,
+} from 'antd';
+import isUndefined from 'lodash/fp/isUndefined';
+import isNil from 'lodash/fp/isNil';
 
 import Bill, { BILL_STATUS, PAYMENT_TYPE } from 'app/models/bill';
 import { toCurrency } from 'utils/numberFormat';
@@ -17,7 +27,7 @@ import {
 import PurchasePrice from './PurchasePrice';
 import UserAvatar from 'app/containers/Auth/components/UserAvatar';
 
-const { Title } = Typography;
+const { Title, Text } = Typography;
 
 const getPaymentDisplay = (paymentType: PAYMENT_TYPE | undefined) => {
   if (paymentType === PAYMENT_TYPE.CASH) {
@@ -160,7 +170,14 @@ const BillView = ({ bill, onArchiveBill, onPrintedVat }: Props) => {
             {bill.description}
           </Descriptions.Item>
           <Descriptions.Item label="Trọng lượng (kg)">
-            {bill.weightInKg}kg
+            <Space>
+              <Text>{bill.weightInKg}kg</Text>
+              {!isUndefined(bill.oldWeightInKg) && !isNil(bill.oldWeightInKg) && (
+                <Tooltip title="Ký bán cho khách">
+                  <Text delete>{bill.oldWeightInKg}kg</Text>
+                </Tooltip>
+              )}
+            </Space>
           </Descriptions.Item>
           <Descriptions.Item label="Dịch vụ">
             {bill.internationalParcelVendor}

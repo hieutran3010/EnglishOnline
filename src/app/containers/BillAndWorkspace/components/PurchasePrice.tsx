@@ -117,7 +117,7 @@ const PurchasePrice = ({
           <Tooltip title="Nhập và sau đó nhấn Enter">
             <Form.Item name="manualPurchasePriceInUsd">
               <InputNumber
-                ref={(ref: any) => ref?.focus()}
+                ref={(ref: any) => ref?.select()}
                 placeholder="Giá mua khác?"
                 style={{ width: 150 }}
               />

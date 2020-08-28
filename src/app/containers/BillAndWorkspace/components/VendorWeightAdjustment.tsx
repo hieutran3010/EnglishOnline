@@ -65,8 +65,9 @@ const VendorWeightAdjustment = ({
   const [form] = Form.useForm();
 
   const [predictPurchasePrice, setPredictPurchasePrice] = useState<
-    PurchasePriceCountingResult
-  >(new PurchasePriceCountingResult());
+    PurchasePriceCountingResult | undefined
+  >();
+
   const [isCountingPurchasePrice, setIsCountingPurchasePrice] = useState(false);
   const [visible, setVisible] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -107,7 +108,7 @@ const VendorWeightAdjustment = ({
   }, []);
 
   const onClose = useCallback(() => {
-    setPredictPurchasePrice(new PurchasePriceCountingResult());
+    setPredictPurchasePrice(undefined);
     form.resetFields();
     setVisible(false);
   }, [form]);
@@ -130,6 +131,19 @@ const VendorWeightAdjustment = ({
 
   const onSubmitNewWeight = useCallback(async () => {
     const _newWeight = form.getFieldValue('vendorWeightInKg');
+
+    if (!_newWeight) {
+      onClose();
+      return;
+    }
+
+    let price: PurchasePriceCountingResult;
+    if (!predictPurchasePrice) {
+      price = await calculatePurchasePrice(_newWeight);
+    } else {
+      price = predictPurchasePrice as PurchasePriceCountingResult;
+    }
+
     if (canSelfSubmit) {
       setIsSubmitting(true);
 
@@ -142,7 +156,7 @@ const VendorWeightAdjustment = ({
           .minute(0)
           .format('YYYY-MM-DD HH:mm');
         const purchasePriceInfo = submitBill.getPurchasePriceInfo();
-        purchasePriceInfo.updateFromCountingResult(predictPurchasePrice);
+        purchasePriceInfo.updateFromCountingResult(price);
         submitBill.updatePurchasePriceInfo(purchasePriceInfo);
 
         const billFetcher = new BillFetcher();
@@ -159,13 +173,14 @@ const VendorWeightAdjustment = ({
       setIsSubmitting(false);
     } else {
       if (onSaveNewWeight) {
-        onSaveNewWeight(bill.weightInKg, _newWeight, predictPurchasePrice);
+        onSaveNewWeight(bill.weightInKg, _newWeight, price);
       }
 
       onClose();
     }
   }, [
     bill,
+    calculatePurchasePrice,
     canSelfSubmit,
     form,
     onClose,
@@ -175,6 +190,13 @@ const VendorWeightAdjustment = ({
   ]);
 
   const onCancelVendorWeight = useCallback(async () => {
+    let price: PurchasePriceCountingResult;
+    if (!predictPurchasePrice) {
+      price = await calculatePurchasePrice(oldWeightInKg || 0);
+    } else {
+      price = predictPurchasePrice as PurchasePriceCountingResult;
+    }
+
     if (canSelfSubmit) {
       showConfirm(
         `Bạn có chắc muốn hủy ký của NCC là ${
@@ -194,7 +216,7 @@ const VendorWeightAdjustment = ({
               .minute(0)
               .format('YYYY-MM-DD HH:mm');
             const purchasePriceInfo = submitBill.getPurchasePriceInfo();
-            purchasePriceInfo.updateFromCountingResult(predictPurchasePrice);
+            purchasePriceInfo.updateFromCountingResult(price);
             submitBill.updatePurchasePriceInfo(purchasePriceInfo);
 
             const billFetcher = new BillFetcher();
@@ -212,12 +234,8 @@ const VendorWeightAdjustment = ({
         },
       );
     } else {
-      const purchasePriceCountingResult = await calculatePurchasePrice(
-        oldWeightInKg || 0,
-      );
-
       if (onRestoreSaleWeight) {
-        onRestoreSaleWeight(oldWeightInKg || 0, purchasePriceCountingResult);
+        onRestoreSaleWeight(oldWeightInKg || 0, price);
       }
     }
   }, [
@@ -287,7 +305,7 @@ const VendorWeightAdjustment = ({
                     ) : (
                       <Text mark>
                         {toCurrency(
-                          predictPurchasePrice.purchasePriceAfterVatInUsd || 0,
+                          predictPurchasePrice?.purchasePriceAfterVatInUsd || 0,
                           true,
                         )}
                       </Text>
