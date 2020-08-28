@@ -73,6 +73,9 @@ interface Props {
   heightOffset?: number;
   width?: number;
   disableFilterFields?: string[];
+  onRestoreArchivedBill?: (billId: string) => void;
+  onReturnFinalBillToAccountant?: (billId: string) => void;
+  onForceDeleteBill?: (billId: string) => void;
 }
 const BillList = ({
   onArchiveBill,
@@ -85,6 +88,9 @@ const BillList = ({
   heightOffset,
   width,
   disableFilterFields,
+  onRestoreArchivedBill,
+  onReturnFinalBillToAccountant,
+  onForceDeleteBill,
 }: Props) => {
   const user = authStorage.getUser();
 
@@ -163,6 +169,36 @@ const BillList = ({
       }
     },
     [histories, loadedHistories, selectedBill.id],
+  );
+
+  const _onRestoreArchivedBill = useCallback(
+    (billId: string) => {
+      if (onRestoreArchivedBill) {
+        onRestoreArchivedBill(billId);
+        onCancelViewBill();
+      }
+    },
+    [onCancelViewBill, onRestoreArchivedBill],
+  );
+
+  const _onReturnFinalBillToAccountant = useCallback(
+    (billId: string) => {
+      if (onReturnFinalBillToAccountant) {
+        onReturnFinalBillToAccountant(billId);
+        onCancelViewBill();
+      }
+    },
+    [onCancelViewBill, onReturnFinalBillToAccountant],
+  );
+
+  const _onForceDeleteBill = useCallback(
+    (billId: string) => {
+      if (onForceDeleteBill) {
+        onForceDeleteBill(billId);
+        onCancelViewBill();
+      }
+    },
+    [onCancelViewBill, onForceDeleteBill],
   );
 
   const getUpdateMenuItems = useCallback(
@@ -286,6 +322,7 @@ const BillList = ({
         key: 'destinationCountry',
         type: COLUMN_TYPES.STRING,
         canFilter: true,
+        sorter: true,
         width: 200,
       },
       {
@@ -293,6 +330,7 @@ const BillList = ({
         key: 'weightInKg',
         type: COLUMN_TYPES.NUMBER,
         width: 100,
+        sorter: true,
         render: record => {
           const { weightInKg, oldWeightInKg } = record;
           return (
@@ -347,12 +385,12 @@ const BillList = ({
 
               {!isEmpty(updateMenuItems) && (
                 <>
-                  <Divider type="vertical" />
+                  <Divider type="vertical" style={{ margin: 0 }} />
                   <Dropdown
                     overlay={<Menu>{updateMenuItems}</Menu>}
                     trigger={['click']}
                   >
-                    <Button type="link" style={{ paddingLeft: 8 }}>
+                    <Button type="link">
                       Sửa <DownOutlined />
                     </Button>
                   </Dropdown>
@@ -365,7 +403,7 @@ const BillList = ({
                 authorizeHelper.canRenderWithRole(
                   [Role.ADMIN, Role.ACCOUNTANT],
                   <>
-                    <Divider type="vertical" />
+                    <Divider type="vertical" style={{ margin: 0 }} />
                     <Button
                       size="small"
                       type="link"
@@ -411,6 +449,7 @@ const BillList = ({
             dontLoadInitialData={dontLoadInitialData}
             heightOffset={heightOffset || 0.32}
             size="small"
+            rowSelection={{}}
           />
           <Modal
             visible={visibleBillView}
@@ -432,6 +471,9 @@ const BillList = ({
                     onArchiveBill ? onArchiveBillFromViewMode : undefined
                   }
                   onPrintedVat={onPrintedVatBill}
+                  onRestoreArchivedBill={_onRestoreArchivedBill}
+                  onReturnFinalBillToAccountant={_onReturnFinalBillToAccountant}
+                  onForceDeleteBill={_onForceDeleteBill}
                 />
               </TabPane>
               <TabPane tab="Tình trạng hàng" key={2}>

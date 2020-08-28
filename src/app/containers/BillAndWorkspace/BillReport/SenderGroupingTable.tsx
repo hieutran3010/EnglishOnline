@@ -90,9 +90,11 @@ const columns = [
 
 interface Props {
   dateRange: any[];
+  onReturnFinalBillToAccountant: (billId: string) => void;
 }
 const SenderGroupingTable = ({
   dateRange,
+  onReturnFinalBillToAccountant,
   ...restProps
 }: Props & TableProps<CustomerStatistic>) => {
   const NestedBillsCustomerGrouping = useCallback(
@@ -131,6 +133,7 @@ const SenderGroupingTable = ({
             excludeFields={['isArchived']}
             extendCols={getAdminCols()}
             heightOffset={0.7}
+            onReturnFinalBillToAccountant={onReturnFinalBillToAccountant}
           />
         );
       }

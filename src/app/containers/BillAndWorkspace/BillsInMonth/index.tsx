@@ -86,6 +86,30 @@ export const BillsInMonth = memo(() => {
     [],
   );
 
+  const onRestoreArchivedBill = useCallback(
+    (billId: string) => {
+      dispatch(actions.restoreArchivedBill(billId));
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [],
+  );
+
+  const onReturnFinalBillToAccountant = useCallback(
+    (billId: string) => {
+      dispatch(actions.returnFinalBillToAccountant(billId));
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [],
+  );
+
+  const onForceDeleteBill = useCallback(
+    (billId: string) => {
+      dispatch(actions.forceDeleteBill(billId));
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [],
+  );
+
   return (
     <RootContainer title={`Danh sách Bill tháng ${moment().format('MM-YYYY')}`}>
       <Switch
@@ -98,6 +122,9 @@ export const BillsInMonth = memo(() => {
         billDataSource={billDataSource}
         onArchiveBill={onArchiveBill}
         onPrintedVatBill={onCheckPrintedVat}
+        onRestoreArchivedBill={onRestoreArchivedBill}
+        onReturnFinalBillToAccountant={onReturnFinalBillToAccountant}
+        onForceDeleteBill={onForceDeleteBill}
       />
     </RootContainer>
   );

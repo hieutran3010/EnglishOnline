@@ -352,6 +352,14 @@ export const BillReport = memo((props: Props) => {
     setIsFilterError(true);
   }, []);
 
+  const onReturnFinalBillToAccountant = useCallback(
+    (billId: string) => {
+      dispatch(actions.returnFinalBillToAccountant(billId));
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [],
+  );
+
   return (
     <RootContainer
       title="Báo Cáo"
@@ -522,6 +530,7 @@ export const BillReport = memo((props: Props) => {
           excludeFields={['isArchived']}
           extendCols={getAdminCols()}
           heightOffset={user.role === Role.ADMIN ? 0.51 : 0.47}
+          onReturnFinalBillToAccountant={onReturnFinalBillToAccountant}
         />
       )}
       {adminBillListType === BillListType.GroupByVendor && !isReset && (
@@ -529,6 +538,7 @@ export const BillReport = memo((props: Props) => {
           loading={isFetchingBillsVendorGrouping}
           dataSource={billsVendorGrouping}
           dateRange={dateRange}
+          onReturnFinalBillToAccountant={onReturnFinalBillToAccountant}
         />
       )}
       {adminBillListType === BillListType.GroupByCustomer && !isReset && (
@@ -536,6 +546,7 @@ export const BillReport = memo((props: Props) => {
           loading={isFetchingBillsCustomerGrouping}
           dataSource={billsCustomerGrouping}
           dateRange={dateRange}
+          onReturnFinalBillToAccountant={onReturnFinalBillToAccountant}
         />
       )}
     </RootContainer>

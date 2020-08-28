@@ -224,4 +224,12 @@ export class BillPatchExecutor extends RestfulFetcherBase<Bill> {
   ) => {
     return this.patch(histories, `updateDeliveryHistory/${billId}`);
   };
+
+  restoreFinalBill = (billId: string) => {
+    return this.patch(undefined, `restoreFinalBill/${billId}`);
+  };
+
+  restoreArchivedBill = (billId: string) => {
+    return this.patch(undefined, `restoreArchivedBill/${billId}`);
+  };
 }

@@ -86,9 +86,11 @@ const columns = [
 
 interface Props {
   dateRange: any[];
+  onReturnFinalBillToAccountant: (billId: string) => void;
 }
 const VendorGroupingTable = ({
   dateRange,
+  onReturnFinalBillToAccountant,
   ...restProps
 }: Props & TableProps<VendorStatistic>) => {
   const NestedBillsVendorGrouping = useCallback(
@@ -118,11 +120,12 @@ const VendorGroupingTable = ({
             excludeFields={['isArchived']}
             extendCols={getAdminCols()}
             heightOffset={0.7}
+            onReturnFinalBillToAccountant={onReturnFinalBillToAccountant}
           />
         );
       }
     },
-    [dateRange],
+    [dateRange, onReturnFinalBillToAccountant],
   );
 
   const getMaxHeight = useCallback(() => {

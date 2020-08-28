@@ -86,7 +86,7 @@ const DeliveryHistoryModal = ({
           name="status"
           rules={[{ required: true, message: 'Chưa nhập nội dung tình trạng' }]}
         >
-          <Input ref={ref => ref?.focus()} />
+          <Input ref={ref => ref?.select()} />
         </Form.Item>
       </Form>
     </Modal>

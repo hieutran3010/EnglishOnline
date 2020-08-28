@@ -174,6 +174,8 @@ const billReportSlice = createSlice({
       state.billsGroupedByCustomer = [];
       state.billsGroupedByVendor = [];
     },
+
+    returnFinalBillToAccountant(state, action: PayloadAction<string>) {},
   },
 });
 
