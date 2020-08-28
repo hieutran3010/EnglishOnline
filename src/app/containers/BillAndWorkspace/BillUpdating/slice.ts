@@ -8,6 +8,7 @@ export const initialState: ContainerState = {
   isFetchingBillError: false,
   isFetchingBill: false,
   bill: new Bill(),
+  isShowBillReview: false,
 };
 
 const billUpdatingSlice = createSlice({
@@ -28,6 +29,17 @@ const billUpdatingSlice = createSlice({
       }
 
       state.isFetchingBill = false;
+    },
+
+    showBillReview(state, action: PayloadAction<Bill>) {
+      state.bill = new Bill(action.payload);
+      state.isShowBillReview = true;
+    },
+    resetState(state) {
+      state.isFetchingBillError = false;
+      state.isFetchingBill = false;
+      state.bill = new Bill();
+      state.isShowBillReview = false;
     },
   },
 });

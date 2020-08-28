@@ -5,6 +5,8 @@ export interface BillUpdatingState {
   isFetchingBillError: boolean;
   isFetchingBill: boolean;
   bill: Bill;
+
+  isShowBillReview: boolean;
 }
 
 export type ContainerState = BillUpdatingState;

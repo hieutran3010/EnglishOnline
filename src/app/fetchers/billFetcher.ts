@@ -126,10 +126,16 @@ export default class BillFetcher extends GraphQLFetcherBase<Bill> {
   };
 
   finalBill = (billId: string) => {
-    return this.executeCustomMutationAsync(
+    return this.executeAsync<Bill>(
       'finalBill',
+      `mutation($billId: GUID!) {
+        bill {
+          finalBill(billId: $billId) {
+            ${getBillFields()}
+          }
+        }
+      }`,
       { billId },
-      { input: 'FinalBillInput!' },
     );
   };
 

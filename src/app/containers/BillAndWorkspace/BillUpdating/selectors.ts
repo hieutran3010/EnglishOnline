@@ -14,3 +14,8 @@ export const selectBill = createSelector(
   [selectDomain],
   billUpdatingState => billUpdatingState.bill,
 );
+
+export const selectIsShowBillReview = createSelector(
+  [selectDomain],
+  billUpdatingState => billUpdatingState.isShowBillReview,
+);

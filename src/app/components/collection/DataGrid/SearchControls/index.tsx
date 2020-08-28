@@ -33,7 +33,7 @@ const getColumnSearchProps = (dataIndex: string, searchInput?: any) => ({
   ),
   onFilterDropdownVisibleChange: visible => {
     if (visible) {
-      setTimeout(() => searchInput.select());
+      setTimeout(() => searchInput?.select());
     }
   },
 });
@@ -70,7 +70,7 @@ const getLocalColumnSearchProps = (dataIndex: string, searchInput?: any) => ({
     record[dataIndex].toString().toLowerCase().includes(value.toLowerCase()),
   onFilterDropdownVisibleChange: visible => {
     if (visible) {
-      setTimeout(() => searchInput.select());
+      setTimeout(() => searchInput?.select());
     }
   },
 });
