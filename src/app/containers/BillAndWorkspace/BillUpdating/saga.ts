@@ -4,6 +4,7 @@ import { call, put, takeLatest } from 'redux-saga/effects';
 import { actions } from './slice';
 import Bill from 'app/models/bill';
 import BillFetcher from 'app/fetchers/billFetcher';
+import { actions as billCreateOrUpdateActions } from '../BillCreateOrUpdate/slice';
 
 const billFetcher = new BillFetcher();
 
@@ -20,6 +21,14 @@ export function* fetchBillTask(action: PayloadAction<string>) {
   yield put(actions.fetchBillCompleted(bill));
 }
 
+export function* onFinalBillTask(action: PayloadAction<Bill>) {
+  yield put(actions.showBillReview(action.payload));
+}
+
 export function* billUpdatingSaga() {
   yield takeLatest(actions.fetchBill.type, fetchBillTask);
+  yield takeLatest(
+    billCreateOrUpdateActions.finalBillCompleted,
+    onFinalBillTask,
+  );
 }
