@@ -12,6 +12,7 @@ import {
   Dropdown,
   Empty,
   Tabs,
+  Spin,
 } from 'antd';
 import { DownOutlined, CheckOutlined } from '@ant-design/icons';
 import {
@@ -19,7 +20,7 @@ import {
   ColumnDefinition,
   DataGrid,
 } from 'app/components/collection/DataGrid';
-import Bill, { BILL_STATUS } from 'app/models/bill';
+import Bill, { BILL_STATUS, BillDeliveryHistory } from 'app/models/bill';
 import { showConfirm } from 'app/components/Modal/utils';
 import { IDataSource } from 'app/components/collection/types';
 import { authorizeHelper, authStorage } from 'app/services/auth';
@@ -30,9 +31,12 @@ import VendorWeightAdjustment from './VendorWeightAdjustment';
 import UserAvatar from 'app/containers/Auth/components/UserAvatar';
 import BillStatusTag from './BillStatusTag';
 import DeliveryTimeline from '../BillDeliveryHistory/DeliveryTimeline';
+import BillFetcher from 'app/fetchers/billFetcher';
 
 const { TabPane } = Tabs;
 const { Text } = Typography;
+
+const billFetcher = new BillFetcher();
 
 const canEdit = (user: User, bill: Bill) => {
   if (
@@ -86,6 +90,13 @@ const BillList = ({
 
   const [selectedBill, setSelectedBill] = useState(new Bill());
   const [visibleBillView, setVisibleBillView] = useState(false);
+  const [
+    isFetchingDeliveryHistories,
+    setIsFetchingDeliveryHistories,
+  ] = useState(false);
+  const [histories, setHistories] = useState<BillDeliveryHistory[]>([]);
+  const [activatedTab, setActivatedTab] = useState('1');
+  const [loadedHistories, setLoadedHistories] = useState(false);
 
   const _onArchiveBill = useCallback(
     (bill: Bill) => () => {
@@ -104,6 +115,9 @@ const BillList = ({
   const onViewBill = useCallback(
     (bill: Bill) => () => {
       setSelectedBill(bill);
+      setHistories([]);
+      setActivatedTab('1');
+      setLoadedHistories(false);
       setVisibleBillView(true);
     },
     [],
@@ -127,6 +141,29 @@ const BillList = ({
   const onSubmitWeightSucceeded = useCallback(() => {
     billDataSource.onReloadData();
   }, [billDataSource]);
+
+  const onTabChanged = useCallback(
+    async activeKey => {
+      setActivatedTab(activeKey);
+      if (activeKey === '2' && !loadedHistories) {
+        if (isEmpty(histories)) {
+          setIsFetchingDeliveryHistories(true);
+
+          const bill = await billFetcher.queryOneAsync(
+            { query: `Id = "${selectedBill.id}"` },
+            ['billDeliveryHistories { date time status }'],
+          );
+
+          const { billDeliveryHistories } = bill as any;
+          setHistories(billDeliveryHistories);
+
+          setLoadedHistories(true);
+          setIsFetchingDeliveryHistories(false);
+        }
+      }
+    },
+    [histories, loadedHistories, selectedBill.id],
+  );
 
   const getUpdateMenuItems = useCallback(
     (bill: Bill): ReactNode[] => {
@@ -387,8 +424,8 @@ const BillList = ({
               </Button>,
             ]}
           >
-            <Tabs type="card" defaultActiveKey="1">
-              <TabPane tab="Thông tin bill" key="1">
+            <Tabs onChange={onTabChanged} type="card" activeKey={activatedTab}>
+              <TabPane tab="Thông tin bill" key={1}>
                 <BillView
                   bill={selectedBill}
                   onArchiveBill={
@@ -397,8 +434,12 @@ const BillList = ({
                   onPrintedVat={onPrintedVatBill}
                 />
               </TabPane>
-              <TabPane tab="Tình trạng hàng" key="2">
-                <DeliveryTimeline histories={[]} isReadOnly />
+              <TabPane tab="Tình trạng hàng" key={2}>
+                {isFetchingDeliveryHistories ? (
+                  <Spin />
+                ) : (
+                  <DeliveryTimeline histories={histories} isReadOnly />
+                )}
               </TabPane>
             </Tabs>
           </Modal>

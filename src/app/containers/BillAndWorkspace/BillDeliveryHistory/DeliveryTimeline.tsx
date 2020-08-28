@@ -1,5 +1,5 @@
 import React, { memo, useMemo, useCallback } from 'react';
-import { Space, Typography, Tooltip, Button, Timeline } from 'antd';
+import { Space, Typography, Tooltip, Button, Timeline, Empty } from 'antd';
 import { PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
 import uniqueId from 'lodash/fp/uniqueId';
 import isEmpty from 'lodash/fp/isEmpty';
@@ -99,69 +99,73 @@ const DeliveryTimeline = ({
 
   return (
     <>
-      {map((groupedHistory: GroupedHistory) => {
-        return (
-          <div key={uniqueId('gh_')}>
-            <div
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'flex-start',
-                marginBottom: 20,
-              }}
-            >
-              <Space>
-                <Text strong>{groupedHistory.date || '<Không có ngày>'}</Text>
-                {!isReadOnly && (
-                  <Tooltip title="Thêm tình trạng hàng vào ngày này">
-                    <Button
-                      size="small"
-                      shape="circle"
-                      type="primary"
-                      ghost
-                      icon={<PlusOutlined />}
-                      onClick={_onAddNewAtADate(groupedHistory)}
-                      disabled={isSaving}
-                    />
-                  </Tooltip>
-                )}
-              </Space>
-            </div>
+      {isEmpty(histories) ? (
+        <Empty description="Chưa có thông tin tình trạng hàng" />
+      ) : (
+        map((groupedHistory: GroupedHistory) => {
+          return (
+            <div key={uniqueId('gh_')}>
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'flex-start',
+                  marginBottom: 20,
+                }}
+              >
+                <Space>
+                  <Text strong>{groupedHistory.date || '<Không có ngày>'}</Text>
+                  {!isReadOnly && (
+                    <Tooltip title="Thêm tình trạng hàng vào ngày này">
+                      <Button
+                        size="small"
+                        shape="circle"
+                        type="primary"
+                        ghost
+                        icon={<PlusOutlined />}
+                        onClick={_onAddNewAtADate(groupedHistory)}
+                        disabled={isSaving}
+                      />
+                    </Tooltip>
+                  )}
+                </Space>
+              </div>
 
-            <Timeline>
-              {map((history: BillDeliveryHistory) => {
-                const { time, status } = history;
-                return (
-                  <Timeline.Item key={uniqueId('gh_tl_')}>
-                    <div style={{ display: 'flex', alignItems: 'center' }}>
-                      {time && (
-                        <Text strong style={{ marginRight: 5 }}>
-                          {moment(time).format('HH:mm')}:
-                        </Text>
-                      )}
-                      <Text style={{ marginRight: 5 }}>{status}</Text>
-                      {!isReadOnly && (
-                        <>
-                          <EditOutlined
-                            style={{ cursor: 'pointer', marginRight: 5 }}
-                            onClick={_onEdit(history)}
-                            disabled={isSaving}
-                          />
-                          <DeleteOutlined
-                            style={{ cursor: 'pointer', color: 'red' }}
-                            onClick={_onDelete(history)}
-                            disabled={isSaving}
-                          />
-                        </>
-                      )}
-                    </div>
-                  </Timeline.Item>
-                );
-              })(groupedHistory.histories)}
-            </Timeline>
-          </div>
-        );
-      })(groupedHistories)}
+              <Timeline>
+                {map((history: BillDeliveryHistory) => {
+                  const { time, status } = history;
+                  return (
+                    <Timeline.Item key={uniqueId('gh_tl_')}>
+                      <div style={{ display: 'flex', alignItems: 'center' }}>
+                        {time && (
+                          <Text strong style={{ marginRight: 5 }}>
+                            {moment(time).format('HH:mm')}:
+                          </Text>
+                        )}
+                        <Text style={{ marginRight: 5 }}>{status}</Text>
+                        {!isReadOnly && (
+                          <>
+                            <EditOutlined
+                              style={{ cursor: 'pointer', marginRight: 5 }}
+                              onClick={_onEdit(history)}
+                              disabled={isSaving}
+                            />
+                            <DeleteOutlined
+                              style={{ cursor: 'pointer', color: 'red' }}
+                              onClick={_onDelete(history)}
+                              disabled={isSaving}
+                            />
+                          </>
+                        )}
+                      </div>
+                    </Timeline.Item>
+                  );
+                })(groupedHistory.histories)}
+              </Timeline>
+            </div>
+          );
+        })(groupedHistories)
+      )}
     </>
   );
 };

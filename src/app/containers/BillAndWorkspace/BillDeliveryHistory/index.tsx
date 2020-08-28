@@ -6,7 +6,7 @@
 
 import React, { memo, useEffect, useState, useCallback, useMemo } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { Typography, Space, Button, Tooltip, Empty, Alert, Spin } from 'antd';
+import { Typography, Space, Button, Tooltip, Alert, Spin } from 'antd';
 import {
   PlusOutlined,
   SaveOutlined,
@@ -253,18 +253,14 @@ export const BillDeliveryHistoryPage = memo(
         actions={mainActions}
       >
         <div style={{ maxHeight, overflow: 'auto' }}>
-          {isEmpty(histories) ? (
-            <Empty description="Chưa có thông tin tình trạng hàng" />
-          ) : (
-            <DeliveryTimeline
-              isReadOnly={isReadOnly}
-              onAddNewAtADate={onAddNewAtADate}
-              onEdit={onEdit}
-              onDelete={onDelete}
-              histories={histories}
-              isSaving={isSaving}
-            />
-          )}
+          <DeliveryTimeline
+            isReadOnly={isReadOnly}
+            onAddNewAtADate={onAddNewAtADate}
+            onEdit={onEdit}
+            onDelete={onDelete}
+            histories={histories}
+            isSaving={isSaving}
+          />
         </div>
         <DeliveryHistoryModal
           visible={visibleCreateOrEditModal}
