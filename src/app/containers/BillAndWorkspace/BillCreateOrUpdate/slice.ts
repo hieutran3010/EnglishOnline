@@ -124,7 +124,11 @@ const billCreateOrUpdateSlice = createSlice({
       state,
       action: PayloadAction<PurchasePriceCountingResult>,
     ) {
-      updatePurchasePrice(state, action.payload);
+      const newPurchasePriceInfo = new PurchasePriceInfo(
+        state.purchasePriceInfo,
+      );
+      newPurchasePriceInfo.updateFromCountingResult(action.payload);
+      state.purchasePriceInfo = newPurchasePriceInfo;
     },
 
     updateNewWeight(
@@ -136,7 +140,14 @@ const billCreateOrUpdateSlice = createSlice({
       }>,
     ) {
       state.oldWeightInKg = action.payload.oldWeight;
-      updatePurchasePrice(state, action.payload.predictPurchasePrice);
+
+      const newPurchasePriceInfo = new PurchasePriceInfo(
+        state.purchasePriceInfo,
+      );
+      newPurchasePriceInfo.updateNewWeightPurchasePrice(
+        action.payload.predictPurchasePrice,
+      );
+      state.purchasePriceInfo = newPurchasePriceInfo;
     },
     restoreSaleWeight(
       state,
@@ -146,7 +157,14 @@ const billCreateOrUpdateSlice = createSlice({
       }>,
     ) {
       state.oldWeightInKg = undefined;
-      updatePurchasePrice(state, action.payload.purchasePrice);
+
+      const newPurchasePriceInfo = new PurchasePriceInfo(
+        state.purchasePriceInfo,
+      );
+      newPurchasePriceInfo.restoreOldWeightPurchasePrice(
+        action.payload.purchasePrice,
+      );
+      state.purchasePriceInfo = newPurchasePriceInfo;
     },
 
     setIsFinalBill(state, action: PayloadAction<boolean>) {
