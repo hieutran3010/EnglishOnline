@@ -40,6 +40,7 @@ import BillView from '../components/BillView';
 import VatPrintedChecking from '../components/VatPrintedChecking';
 import { MyBills, UnassignedBills } from './WorkingBills';
 import { BillCreateOrUpdate } from '../BillCreateOrUpdate';
+import { SagaInjectionModes } from 'redux-injectors';
 
 enum SELECTED_BILL_AREA {
   MY_BILLS = 0,
@@ -75,6 +76,7 @@ export const Workspace = memo(() => {
   useInjectSaga({
     key: sliceKey,
     saga: workspaceSaga,
+    mode: SagaInjectionModes.RESTART_ON_REMOUNT,
   });
 
   const screenMode = useSelector(selectScreenMode);
