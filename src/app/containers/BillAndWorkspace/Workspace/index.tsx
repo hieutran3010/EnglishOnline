@@ -107,6 +107,12 @@ export const Workspace = memo(() => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  useEffect(() => {
+    return function cleanUp() {
+      dispatch(actions.resetState());
+    };
+  }, [dispatch]);
+
   const initNewBill = useCallback(() => {
     dispatch(actions.initNewBill());
     setCurrentBillArea(SELECTED_BILL_AREA.MY_BILLS);

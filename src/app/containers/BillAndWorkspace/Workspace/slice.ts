@@ -35,6 +35,10 @@ const workspaceSlice = createSlice({
     setNeedToReloadWorkingBills(state, action: PayloadAction<boolean>) {
       state.needToReloadWorkingBills = action.payload;
     },
+    resetState(state) {
+      state.bill = new Bill();
+      state.needToReloadWorkingBills = false;
+    },
   },
 });
 
