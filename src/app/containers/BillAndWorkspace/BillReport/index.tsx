@@ -44,7 +44,6 @@ import {
   selectTotalCustomerDebt,
   selectIsFetchingTotalCustomerDebt,
   selectTotalProfit,
-  selectTotalProfitBeforeTax,
   selectIsFetchingTotalProfit,
   selectTotalVendorDebt,
   selectIsFetchingTotalVendorDebt,
@@ -111,7 +110,6 @@ export const BillReport = memo((props: Props) => {
   );
 
   const totalProfit = useSelector(selectTotalProfit);
-  const totalProfitBeforeTax = useSelector(selectTotalProfitBeforeTax);
   const isFetchingTotalProfit = useSelector(selectIsFetchingTotalProfit);
 
   const totalRawProfit = useSelector(selectTotalRawProfit);
@@ -318,7 +316,6 @@ export const BillReport = memo((props: Props) => {
     isFetchingTotalCustomerDebt,
     isFetchingTotalProfit,
     totalProfit,
-    totalProfitBeforeTax,
     totalVendorDebt,
     isFetchingTotalVendorDebt,
     totalBillCount,
@@ -351,6 +348,14 @@ export const BillReport = memo((props: Props) => {
   const onSubmitReportFailed = useCallback(() => {
     setIsFilterError(true);
   }, []);
+
+  const onReturnFinalBillToAccountant = useCallback(
+    (billId: string) => {
+      dispatch(actions.returnFinalBillToAccountant(billId));
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [],
+  );
 
   return (
     <RootContainer
@@ -522,6 +527,7 @@ export const BillReport = memo((props: Props) => {
           excludeFields={['isArchived']}
           extendCols={getAdminCols()}
           heightOffset={user.role === Role.ADMIN ? 0.51 : 0.47}
+          onReturnFinalBillToAccountant={onReturnFinalBillToAccountant}
         />
       )}
       {adminBillListType === BillListType.GroupByVendor && !isReset && (
@@ -529,6 +535,7 @@ export const BillReport = memo((props: Props) => {
           loading={isFetchingBillsVendorGrouping}
           dataSource={billsVendorGrouping}
           dateRange={dateRange}
+          onReturnFinalBillToAccountant={onReturnFinalBillToAccountant}
         />
       )}
       {adminBillListType === BillListType.GroupByCustomer && !isReset && (
@@ -536,6 +543,7 @@ export const BillReport = memo((props: Props) => {
           loading={isFetchingBillsCustomerGrouping}
           dataSource={billsCustomerGrouping}
           dateRange={dateRange}
+          onReturnFinalBillToAccountant={onReturnFinalBillToAccountant}
         />
       )}
     </RootContainer>

@@ -38,6 +38,7 @@ Sentry.init({
     'ResizeObserver loop limit exceeded',
     'Non-Error promise rejection captured with keys: errorFields, outOfDate, values',
   ],
+  maxValueLength: 10000,
 });
 
 const store = configureAppStore();

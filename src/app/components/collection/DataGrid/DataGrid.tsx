@@ -279,4 +279,5 @@ export default function DataGrid({
 DataGrid.defaultProps = {
   pageSizeOptions: ['10', '20', '30', '40'],
   pageSize: 10,
+  size: 'small',
 };

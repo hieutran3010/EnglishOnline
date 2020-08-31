@@ -4,7 +4,7 @@
  *
  */
 
-import React, { memo, useCallback, useEffect, useState } from 'react';
+import React, { memo, useCallback, useEffect, useState, useMemo } from 'react';
 import { Button, Tabs, Tooltip } from 'antd';
 import { PlusCircleOutlined } from '@ant-design/icons';
 import { useDispatch, useSelector } from 'react-redux';
@@ -35,12 +35,15 @@ import {
   selectNumberOfUncheckedVatBills,
   selectNeedToReloadWorkingBills,
 } from './selectors';
-import BillBlock from '../components/BillBlock';
+import BillBlock, { BILL_BLOCK_ACTION_TYPE } from '../components/BillBlock';
 import BillView from '../components/BillView';
 import VatPrintedChecking from '../components/VatPrintedChecking';
 import { MyBills, UnassignedBills } from './WorkingBills';
 import { BillCreateOrUpdate } from '../BillCreateOrUpdate';
 import { SagaInjectionModes } from 'redux-injectors';
+import { BillDeliveryHistoryPage } from '../BillDeliveryHistory';
+import useBillDeliveryHistory from '../BillDeliveryHistory/hook';
+import { checkCanEditHistory } from '../utils';
 
 enum SELECTED_BILL_AREA {
   MY_BILLS = 0,
@@ -71,6 +74,7 @@ export const Workspace = memo(() => {
   const currentRole = authStorage.getRole();
 
   const dispatch = useDispatch();
+  useBillDeliveryHistory();
 
   useInjectReducer({ key: sliceKey, reducer: reducer });
   useInjectSaga({
@@ -93,6 +97,10 @@ export const Workspace = memo(() => {
     SELECTED_BILL_AREA | undefined
   >();
 
+  const [billBlockActionType, setBillBlockActionType] = useState(
+    BILL_BLOCK_ACTION_TYPE.EDIT_OR_VIEW,
+  );
+
   useEffect(() => {
     if (role === Role.ACCOUNTANT || role === Role.ADMIN) {
       dispatch(actions.fetchNumberOfUncheckedVatBill());
@@ -100,9 +108,16 @@ export const Workspace = memo(() => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  useEffect(() => {
+    return function cleanUp() {
+      dispatch(actions.resetState());
+    };
+  }, [dispatch]);
+
   const initNewBill = useCallback(() => {
     dispatch(actions.initNewBill());
     setCurrentBillArea(SELECTED_BILL_AREA.MY_BILLS);
+    setBillBlockActionType(BILL_BLOCK_ACTION_TYPE.EDIT_OR_VIEW);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -114,9 +129,19 @@ export const Workspace = memo(() => {
     (billsArea: SELECTED_BILL_AREA) => (selectedBill: Bill) => {
       dispatch(actions.selectBill(selectedBill));
       setCurrentBillArea(billsArea);
+      setBillBlockActionType(BILL_BLOCK_ACTION_TYPE.EDIT_OR_VIEW);
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [],
+  );
+
+  const onSelectForDeliveryHistory = useCallback(
+    (selectedBill: Bill) => {
+      dispatch(actions.selectBill(selectedBill));
+      setCurrentBillArea(SELECTED_BILL_AREA.MY_BILLS);
+      setBillBlockActionType(BILL_BLOCK_ACTION_TYPE.HISTORY);
+    },
+    [dispatch],
   );
 
   const canEdit = canEditBill(role, bill);
@@ -125,8 +150,10 @@ export const Workspace = memo(() => {
     return (
       <BillBlock
         bill={item}
-        onEdit={onBillSelectionChanged(SELECTED_BILL_AREA.MY_BILLS)}
+        onSelect={onBillSelectionChanged(SELECTED_BILL_AREA.MY_BILLS)}
         selectedBillId={bill.id}
+        userRole={role}
+        onSelectForDeliveryHistory={onSelectForDeliveryHistory}
       />
     );
   };
@@ -135,8 +162,9 @@ export const Workspace = memo(() => {
     return (
       <BillBlock
         bill={item}
-        onEdit={onBillSelectionChanged(SELECTED_BILL_AREA.UNASSIGNED)}
+        onSelect={onBillSelectionChanged(SELECTED_BILL_AREA.UNASSIGNED)}
         selectedBillId={bill.id}
+        userRole={role}
       />
     );
   };
@@ -148,6 +176,10 @@ export const Workspace = memo(() => {
   const onDataReloaded = useCallback(() => {
     dispatch(actions.setNeedToReloadWorkingBills(false));
   }, [dispatch]);
+
+  const canEditHistory = useMemo(() => {
+    return checkCanEditHistory(role, bill.saleUserId);
+  }, [bill.saleUserId, role]);
 
   return (
     <>
@@ -229,17 +261,28 @@ export const Workspace = memo(() => {
             </StyledMainToolbar>,
           )}
           {currentRole !== Role.SALE && <div style={{ marginTop: 54 }}></div>}
-          <ContentContainer style={{ marginBottom: canEdit ? 65 : 0 }}>
-            {canEdit && (
-              <BillCreateOrUpdate
-                inputBill={bill}
-                canDelete
-                onSubmitting={onBillSubmitting}
-                isFixedCommandBar
-              />
-            )}
-            {!canEdit && <BillView bill={bill} />}
-          </ContentContainer>
+          {billBlockActionType === BILL_BLOCK_ACTION_TYPE.EDIT_OR_VIEW && (
+            <ContentContainer style={{ marginBottom: canEdit ? 112 : 0 }}>
+              {canEdit && (
+                <BillCreateOrUpdate
+                  inputBill={bill}
+                  canDelete
+                  onSubmitting={onBillSubmitting}
+                  isFixedCommandBar
+                />
+              )}
+              {!canEdit && <BillView bill={bill} />}
+            </ContentContainer>
+          )}
+          {billBlockActionType === BILL_BLOCK_ACTION_TYPE.HISTORY && (
+            <BillDeliveryHistoryPage
+              size="small"
+              inputBillId={bill.id}
+              isReadOnly={!canEditHistory}
+              delegateControl
+              notAbleToViewBillInfo
+            />
+          )}
         </StyledRightContainer>
       </StyledContainer>
     </>

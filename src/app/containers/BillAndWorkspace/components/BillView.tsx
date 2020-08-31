@@ -26,6 +26,7 @@ import {
 } from '../Workspace/styles/StyledIndex';
 import PurchasePrice from './PurchasePrice';
 import UserAvatar from 'app/containers/Auth/components/UserAvatar';
+import { showConfirm } from 'app/components/Modal/utils';
 
 const { Title, Text } = Typography;
 
@@ -41,8 +42,18 @@ interface Props {
   bill: Bill;
   onArchiveBill?: (bill: Bill) => () => void;
   onPrintedVat?: (bill: Bill) => void;
+  onRestoreArchivedBill?: (billId: string) => void;
+  onReturnFinalBillToAccountant?: (billId: string) => void;
+  onForceDeleteBill?: (billId: string) => void;
 }
-const BillView = ({ bill, onArchiveBill, onPrintedVat }: Props) => {
+const BillView = ({
+  bill,
+  onArchiveBill,
+  onPrintedVat,
+  onRestoreArchivedBill,
+  onReturnFinalBillToAccountant,
+  onForceDeleteBill,
+}: Props) => {
   const [isRequestedPrinted, setIsRequestedPrinted] = useState(false);
 
   const onRequestPrintedVat = useCallback(() => {
@@ -56,28 +67,83 @@ const BillView = ({ bill, onArchiveBill, onPrintedVat }: Props) => {
     return new Bill(bill).getPurchasePriceInfo();
   }, [bill]);
 
+  const _onRestoreArchivedBill = useCallback(() => {
+    if (onRestoreArchivedBill) {
+      onRestoreArchivedBill(bill.id);
+    }
+  }, [bill.id, onRestoreArchivedBill]);
+
+  const _onReturnFinalBillToAccountant = useCallback(() => {
+    if (onReturnFinalBillToAccountant) {
+      onReturnFinalBillToAccountant(bill.id);
+    }
+  }, [bill.id, onReturnFinalBillToAccountant]);
+
+  const _onForceDeleteBill = useCallback(() => {
+    if (onForceDeleteBill) {
+      showConfirm(
+        `Bạn có chắc muốn xóa bill này, bill sau khi xóa không thể phục hồi, tiếp tục xóa?`,
+        () => {
+          onForceDeleteBill(bill.id);
+        },
+      );
+    }
+  }, [bill.id, onForceDeleteBill]);
+
   return (
     <>
       <StyledDateAndAssigneeContainer>
-        <div>
+        <Space>
+          {onForceDeleteBill &&
+            authorizeHelper.canRenderWithRole(
+              [Role.ADMIN],
+              <Button
+                type="primary"
+                danger
+                size="small"
+                onClick={_onForceDeleteBill}
+              >
+                Xóa Bill
+              </Button>,
+            )}
           {bill.status === BILL_STATUS.DONE &&
             !bill.isArchived &&
             onArchiveBill &&
             authorizeHelper.canRenderWithRole(
               [Role.ACCOUNTANT, Role.ADMIN],
-              <Button
-                danger
-                onClick={onArchiveBill(bill)}
-                style={{ marginRight: 10 }}
-              >
+              <Button danger onClick={onArchiveBill(bill)} size="small">
                 Hủy bill
               </Button>,
             )}
+          {onRestoreArchivedBill &&
+            bill.isArchived &&
+            authorizeHelper.canRenderWithRole(
+              [Role.ADMIN],
+              <Button danger size="small" onClick={_onRestoreArchivedBill}>
+                Bỏ Hủy bill
+              </Button>,
+            )}
+
+          {onReturnFinalBillToAccountant &&
+            !bill.isArchived &&
+            bill.status === BILL_STATUS.DONE &&
+            authorizeHelper.canRenderWithRole(
+              [Role.ADMIN],
+              <Button
+                type="primary"
+                ghost
+                size="small"
+                onClick={_onReturnFinalBillToAccountant}
+              >
+                Trả lại Kế Toán
+              </Button>,
+            )}
           <span>{moment(bill.date).format('DD-MM-YYYY')}</span>
-        </div>
+        </Space>
 
         <div>
           <BillStatusTag status={bill.status} />
+          {bill.isArchived && <Tag color="red">Đã Bị Hủy</Tag>}
           {bill.status === BILL_STATUS.DONE &&
             !bill.isArchived &&
             (bill.vat || 0) > 0 &&
@@ -114,7 +180,11 @@ const BillView = ({ bill, onArchiveBill, onPrintedVat }: Props) => {
         </Space>
       </StyledDateAndAssigneeContainer>
 
-      <Divider type="horizontal" orientation="center" />
+      <Divider
+        type="horizontal"
+        orientation="center"
+        style={{ margin: '17px 0' }}
+      />
 
       <StyledCustomerContainer style={{ marginBottom: 20 }}>
         <StyledSenderContainer>
@@ -259,11 +329,27 @@ const BillView = ({ bill, onArchiveBill, onPrintedVat }: Props) => {
             Lợi Nhuận
           </Title>
           <Descriptions size="small" bordered column={1}>
-            <Descriptions.Item label="Trước Thuế">
-              {toCurrency(bill.profitBeforeTax || 0)}
+            <Descriptions.Item label="Lợi nhuận thô sau/trước thuế">
+              <Space>
+                <Text>
+                  {toCurrency(
+                    (bill.salePrice || 0) -
+                      (bill.purchasePriceAfterVatInVnd || 0),
+                  )}
+                </Text>
+                <Text>/</Text>
+                <Text>
+                  {toCurrency(
+                    (bill.salePrice || 0) - (bill.purchasePriceInVnd || 0),
+                  )}
+                </Text>
+              </Space>
             </Descriptions.Item>
-            <Descriptions.Item label="Sau Thuế">
-              {toCurrency(bill.profit || 0)}
+            <Descriptions.Item label="Lợi nhuận thực tạm tính (Khách hàng thanh toán - Thanh toán NCC)">
+              {toCurrency(
+                (bill.customerPaymentAmount || 0) -
+                  (bill.vendorPaymentAmount || 0),
+              )}
             </Descriptions.Item>
           </Descriptions>
         </div>,

@@ -3,7 +3,6 @@ import React, { memo, useCallback, useState } from 'react';
 import {
   Modal,
   Typography,
-  Divider,
   Descriptions,
   InputNumber,
   Form,
@@ -11,6 +10,7 @@ import {
   Spin,
   Space,
   Button,
+  Alert,
 } from 'antd';
 import { toast } from 'react-toastify';
 import { InfoCircleOutlined } from '@ant-design/icons';
@@ -18,7 +18,7 @@ import isUndefined from 'lodash/fp/isUndefined';
 import isNil from 'lodash/fp/isNil';
 import moment from 'moment';
 
-import Bill from 'app/models/bill';
+import Bill, { BillQuotation, PurchasePriceInfo } from 'app/models/bill';
 import { toCurrency } from 'utils/numberFormat';
 import {
   PurchasePriceCountingParams,
@@ -26,6 +26,8 @@ import {
 } from 'app/models/purchasePriceCounting';
 import BillFetcher from 'app/fetchers/billFetcher';
 import { showConfirm } from 'app/components/Modal/utils';
+import isEmpty from 'lodash/fp/isEmpty';
+import BillQuotationModal from './BillQuotationModal';
 
 const getPurchasePrice = (
   params: PurchasePriceCountingParams,
@@ -52,6 +54,9 @@ interface Props {
   purchasePriceInUsd: number;
   canSelfSubmit?: boolean;
   onSubmitSucceeded?: () => void;
+  billQuotations?: BillQuotation[];
+  purchasePriceInfo?: PurchasePriceInfo;
+  isUseLatestQuotation?: boolean;
 }
 const VendorWeightAdjustment = ({
   bill,
@@ -61,6 +66,9 @@ const VendorWeightAdjustment = ({
   oldWeightInKg,
   canSelfSubmit,
   onSubmitSucceeded,
+  billQuotations,
+  purchasePriceInfo,
+  isUseLatestQuotation,
 }: Props) => {
   const [form] = Form.useForm();
 
@@ -84,6 +92,9 @@ const VendorWeightAdjustment = ({
       countingParams.vat = bill.vat;
       countingParams.vendorId = bill.vendorId;
       countingParams.weightInKg = weight;
+      countingParams.billQuotations = billQuotations || [];
+      countingParams.isGetLatestQuotation =
+        isUseLatestQuotation || isEmpty(billQuotations);
 
       const purchasePriceCountingResult = await getPurchasePrice(
         countingParams,
@@ -100,6 +111,8 @@ const VendorWeightAdjustment = ({
       bill.vendorFuelChargePercent,
       bill.vendorId,
       bill.vendorOtherFee,
+      billQuotations,
+      isUseLatestQuotation,
     ],
   );
 
@@ -120,13 +133,18 @@ const VendorWeightAdjustment = ({
         return;
       }
 
+      if (vendorWeightInKg === bill.weightInKg) {
+        toast.info('Ký mới không được giống ký cũ');
+        return;
+      }
+
       const purchasePriceCountingResult = await calculatePurchasePrice(
         vendorWeightInKg,
       );
 
       setPredictPurchasePrice(purchasePriceCountingResult);
     },
-    [calculatePurchasePrice],
+    [bill.weightInKg, calculatePurchasePrice],
   );
 
   const onSubmitNewWeight = useCallback(async () => {
@@ -134,6 +152,11 @@ const VendorWeightAdjustment = ({
 
     if (!_newWeight) {
       onClose();
+      return;
+    }
+
+    if (_newWeight === bill.weightInKg) {
+      toast.info('Ký mới không được giống ký cũ');
       return;
     }
 
@@ -265,14 +288,46 @@ const VendorWeightAdjustment = ({
             onCancel={onClose}
             width={650}
             visible={visible}
-            title={bill.airlineBillId || '<Chưa có Bill hãng bay>'}
+            title={
+              bill.airlineBillId ||
+              bill.childBillId ||
+              '<Chưa có bill hãng bay/bill con>'
+            }
             okText="Lưu số ký mới"
             onOk={onSubmitNewWeight}
             confirmLoading={isSubmitting}
           >
+            {isUseLatestQuotation ? (
+              <Alert
+                type="warning"
+                showIcon
+                message="Ký mới sẽ dùng báo giá mới nhất"
+                style={{ marginBottom: 10 }}
+              />
+            ) : (
+              <div style={{ display: 'flex', marginBottom: 10 }}>
+                <Alert
+                  type="info"
+                  showIcon
+                  message="Ký mới sẽ dùng báo giá theo bill"
+                  style={{ flex: 1 }}
+                />
+                {canSelfSubmit && (
+                  <div style={{ marginLeft: 10, alignItems: 'center' }}>
+                    <BillQuotationModal
+                      purchasePriceInfo={purchasePriceInfo as PurchasePriceInfo}
+                      bill={bill}
+                      size="large"
+                      showFullInfo={canSelfSubmit}
+                    />
+                  </div>
+                )}
+              </div>
+            )}
             <div style={{ display: 'flex' }}>
               <div style={{ flex: 0.5 }}>
                 <Title level={4}>Trọng lượng mới</Title>
+
                 <Descriptions size="small" column={1}>
                   <Descriptions.Item
                     label={
@@ -312,15 +367,6 @@ const VendorWeightAdjustment = ({
                     )}
                   </Descriptions.Item>
                 </Descriptions>
-              </div>
-              <div
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                }}
-              >
-                <Divider type="vertical" />
               </div>
               <div style={{ flex: 0.5 }}>
                 <Title level={4}>Trọng lượng bán cho Khách</Title>

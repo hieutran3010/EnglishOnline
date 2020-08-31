@@ -9,7 +9,6 @@ import ExportSession from 'app/models/exportSession';
 export const initialState: ContainerState = {
   totalCustomerDebt: 0,
   totalProfit: 0,
-  totalProfitBeforeTax: 0,
   totalRawProfit: 0,
   totalRawProfitBeforeTax: 0,
   totalRevenue: 0,
@@ -73,16 +72,9 @@ const billReportSlice = createSlice({
     fetchProfit(state, action: PayloadAction<string>) {
       state.isFetchingTotalProfit = true;
     },
-    fetchProfitCompleted(
-      state,
-      action: PayloadAction<{
-        totalProfitBeforeTax: number;
-        totalProfit: number;
-      }>,
-    ) {
+    fetchProfitCompleted(state, action: PayloadAction<number>) {
       state.isFetchingTotalProfit = false;
-      state.totalProfit = action.payload.totalProfit;
-      state.totalProfitBeforeTax = action.payload.totalProfitBeforeTax;
+      state.totalProfit = action.payload;
     },
 
     fetchRawProfit(state, action: PayloadAction<string>) {
@@ -166,7 +158,6 @@ const billReportSlice = createSlice({
       state.totalSalePriceOfSale = initialState.totalSalePriceOfSale;
       state.totalCustomerDebt = 0;
       state.totalProfit = 0;
-      state.totalProfitBeforeTax = 0;
       state.totalRevenue = 0;
       state.totalVendorDebt = 0;
       state.totalBillCount = 0;
@@ -174,6 +165,8 @@ const billReportSlice = createSlice({
       state.billsGroupedByCustomer = [];
       state.billsGroupedByVendor = [];
     },
+
+    returnFinalBillToAccountant(state, action: PayloadAction<string>) {},
   },
 });
 

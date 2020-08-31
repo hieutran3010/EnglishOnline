@@ -1,13 +1,13 @@
 import React, { memo, useCallback, useState, useEffect } from 'react';
 import {
   Typography,
-  Popover,
   Descriptions,
   Form,
   InputNumber,
   Button,
   Space,
   Tooltip,
+  Popover,
 } from 'antd';
 import isUndefined from 'lodash/fp/isUndefined';
 import isNil from 'lodash/fp/isNil';
@@ -143,11 +143,19 @@ const PurchasePrice = ({
 
   return (
     <Popover
-      title="Công thức cấu thành Giá mua"
+      title="Công thức cấu thành giá mua"
+      placement="top"
       content={
         <Descriptions bordered size="small" column={3}>
           <Descriptions.Item label="1/ Trọng Lượng">
-            {priceInfo.weightInKg}kg
+            <Space>
+              <Text>{priceInfo.weightInKg}kg</Text>
+              {priceInfo.oldWeightInKg && (
+                <Tooltip title="Ký bán cho khách">
+                  <Text delete>{priceInfo.oldWeightInKg}kg</Text>
+                </Tooltip>
+              )}
+            </Space>
           </Descriptions.Item>
           <Descriptions.Item label="2/ Nước Đến">
             {priceInfo.destinationCountry}
@@ -157,7 +165,18 @@ const PurchasePrice = ({
           </Descriptions.Item>
 
           <Descriptions.Item label="4/ Báo Giá NCC (USD)" span={3}>
-            ${priceInfo.quotationPriceInUsd}
+            <Space>
+              <Text>
+                {toCurrency(priceInfo.quotationPriceInUsd || 0, true)}
+              </Text>
+              {priceInfo.oldQuotationPriceInUsd &&
+                priceInfo.oldQuotationPriceInUsd !==
+                  priceInfo.quotationPriceInUsd && (
+                  <Text delete>
+                    {toCurrency(priceInfo.oldQuotationPriceInUsd || 0, true)}
+                  </Text>
+                )}
+            </Space>
           </Descriptions.Item>
 
           {priceInfo.vendorNetPriceInUsd === priceInfo.quotationPriceInUsd && (

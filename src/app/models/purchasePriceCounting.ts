@@ -1,4 +1,4 @@
-import Bill from './bill';
+import Bill, { BillQuotation } from './bill';
 
 export const purchasePriceCountingFields = [
   'weightInKg',
@@ -8,6 +8,7 @@ export const purchasePriceCountingFields = [
   'usdExchangeRate',
   'vendorOtherFee',
   'vendorFuelChargePercent',
+  'billQuotations',
 ];
 
 export class PurchasePriceCountingResult {
@@ -20,6 +21,8 @@ export class PurchasePriceCountingResult {
   zoneName!: string;
   purchasePriceAfterVatInUsd!: number;
   purchasePriceAfterVatInVnd!: number;
+  billQuotations: BillQuotation[] = [];
+  lastUpdatedQuotation?: Date;
 }
 
 export class PurchasePriceCountingParams {
@@ -30,6 +33,8 @@ export class PurchasePriceCountingParams {
   fuelChargePercent!: number;
   vat?: number;
   usdExchangeRate!: number;
+  billQuotations: BillQuotation[] = [];
+  isGetLatestQuotation: boolean = false;
 
   constructor(bill?: Bill) {
     if (bill) {
@@ -40,6 +45,7 @@ export class PurchasePriceCountingParams {
       this.vat = bill.vat;
       this.vendorId = bill.vendorId;
       this.weightInKg = bill.weightInKg;
+      this.billQuotations = bill.billQuotations;
     }
   }
 }

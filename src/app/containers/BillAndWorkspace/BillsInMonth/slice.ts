@@ -18,6 +18,9 @@ const billsInMonthSlice = createSlice({
       state.needToReload = action.payload;
     },
     checkPrintedVatBill(state, action: PayloadAction<Bill>) {},
+    returnFinalBillToAccountant(state, action: PayloadAction<string>) {},
+    restoreArchivedBill(state, action: PayloadAction<string>) {},
+    forceDeleteBill(state, action: PayloadAction<string>) {},
   },
 });
 

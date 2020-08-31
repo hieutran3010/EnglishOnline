@@ -1,7 +1,7 @@
 import { call, put, takeLatest, select } from 'redux-saga/effects';
 import { actions } from './slice';
 import { PayloadAction } from '@reduxjs/toolkit';
-import BillFetcher from 'app/fetchers/billFetcher';
+import BillFetcher, { BillPatchExecutor } from 'app/fetchers/billFetcher';
 import { MathResult } from 'graphql-door-client/lib/types';
 import {
   VendorStatistic,
@@ -17,6 +17,7 @@ import { selectExportSession } from './selectors';
 const billFetcher = new BillFetcher();
 const exportSessionFetcher = new ExportSessionFetcher();
 const exportFetcher = new ExportFetcher();
+const billPatchExecutor = new BillPatchExecutor();
 
 export function* fetchTotalSalePriceTask(action: PayloadAction<string>) {
   const query = action.payload;
@@ -55,18 +56,7 @@ export function* fetchVendorDebtTask(action: PayloadAction<string>) {
 export function* fetchProfitTask(action: PayloadAction<string>) {
   const query = action.payload;
   const profit = yield call(billFetcher.sumAsync, 'Profit', 'Profit', query);
-  const profitBeforeTax = yield call(
-    billFetcher.sumAsync,
-    'ProfitBeforeTax',
-    'ProfitBeforeTax',
-    query,
-  );
-  yield put(
-    actions.fetchProfitCompleted({
-      totalProfit: profit.value,
-      totalProfitBeforeTax: profitBeforeTax.value,
-    }),
-  );
+  yield put(actions.fetchProfitCompleted(profit.value));
 }
 
 export function* fetchRawProfitTask(action: PayloadAction<string>) {
@@ -181,6 +171,15 @@ export async function getRevenue(query: string): Promise<MathResult> {
   return result;
 }
 
+export function* returnFinalBillToAccountantTask(
+  action: PayloadAction<string>,
+) {
+  const billId = action.payload;
+
+  yield call(billPatchExecutor.restoreFinalBill, billId);
+  yield call(toast.success, 'Đã trả lại bill cho kế toán');
+}
+
 export function* billReportSaga() {
   yield takeLatest(actions.fetchTotalSalePrice.type, fetchTotalSalePriceTask);
   yield takeLatest(actions.fetchTotalRevenue.type, fetchTotalRevenueTask);
@@ -201,4 +200,8 @@ export function* billReportSaga() {
   yield takeLatest(actions.requestBillExport.type, requestBillExportTask);
   yield takeLatest(actions.checkExportSession.type, checkExportSessionTask);
   yield takeLatest(actions.downloadBills.type, downloadBillsTask);
+  yield takeLatest(
+    actions.returnFinalBillToAccountant.type,
+    returnFinalBillToAccountantTask,
+  );
 }

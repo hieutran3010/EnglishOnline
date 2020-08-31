@@ -1,4 +1,4 @@
-import React, { memo, useMemo, useCallback, useState } from 'react';
+import React, { memo, useMemo, useCallback, useState, ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import isEmpty from 'lodash/fp/isEmpty';
 import filter from 'lodash/fp/filter';
@@ -11,6 +11,8 @@ import {
   Menu,
   Dropdown,
   Empty,
+  Tabs,
+  Spin,
 } from 'antd';
 import { DownOutlined, CheckOutlined } from '@ant-design/icons';
 import {
@@ -18,7 +20,7 @@ import {
   ColumnDefinition,
   DataGrid,
 } from 'app/components/collection/DataGrid';
-import Bill, { BILL_STATUS } from 'app/models/bill';
+import Bill, { BILL_STATUS, BillDeliveryHistory } from 'app/models/bill';
 import { showConfirm } from 'app/components/Modal/utils';
 import { IDataSource } from 'app/components/collection/types';
 import { authorizeHelper, authStorage } from 'app/services/auth';
@@ -28,8 +30,14 @@ import BillView from './BillView';
 import VendorWeightAdjustment from './VendorWeightAdjustment';
 import UserAvatar from 'app/containers/Auth/components/UserAvatar';
 import BillStatusTag from './BillStatusTag';
+import DeliveryTimeline from '../BillDeliveryHistory/DeliveryTimeline';
+import BillFetcher from 'app/fetchers/billFetcher';
+import { checkCanEditHistory } from '../utils';
 
+const { TabPane } = Tabs;
 const { Text } = Typography;
+
+const billFetcher = new BillFetcher();
 
 const canEdit = (user: User, bill: Bill) => {
   if (
@@ -66,6 +74,9 @@ interface Props {
   heightOffset?: number;
   width?: number;
   disableFilterFields?: string[];
+  onRestoreArchivedBill?: (billId: string) => void;
+  onReturnFinalBillToAccountant?: (billId: string) => void;
+  onForceDeleteBill?: (billId: string) => void;
 }
 const BillList = ({
   onArchiveBill,
@@ -78,11 +89,21 @@ const BillList = ({
   heightOffset,
   width,
   disableFilterFields,
+  onRestoreArchivedBill,
+  onReturnFinalBillToAccountant,
+  onForceDeleteBill,
 }: Props) => {
   const user = authStorage.getUser();
 
   const [selectedBill, setSelectedBill] = useState(new Bill());
   const [visibleBillView, setVisibleBillView] = useState(false);
+  const [
+    isFetchingDeliveryHistories,
+    setIsFetchingDeliveryHistories,
+  ] = useState(false);
+  const [histories, setHistories] = useState<BillDeliveryHistory[]>([]);
+  const [activatedTab, setActivatedTab] = useState('1');
+  const [loadedHistories, setLoadedHistories] = useState(false);
 
   const _onArchiveBill = useCallback(
     (bill: Bill) => () => {
@@ -101,6 +122,9 @@ const BillList = ({
   const onViewBill = useCallback(
     (bill: Bill) => () => {
       setSelectedBill(bill);
+      setHistories([]);
+      setActivatedTab('1');
+      setLoadedHistories(false);
       setVisibleBillView(true);
     },
     [],
@@ -125,32 +149,111 @@ const BillList = ({
     billDataSource.onReloadData();
   }, [billDataSource]);
 
-  const getMenu = useCallback(
-    (bill: Bill) => (
-      <Menu>
-        <Menu.Item key="0">
-          <Link to={`/billUpdating/${bill.id}`}>Sửa thông tin</Link>
-        </Menu.Item>
-        <Menu.Item key="1">
-          <Link to={`/billUpdating/${bill.id}`} target="_blank">
-            Sửa thông tin ở Tab mới
-          </Link>
-        </Menu.Item>
-        {authorizeHelper.canRenderWithRole(
-          [Role.ACCOUNTANT, Role.ADMIN],
-          <Menu.Item key="2">
+  const onTabChanged = useCallback(
+    async activeKey => {
+      setActivatedTab(activeKey);
+      if (activeKey === '2' && !loadedHistories) {
+        if (isEmpty(histories)) {
+          setIsFetchingDeliveryHistories(true);
+
+          const bill = await billFetcher.queryOneAsync(
+            { query: `Id = "${selectedBill.id}"` },
+            ['billDeliveryHistories { date time status }'],
+          );
+
+          const { billDeliveryHistories } = bill as any;
+          setHistories(billDeliveryHistories);
+
+          setLoadedHistories(true);
+          setIsFetchingDeliveryHistories(false);
+        }
+      }
+    },
+    [histories, loadedHistories, selectedBill.id],
+  );
+
+  const _onRestoreArchivedBill = useCallback(
+    (billId: string) => {
+      if (onRestoreArchivedBill) {
+        onRestoreArchivedBill(billId);
+        onCancelViewBill();
+      }
+    },
+    [onCancelViewBill, onRestoreArchivedBill],
+  );
+
+  const _onReturnFinalBillToAccountant = useCallback(
+    (billId: string) => {
+      if (onReturnFinalBillToAccountant) {
+        onReturnFinalBillToAccountant(billId);
+        onCancelViewBill();
+      }
+    },
+    [onCancelViewBill, onReturnFinalBillToAccountant],
+  );
+
+  const _onForceDeleteBill = useCallback(
+    (billId: string) => {
+      if (onForceDeleteBill) {
+        onForceDeleteBill(billId);
+        onCancelViewBill();
+      }
+    },
+    [onCancelViewBill, onForceDeleteBill],
+  );
+
+  const getUpdateMenuItems = useCallback(
+    (bill: Bill): ReactNode[] => {
+      const MenuItems: ReactNode[] = [];
+      const isAbleToEditInfo = canEdit(user, bill);
+      const userRole = user.role as Role;
+
+      if (isAbleToEditInfo) {
+        MenuItems.push(
+          <Menu.Item key={0}>
+            <Link to={`/billUpdating/${bill.id}`}>Sửa thông tin</Link>
+          </Menu.Item>,
+          <Menu.Item key={1}>
+            <Link to={`/billUpdating/${bill.id}`} target="_blank">
+              Sửa thông tin ở Tab mới
+            </Link>
+          </Menu.Item>,
+        );
+      }
+
+      if (
+        isAbleToEditInfo &&
+        [Role.ACCOUNTANT, Role.ADMIN].includes(userRole)
+      ) {
+        MenuItems.push(
+          <Menu.Item key={2}>
             <VendorWeightAdjustment
               bill={bill}
               oldWeightInKg={bill.oldWeightInKg}
               purchasePriceInUsd={bill.purchasePriceInUsd || 0}
               canSelfSubmit={true}
               onSubmitSucceeded={onSubmitWeightSucceeded}
+              purchasePriceInfo={new Bill(bill).getPurchasePriceInfo()}
+              billQuotations={bill.billQuotations}
+              isUseLatestQuotation={isEmpty(bill.billQuotations)}
             />
           </Menu.Item>,
-        )}
-      </Menu>
-    ),
-    [onSubmitWeightSucceeded],
+        );
+      }
+
+      if (checkCanEditHistory(user.role as Role, bill.saleUserId)) {
+        MenuItems.push(
+          <Menu.Item key={3}>
+            <Link to={`/billStatusUpdating/${bill.id}`}>
+              Cập nhật tình trạng hàng
+            </Link>
+          </Menu.Item>,
+        );
+      }
+
+      return MenuItems;
+    },
+    [onSubmitWeightSucceeded, user],
   );
 
   const columns = useMemo((): ColumnDefinition[] => {
@@ -164,7 +267,7 @@ const BillList = ({
         type: COLUMN_TYPES.STRING,
         width: 170,
         fixed: 'left',
-        render: value => <span>{value ?? '<Chưa có bill hãng bay>'}</span>,
+        render: value => <span>{value ?? '<Không có>'}</span>,
       },
       {
         title: 'Bill con',
@@ -173,12 +276,7 @@ const BillList = ({
         canFilter: true,
         type: COLUMN_TYPES.STRING,
         width: 150,
-      },
-      {
-        title: 'Tình trạng hàng',
-        dataIndex: 'packageStatus',
-        key: 'packageStatus',
-        width: 250,
+        render: value => <span>{value ?? '<Không có>'}</span>,
       },
       {
         title: 'Ngày',
@@ -228,6 +326,7 @@ const BillList = ({
         key: 'destinationCountry',
         type: COLUMN_TYPES.STRING,
         canFilter: true,
+        sorter: true,
         width: 200,
       },
       {
@@ -235,6 +334,7 @@ const BillList = ({
         key: 'weightInKg',
         type: COLUMN_TYPES.NUMBER,
         width: 100,
+        sorter: true,
         render: record => {
           const { weightInKg, oldWeightInKg } = record;
           return (
@@ -278,42 +378,49 @@ const BillList = ({
         key: 'action',
         width: 150,
         fixed: 'right',
-        render: (record: Bill) => (
-          <Space size={1}>
-            <Button size="small" type="link" onClick={onViewBill(record)}>
-              Xem
-            </Button>
+        render: (record: Bill) => {
+          const updateMenuItems = getUpdateMenuItems(record);
 
-            {onArchiveBill &&
-              record.status === BILL_STATUS.DONE &&
-              !record.isArchived &&
-              authorizeHelper.canRenderWithRole(
-                [Role.ADMIN, Role.ACCOUNTANT],
+          return (
+            <Space size={1}>
+              <Button size="small" type="link" onClick={onViewBill(record)}>
+                Xem
+              </Button>
+
+              {!isEmpty(updateMenuItems) && (
                 <>
-                  <Divider type="vertical" />
-                  <Button
-                    size="small"
-                    type="link"
-                    danger
-                    onClick={_onArchiveBill(record)}
+                  <Divider type="vertical" style={{ margin: 0 }} />
+                  <Dropdown
+                    overlay={<Menu>{updateMenuItems}</Menu>}
+                    trigger={['click']}
                   >
-                    Hủy
-                  </Button>
-                </>,
+                    <Button type="link">
+                      Sửa <DownOutlined />
+                    </Button>
+                  </Dropdown>
+                </>
               )}
 
-            {canEdit(user, record) && (
-              <>
-                <Divider type="vertical" />
-                <Dropdown overlay={getMenu(record)} trigger={['click']}>
-                  <Button type="link" style={{ paddingLeft: 8 }}>
-                    Sửa <DownOutlined />
-                  </Button>
-                </Dropdown>
-              </>
-            )}
-          </Space>
-        ),
+              {onArchiveBill &&
+                record.status === BILL_STATUS.DONE &&
+                !record.isArchived &&
+                authorizeHelper.canRenderWithRole(
+                  [Role.ADMIN, Role.ACCOUNTANT],
+                  <>
+                    <Divider type="vertical" style={{ margin: 0 }} />
+                    <Button
+                      size="small"
+                      type="link"
+                      danger
+                      onClick={_onArchiveBill(record)}
+                    >
+                      Hủy
+                    </Button>
+                  </>,
+                )}
+            </Space>
+          );
+        },
       },
     ];
 
@@ -329,10 +436,9 @@ const BillList = ({
     disableFilterFields,
     excludeFields,
     extendCols,
-    getMenu,
+    getUpdateMenuItems,
     onArchiveBill,
     onViewBill,
-    user,
   ]);
 
   return (
@@ -347,6 +453,7 @@ const BillList = ({
             dontLoadInitialData={dontLoadInitialData}
             heightOffset={heightOffset || 0.32}
             size="small"
+            rowSelection={{}}
           />
           <Modal
             visible={visibleBillView}
@@ -360,15 +467,27 @@ const BillList = ({
               </Button>,
             ]}
           >
-            <div style={{ paddingTop: 20 }}>
-              <BillView
-                bill={selectedBill}
-                onArchiveBill={
-                  onArchiveBill ? onArchiveBillFromViewMode : undefined
-                }
-                onPrintedVat={onPrintedVatBill}
-              />
-            </div>
+            <Tabs onChange={onTabChanged} type="card" activeKey={activatedTab}>
+              <TabPane tab="Thông tin bill" key={1}>
+                <BillView
+                  bill={selectedBill}
+                  onArchiveBill={
+                    onArchiveBill ? onArchiveBillFromViewMode : undefined
+                  }
+                  onPrintedVat={onPrintedVatBill}
+                  onRestoreArchivedBill={_onRestoreArchivedBill}
+                  onReturnFinalBillToAccountant={_onReturnFinalBillToAccountant}
+                  onForceDeleteBill={_onForceDeleteBill}
+                />
+              </TabPane>
+              <TabPane tab="Tình trạng hàng" key={2}>
+                {isFetchingDeliveryHistories ? (
+                  <Spin />
+                ) : (
+                  <DeliveryTimeline histories={histories} isReadOnly />
+                )}
+              </TabPane>
+            </Tabs>
           </Modal>
         </>
       )}

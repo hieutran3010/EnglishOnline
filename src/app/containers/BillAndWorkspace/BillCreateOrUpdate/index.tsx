@@ -15,6 +15,7 @@ import {
   Alert,
   Typography,
   Modal,
+  Checkbox,
 } from 'antd';
 import { CheckOutlined } from '@ant-design/icons';
 import toNumber from 'lodash/fp/toNumber';
@@ -83,6 +84,7 @@ import {
   selectCollapsedMenu,
 } from 'app/containers/HomePage/selectors';
 import { SubmitBillAction } from './types';
+import BillQuotationModal from '../components/BillQuotationModal';
 
 const { Text } = Typography;
 
@@ -129,7 +131,7 @@ const countPurchasePriceWarningConfig = {
       </Space>
       <Space>
         <CheckOutlined style={{ marginBottom: 6 }} />
-        <Text>Tỷ Giá đồng USD</Text>
+        <Text>Tỉ Giá USD</Text>
       </Space>
     </div>
   ),
@@ -138,6 +140,7 @@ const countPurchasePriceWarningConfig = {
 const getStyle = (
   screenMode: ScreenMode,
   collapsedMenu: boolean,
+  hasSubActionsBar: boolean,
   isFixedCommandBar?: boolean,
 ): React.CSSProperties | undefined => {
   if (isFixedCommandBar === true) {
@@ -145,17 +148,22 @@ const getStyle = (
       position: 'fixed',
       left: getMarginLeft(screenMode, collapsedMenu) + 320,
       right: 20,
-      top: '93%',
+      top: hasSubActionsBar ? '88%' : '93%',
       bottom: 10,
-      background: 'white',
-      display: 'flex',
-      padding: 24,
-      borderRadius: 5,
-      boxShadow:
-        '0px 1px 3px 0px rgba(0, 0, 0, 0.1), 0px 1px 2px 0px rgba(0, 0, 0, 0.06) ',
     };
   }
   return undefined;
+};
+
+const actionBarStyle: React.CSSProperties | undefined = {
+  padding: 24,
+  paddingTop: 14,
+  paddingBottom: 14,
+  borderRadius: 5,
+  boxShadow:
+    '0px 1px 3px 0px rgba(0, 0, 0, 0.1), 0px 1px 2px 0px rgba(0, 0, 0, 0.06) ',
+  display: 'flex',
+  background: 'white',
 };
 
 const layout = {
@@ -186,6 +194,10 @@ export const BillCreateOrUpdate = memo(
       setShouldRecalculatePurchasePrice,
     ] = useState(false);
     const [isDirty, setIsDirty] = useState<boolean>(false);
+    const [
+      shouldCountPurchasePriceWithLatestQuotation,
+      setShouldCountPurchasePriceWithLatestQuotation,
+    ] = useState<boolean>(false);
 
     const billId = useSelector(selectBillId);
     const purchasePriceInfo = useSelector(selectPurchasePriceInfo);
@@ -235,6 +247,7 @@ export const BillCreateOrUpdate = memo(
     }, [dispatch]);
 
     useEffect(() => {
+      billForm.resetFields();
       setIsDirty(false);
 
       if (role !== Role.SALE) {
@@ -292,17 +305,18 @@ export const BillCreateOrUpdate = memo(
 
       setHasVat((inputBill.vat || 0) > 0);
       setShouldRecalculatePurchasePrice(false);
+      setShouldCountPurchasePriceWithLatestQuotation(
+        isEmpty(inputBill.billQuotations),
+      );
       // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [inputBill, role]);
 
     useEffect(() => {
-      if (isEmpty(inputBill.id)) {
-        const usdExchangeRate = billForm.getFieldValue('usdExchangeRate');
-        if (!usdExchangeRate) {
-          billForm.setFieldsValue({
-            usdExchangeRate: billParams.usdExchangeRate,
-          });
-        }
+      const usdExchangeRate = billForm.getFieldValue('usdExchangeRate');
+      if (!usdExchangeRate || usdExchangeRate <= 0) {
+        billForm.setFieldsValue({
+          usdExchangeRate: billParams.usdExchangeRate || 0,
+        });
       }
     }, [billForm, billParams.usdExchangeRate, inputBill.id]);
 
@@ -475,16 +489,23 @@ export const BillCreateOrUpdate = memo(
         isUndefined(weightInKg) ||
         isNil(weightInKg) ||
         isUndefined(usdExchangeRate) ||
-        isNil(usdExchangeRate)
+        isNil(usdExchangeRate) ||
+        usdExchangeRate <= 0
       ) {
         Modal.warning(countPurchasePriceWarningConfig);
         return;
       }
 
-      dispatch(actions.calculatePurchasePrice(billData));
+      dispatch(
+        actions.calculatePurchasePrice({
+          billForm: billData,
+          isGetLatestQuotation: shouldCountPurchasePriceWithLatestQuotation,
+        }),
+      );
       setShouldRecalculatePurchasePrice(false);
       setIsDirty(true);
-    }, [dispatch, getBillData]);
+      setShouldCountPurchasePriceWithLatestQuotation(false);
+    }, [dispatch, getBillData, shouldCountPurchasePriceWithLatestQuotation]);
 
     const onFinalBill = useCallback(async () => {
       const submitParams = await getSubmitActionParams();
@@ -558,10 +579,15 @@ export const BillCreateOrUpdate = memo(
             oldWeight,
             newWeight,
             predictPurchasePrice,
+            isUseLatestQuotation: shouldCountPurchasePriceWithLatestQuotation,
           }),
         );
       },
-      [dispatch, updateBillFormData],
+      [
+        dispatch,
+        shouldCountPurchasePriceWithLatestQuotation,
+        updateBillFormData,
+      ],
     );
 
     const onPurchasePriceManuallyChanged = useCallback(
@@ -575,9 +601,19 @@ export const BillCreateOrUpdate = memo(
     const onRestoreSaleWeight = useCallback(
       (saleWeight: number, purchasePrice: PurchasePriceCountingResult) => {
         updateBillFormData({ weightInKg: saleWeight });
-        dispatch(actions.restoreSaleWeight({ saleWeight, purchasePrice }));
+        dispatch(
+          actions.restoreSaleWeight({
+            saleWeight,
+            purchasePrice,
+            isUseLatestQuotation: shouldCountPurchasePriceWithLatestQuotation,
+          }),
+        );
       },
-      [dispatch, updateBillFormData],
+      [
+        dispatch,
+        shouldCountPurchasePriceWithLatestQuotation,
+        updateBillFormData,
+      ],
     );
 
     const onFinishFormFailed = useCallback(() => {
@@ -614,10 +650,19 @@ export const BillCreateOrUpdate = memo(
       updateBillFormData,
     ]);
 
+    const onShouldCountPurchasePriceWithLatestQuotationChanged = useCallback(
+      e => {
+        setShouldCountPurchasePriceWithLatestQuotation(e.target.checked);
+      },
+      [],
+    );
+
     const billValidator = useMemo(() => getBillValidator(hasVat, billId), [
       hasVat,
       billId,
     ]);
+
+    const hasSubActionsBar = !isEmpty(purchasePriceInfo.billQuotations);
 
     return (
       <>
@@ -679,6 +724,8 @@ export const BillCreateOrUpdate = memo(
             billId={billId}
             billForm={billForm.getFieldsValue()}
             purchasePriceInUsd={purchasePriceInfo.purchasePriceInUsd || 0}
+            billQuotations={purchasePriceInfo.billQuotations}
+            isUseLatestQuotation={shouldCountPurchasePriceWithLatestQuotation}
           />
 
           <FeeAndPrice
@@ -704,112 +751,148 @@ export const BillCreateOrUpdate = memo(
             />,
           )}
 
-          <div style={getStyle(screenMode, collapsedMenu, isFixedCommandBar)}>
-            <Form.Item noStyle>
-              <Space>
-                <Button
-                  size="middle"
-                  type="primary"
-                  htmlType="submit"
-                  loading={isSubmitting}
-                  disabled={
-                    isAssigningAccountant ||
-                    isCalculatingPurchasePrice ||
-                    isDeletingBill ||
-                    isFinalBill ||
-                    isAssigningLicense
-                  }
-                >
-                  Lưu
-                </Button>
-
-                {billId && billStatus === BILL_STATUS.LICENSE && (
+          <div
+            style={getStyle(
+              screenMode,
+              collapsedMenu,
+              hasSubActionsBar,
+              isFixedCommandBar,
+            )}
+          >
+            {hasSubActionsBar && (
+              <div
+                style={{
+                  ...actionBarStyle,
+                  paddingTop: 5,
+                  paddingBottom: 5,
+                  marginBottom: 5,
+                }}
+              >
+                <Form.Item noStyle>
+                  <Space>
+                    <Checkbox
+                      checked={shouldCountPurchasePriceWithLatestQuotation}
+                      onChange={
+                        onShouldCountPurchasePriceWithLatestQuotationChanged
+                      }
+                    >
+                      Tính theo báo giá mới nhất
+                    </Checkbox>
+                    <BillQuotationModal
+                      purchasePriceInfo={purchasePriceInfo}
+                      bill={billForm.getFieldsValue()}
+                    />
+                  </Space>
+                </Form.Item>
+              </div>
+            )}
+            <div style={actionBarStyle}>
+              <Form.Item noStyle>
+                <Space>
                   <Button
                     size="middle"
-                    type="ghost"
-                    htmlType="button"
+                    type="primary"
+                    htmlType="submit"
+                    loading={isSubmitting}
                     disabled={
-                      isSubmitting ||
+                      isAssigningAccountant ||
                       isCalculatingPurchasePrice ||
                       isDeletingBill ||
-                      isFinalBill
+                      isFinalBill ||
+                      isAssigningLicense
                     }
-                    loading={isAssigningAccountant}
-                    onClick={onAssignToAccountant}
                   >
-                    Chuyển cho Kế Toán
+                    Lưu
                   </Button>
-                )}
 
-                {!isEmpty(billId) &&
-                  billStatus === BILL_STATUS.ACCOUNTANT &&
-                  authorizeHelper.canRenderWithRole(
-                    [Role.ACCOUNTANT, Role.ADMIN],
-                    <>
+                  {billId && billStatus === BILL_STATUS.LICENSE && (
+                    <Button
+                      size="middle"
+                      type="ghost"
+                      htmlType="button"
+                      disabled={
+                        isSubmitting ||
+                        isCalculatingPurchasePrice ||
+                        isDeletingBill ||
+                        isFinalBill
+                      }
+                      loading={isAssigningAccountant}
+                      onClick={onAssignToAccountant}
+                    >
+                      Chuyển cho Kế Toán
+                    </Button>
+                  )}
+
+                  {!isEmpty(billId) &&
+                    billStatus === BILL_STATUS.ACCOUNTANT &&
+                    authorizeHelper.canRenderWithRole(
+                      [Role.ACCOUNTANT, Role.ADMIN],
+                      <>
+                        <Button
+                          size="middle"
+                          type="ghost"
+                          htmlType="button"
+                          disabled={
+                            isSubmitting ||
+                            isCalculatingPurchasePrice ||
+                            isDeletingBill ||
+                            isFinalBill
+                          }
+                          loading={isAssigningLicense}
+                          onClick={onAssignToLicense}
+                        >
+                          Chuyển cho Chứng Từ
+                        </Button>
+                        <Button
+                          size="middle"
+                          type="ghost"
+                          htmlType="button"
+                          onClick={onFinalBill}
+                          loading={isFinalBill}
+                          disabled={
+                            isSubmitting ||
+                            isCalculatingPurchasePrice ||
+                            isAssigningAccountant ||
+                            isDeletingBill ||
+                            isAssigningLicense
+                          }
+                        >
+                          Chốt Bill
+                        </Button>
+                      </>,
+                    )}
+
+                  {canDelete &&
+                    !isEmpty(billId) &&
+                    billStatus !== BILL_STATUS.DONE && (
                       <Button
                         size="middle"
-                        type="ghost"
+                        type="primary"
                         htmlType="button"
-                        disabled={
-                          isSubmitting ||
-                          isCalculatingPurchasePrice ||
-                          isDeletingBill ||
-                          isFinalBill
-                        }
-                        loading={isAssigningLicense}
-                        onClick={onAssignToLicense}
-                      >
-                        Chuyển cho Chứng Từ
-                      </Button>
-                      <Button
-                        size="middle"
-                        type="ghost"
-                        htmlType="button"
-                        onClick={onFinalBill}
-                        loading={isFinalBill}
+                        loading={isDeletingBill}
                         disabled={
                           isSubmitting ||
                           isCalculatingPurchasePrice ||
                           isAssigningAccountant ||
-                          isDeletingBill ||
+                          isFinalBill ||
                           isAssigningLicense
                         }
+                        danger
+                        onClick={onDeleteBill}
                       >
-                        Chốt Bill
+                        Xóa Bill
                       </Button>
-                    </>,
+                    )}
+                  {isDirty && (
+                    <Alert
+                      banner
+                      showIcon
+                      message="Có thay đổi dữ liệu, nhớ bấm Lưu hoặc các nút bên cạnh để tránh mất dữ liệu!"
+                    />
                   )}
-
-                {canDelete &&
-                  !isEmpty(billId) &&
-                  billStatus !== BILL_STATUS.DONE && (
-                    <Button
-                      size="middle"
-                      type="primary"
-                      htmlType="button"
-                      loading={isDeletingBill}
-                      disabled={
-                        isSubmitting ||
-                        isCalculatingPurchasePrice ||
-                        isAssigningAccountant ||
-                        isFinalBill ||
-                        isAssigningLicense
-                      }
-                      danger
-                      onClick={onDeleteBill}
-                    >
-                      Xóa Bill
-                    </Button>
-                  )}
-                {isDirty && (
-                  <Alert
-                    banner
-                    showIcon
-                    message="Có thay đổi dữ liệu, nhớ bấm Lưu hoặc các nút bên cạnh để tránh mất dữ liệu!"
-                  />
-                )}
-              </Space>
-            </Form.Item>
+                </Space>
+              </Form.Item>
+            </div>
           </div>
         </Form>
       </>

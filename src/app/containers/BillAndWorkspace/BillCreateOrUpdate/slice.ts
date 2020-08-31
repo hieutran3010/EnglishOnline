@@ -46,15 +46,6 @@ const extractBillInfo = (state: ContainerState, billInfo: any) => {
   state.bill = bill;
 };
 
-const updatePurchasePrice = (
-  state: ContainerState,
-  purchasePrice: PurchasePriceCountingResult,
-) => {
-  const newPurchasePriceInfo = new PurchasePriceInfo(state.purchasePriceInfo);
-  newPurchasePriceInfo.updateFromCountingResult(purchasePrice);
-  state.purchasePriceInfo = newPurchasePriceInfo;
-};
-
 const billCreateOrUpdateSlice = createSlice({
   name: 'billCreateOrUpdate',
   initialState,
@@ -119,15 +110,24 @@ const billCreateOrUpdateSlice = createSlice({
     setIsCalculatingPurchasePrice(state, action: PayloadAction<boolean>) {
       state.isCalculatingPurchasePrice = action.payload;
     },
-    calculatePurchasePrice(state, action: PayloadAction<any>) {},
+    calculatePurchasePrice(
+      state,
+      action: PayloadAction<{ billForm: any; isGetLatestQuotation: boolean }>,
+    ) {},
     calculatePurchasePriceCompleted(
       state,
-      action: PayloadAction<PurchasePriceCountingResult>,
+      action: PayloadAction<{
+        result: PurchasePriceCountingResult;
+        isGetLatestQuotation: boolean;
+      }>,
     ) {
       const newPurchasePriceInfo = new PurchasePriceInfo(
         state.purchasePriceInfo,
       );
-      newPurchasePriceInfo.updateFromCountingResult(action.payload);
+      newPurchasePriceInfo.updateFromCountingResult(
+        action.payload.result,
+        action.payload.isGetLatestQuotation,
+      );
       state.purchasePriceInfo = newPurchasePriceInfo;
     },
 
@@ -137,6 +137,7 @@ const billCreateOrUpdateSlice = createSlice({
         oldWeight: number;
         newWeight: number;
         predictPurchasePrice: PurchasePriceCountingResult;
+        isUseLatestQuotation: boolean;
       }>,
     ) {
       state.oldWeightInKg = action.payload.oldWeight;
@@ -146,6 +147,9 @@ const billCreateOrUpdateSlice = createSlice({
       );
       newPurchasePriceInfo.updateNewWeightPurchasePrice(
         action.payload.predictPurchasePrice,
+        action.payload.newWeight,
+        action.payload.oldWeight,
+        action.payload.isUseLatestQuotation,
       );
       state.purchasePriceInfo = newPurchasePriceInfo;
     },
@@ -154,6 +158,7 @@ const billCreateOrUpdateSlice = createSlice({
       action: PayloadAction<{
         saleWeight: number;
         purchasePrice: PurchasePriceCountingResult;
+        isUseLatestQuotation: boolean;
       }>,
     ) {
       state.oldWeightInKg = undefined;
@@ -163,6 +168,7 @@ const billCreateOrUpdateSlice = createSlice({
       );
       newPurchasePriceInfo.restoreOldWeightPurchasePrice(
         action.payload.purchasePrice,
+        action.payload.isUseLatestQuotation,
       );
       state.purchasePriceInfo = newPurchasePriceInfo;
     },

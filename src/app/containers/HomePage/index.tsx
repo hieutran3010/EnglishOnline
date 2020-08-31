@@ -49,6 +49,7 @@ import { Setting } from '../Setting/Loadable';
 import { reducer, actions, sliceKey } from './slice';
 import { selectScreenMode, selectCollapsedMenu } from './selectors';
 import { BillUpdating } from '../BillAndWorkspace/BillUpdating/Loadable';
+import { BillDeliveryHistoryPage } from '../BillAndWorkspace/BillDeliveryHistory/Loadable';
 
 const logo = require('assets/logo.png');
 const logoSmall = require('assets/logo-compact.png');
@@ -282,6 +283,13 @@ export function HomePage() {
           exact
           path="/billUpdating/:billId"
           component={BillUpdating}
+        />
+
+        <Route
+          breadcrumbName="Cập nhật tình trạng hàng"
+          exact
+          path="/billStatusUpdating/:billId"
+          component={BillDeliveryHistoryPage}
         />
 
         <Route

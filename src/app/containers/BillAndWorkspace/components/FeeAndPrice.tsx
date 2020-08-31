@@ -137,11 +137,11 @@ const FeeAndPrice = ({
               userRole={userRole}
               onPurchasePriceChanged={onPurchasePriceManuallyChanged}
             />
-            <Tooltip title="Tính lại Giá mua">
+            <Tooltip title="Tính giá mua">
               <Button
                 size="small"
-                shape="circle"
                 type="primary"
+                shape="circle"
                 icon={<RetweetOutlined />}
                 style={{ marginLeft: 10 }}
                 onClick={onCalculatePurchasePrice}

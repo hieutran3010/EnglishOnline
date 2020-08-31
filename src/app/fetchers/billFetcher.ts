@@ -1,5 +1,9 @@
-import { GraphQLFetcherBase } from './base';
-import Bill, { VendorStatistic, CustomerStatistic } from 'app/models/bill';
+import { GraphQLFetcherBase, RestfulFetcherBase } from './base';
+import Bill, {
+  VendorStatistic,
+  CustomerStatistic,
+  BillDeliveryHistory,
+} from 'app/models/bill';
 import type {
   PurchasePriceCountingParams,
   PurchasePriceCountingResult,
@@ -33,7 +37,6 @@ const normalFields: string[] = [
   'isArchived',
   'destinationCountry',
   'isPrintedVatBill',
-  'packageStatus',
   'createdOn',
 ];
 
@@ -45,7 +48,6 @@ const otherFields: string[] = [
   'purchasePriceAfterVatInUsd',
   'purchasePriceAfterVatInVnd',
   'profit',
-  'profitBeforeTax',
   'vendorNetPriceInUsd',
   'vendorOtherFee',
   'vendorFuelChargePercent',
@@ -64,6 +66,9 @@ const otherFields: string[] = [
   'oldPurchasePriceInVnd',
   'oldPurchasePriceAfterVatInUsd',
   'oldPurchasePriceAfterVatInVnd',
+  'billQuotations {startWeight endWeight priceInUsd}',
+  'oldQuotationPriceInUsd',
+  'lastUpdatedQuotation',
 ];
 
 const getBillFields = () => {
@@ -104,6 +109,8 @@ export default class BillFetcher extends GraphQLFetcherBase<Bill> {
               purchasePriceAfterVatInUsd
               purchasePriceAfterVatInVnd
               zoneName
+              billQuotations {startWeight endWeight priceInUsd}
+              lastUpdatedQuotation
             }
           }
         }`,
@@ -163,7 +170,8 @@ export default class BillFetcher extends GraphQLFetcherBase<Bill> {
               totalCashPayment
               totalBankTransferPayment
               totalProfit
-              totalProfitBeforeTax
+              totalRawProfit
+              totalRawProfitBeforeTax
           }
         }
       }`,
@@ -187,7 +195,8 @@ export default class BillFetcher extends GraphQLFetcherBase<Bill> {
               totalCashPayment
               totalBankTransferPayment
               totalProfit
-              totalProfitBeforeTax
+              totalRawProfit
+              totalRawProfitBeforeTax
           }
         }
       }`,
@@ -207,5 +216,26 @@ export default class BillFetcher extends GraphQLFetcherBase<Bill> {
       }`,
       { billId },
     );
+  };
+}
+
+export class BillPatchExecutor extends RestfulFetcherBase<Bill> {
+  constructor() {
+    super('bill');
+  }
+
+  updateDeliveryHistory = (
+    billId: string,
+    histories: BillDeliveryHistory[],
+  ) => {
+    return this.patch(histories, `updateDeliveryHistory/${billId}`);
+  };
+
+  restoreFinalBill = (billId: string) => {
+    return this.patch(undefined, `restoreFinalBill/${billId}`);
+  };
+
+  restoreArchivedBill = (billId: string) => {
+    return this.patch(undefined, `restoreArchivedBill/${billId}`);
   };
 }

@@ -1,4 +1,5 @@
 import moment from 'moment';
+import { v4 as uuidV4 } from 'uuid';
 
 import ModelBase from './modelBase';
 import { PurchasePriceCountingResult } from './purchasePriceCounting';
@@ -24,6 +25,7 @@ export enum PARCEL_VENDOR {
 
 export class PurchasePriceInfo {
   weightInKg!: number;
+  oldWeightInKg?: number;
   destinationCountry!: string;
   quotationPriceInUsd?: number;
   zoneName?: string;
@@ -42,6 +44,9 @@ export class PurchasePriceInfo {
   oldPurchasePriceInVnd?: number;
   oldPurchasePriceAfterVatInUsd?: number;
   oldPurchasePriceAfterVatInVnd?: number;
+  billQuotations: BillQuotation[] = [];
+  oldQuotationPriceInUsd?: number;
+  lastUpdatedQuotation?: Date;
 
   /**
    *
@@ -68,48 +73,64 @@ export class PurchasePriceInfo {
       this.oldPurchasePriceInVnd = input.oldPurchasePriceInVnd;
       this.oldPurchasePriceAfterVatInUsd = input.oldPurchasePriceAfterVatInUsd;
       this.oldPurchasePriceAfterVatInVnd = input.oldPurchasePriceAfterVatInVnd;
+      this.billQuotations = input.billQuotations;
+      this.oldWeightInKg = input.oldWeightInKg;
+      this.oldQuotationPriceInUsd = input.oldQuotationPriceInUsd;
+      this.lastUpdatedQuotation = input.lastUpdatedQuotation;
     }
   }
 
-  updateFromCountingResult(result: PurchasePriceCountingResult) {
+  updateFromCountingResult(
+    result: PurchasePriceCountingResult,
+    isGetLatestQuotation: boolean = false,
+  ) {
     this.purchasePriceInUsd = result.purchasePriceInUsd;
     this.purchasePriceInVnd = result.purchasePriceInVnd;
     this.vendorFuelChargeFeeInUsd = result.fuelChargeFeeInUsd;
     this.vendorFuelChargeFeeInVnd = result.fuelChargeFeeInVnd;
     this.quotationPriceInUsd = result.quotationPriceInUsd;
     this.vendorNetPriceInUsd = result.vendorNetPriceInUsd;
-    this.zoneName = result.zoneName;
     this.purchasePriceAfterVatInUsd = result.purchasePriceAfterVatInUsd;
     this.purchasePriceAfterVatInVnd = result.purchasePriceAfterVatInVnd;
+
+    if (isGetLatestQuotation) {
+      this.zoneName = result.zoneName;
+      this.billQuotations = result.billQuotations;
+      this.lastUpdatedQuotation = result.lastUpdatedQuotation;
+    }
   }
 
-  updateNewWeightPurchasePrice(result: PurchasePriceCountingResult) {
-    this.oldPurchasePriceInUsd = this.purchasePriceInUsd;
-    this.oldPurchasePriceInVnd = this.purchasePriceInVnd;
-    this.oldPurchasePriceAfterVatInUsd = this.purchasePriceAfterVatInUsd;
-    this.oldPurchasePriceAfterVatInVnd = this.purchasePriceAfterVatInVnd;
+  updateNewWeightPurchasePrice(
+    result: PurchasePriceCountingResult,
+    newWeight: number,
+    oldWeight: number,
+    isUseLatestQuotation: boolean,
+  ) {
+    this.oldQuotationPriceInUsd = this.quotationPriceInUsd;
+    this.weightInKg = newWeight;
+    this.oldWeightInKg = oldWeight;
 
-    this.purchasePriceInUsd = result.purchasePriceInUsd;
-    this.purchasePriceInVnd = result.purchasePriceInVnd;
-    this.vendorFuelChargeFeeInUsd = result.fuelChargeFeeInUsd;
-    this.vendorFuelChargeFeeInVnd = result.fuelChargeFeeInVnd;
-    this.quotationPriceInUsd = result.quotationPriceInUsd;
-    this.vendorNetPriceInUsd = result.vendorNetPriceInUsd;
-    this.zoneName = result.zoneName;
-    this.purchasePriceAfterVatInUsd = result.purchasePriceAfterVatInUsd;
-    this.purchasePriceAfterVatInVnd = result.purchasePriceAfterVatInVnd;
+    // Clear the manual purchase price
+    this.oldPurchasePriceInUsd = undefined;
+    this.oldPurchasePriceInVnd = undefined;
+    this.oldPurchasePriceAfterVatInUsd = undefined;
+    this.oldPurchasePriceAfterVatInVnd = undefined;
+
+    this.updateFromCountingResult(result, isUseLatestQuotation);
   }
 
-  restoreOldWeightPurchasePrice(result: PurchasePriceCountingResult) {
-    this.purchasePriceInUsd = result.purchasePriceInUsd;
-    this.purchasePriceInVnd = result.purchasePriceInVnd;
-    this.vendorFuelChargeFeeInUsd = result.fuelChargeFeeInUsd;
-    this.vendorFuelChargeFeeInVnd = result.fuelChargeFeeInVnd;
-    this.quotationPriceInUsd = result.quotationPriceInUsd;
-    this.vendorNetPriceInUsd = result.vendorNetPriceInUsd;
-    this.zoneName = result.zoneName;
-    this.purchasePriceAfterVatInUsd = result.purchasePriceAfterVatInUsd;
-    this.purchasePriceAfterVatInVnd = result.purchasePriceAfterVatInVnd;
+  restoreOldWeightPurchasePrice(
+    result: PurchasePriceCountingResult,
+    isUseLatestQuotation: boolean,
+  ) {
+    this.updateFromCountingResult(result, isUseLatestQuotation);
+
+    this.weightInKg = this.oldWeightInKg || 0;
+
+    // clear old quotation
+    this.oldQuotationPriceInUsd = undefined;
+    this.oldWeightInKg = undefined;
+    // Clear the manual purchase price
     this.oldPurchasePriceInUsd = undefined;
     this.oldPurchasePriceInVnd = undefined;
     this.oldPurchasePriceAfterVatInUsd = undefined;
@@ -144,7 +165,6 @@ export default class Bill extends ModelBase {
   purchasePriceInUsd?: number;
   purchasePriceInVnd?: number;
   profit?: number;
-  profitBeforeTax?: number;
   vat?: number;
   status: BILL_STATUS;
   vendorNetPriceInUsd?: number;
@@ -165,11 +185,13 @@ export default class Bill extends ModelBase {
   purchasePriceAfterVatInUsd?: number;
   purchasePriceAfterVatInVnd?: number;
   isPrintedVatBill!: boolean;
-  packageStatus!: string;
   oldPurchasePriceInUsd?: number;
   oldPurchasePriceInVnd?: number;
   oldPurchasePriceAfterVatInUsd?: number;
   oldPurchasePriceAfterVatInVnd?: number;
+  oldQuotationPriceInUsd?: number;
+  billQuotations: BillQuotation[] = [];
+  lastUpdatedQuotation?: Date;
 
   constructor(input?: Bill | any) {
     super(input);
@@ -217,14 +239,15 @@ export default class Bill extends ModelBase {
       this.customerPaymentDebt = input.customerPaymentDebt;
       this.vendorPaymentAmount = input.vendorPaymentAmount;
       this.vendorPaymentDebt = input.vendorPaymentDebt;
-      this.profitBeforeTax = input.profitBeforeTax;
       this.profit = input.profit;
       this.isPrintedVatBill = input.isPrintedVatBill;
-      this.packageStatus = input.packageStatus;
       this.oldPurchasePriceInUsd = input.oldPurchasePriceInUsd;
       this.oldPurchasePriceInVnd = input.oldPurchasePriceInVnd;
       this.oldPurchasePriceAfterVatInUsd = input.oldPurchasePriceAfterVatInUsd;
       this.oldPurchasePriceAfterVatInVnd = input.oldPurchasePriceAfterVatInVnd;
+      this.billQuotations = input.billQuotations;
+      this.oldQuotationPriceInUsd = input.oldQuotationPriceInUsd;
+      this.lastUpdatedQuotation = input.lastUpdatedQuotation;
     } else {
       this.status = BILL_STATUS.LICENSE;
       this.vendorOtherFee = 0;
@@ -260,6 +283,10 @@ export default class Bill extends ModelBase {
     info.oldPurchasePriceInVnd = this.oldPurchasePriceInVnd;
     info.oldPurchasePriceAfterVatInUsd = this.oldPurchasePriceAfterVatInUsd;
     info.oldPurchasePriceAfterVatInVnd = this.oldPurchasePriceAfterVatInVnd;
+    info.billQuotations = this.billQuotations;
+    info.oldWeightInKg = this.oldWeightInKg;
+    info.oldQuotationPriceInUsd = this.oldQuotationPriceInUsd;
+    info.lastUpdatedQuotation = this.lastUpdatedQuotation;
     return info;
   }
 
@@ -277,6 +304,11 @@ export default class Bill extends ModelBase {
     this.oldPurchasePriceInVnd = result.oldPurchasePriceInVnd;
     this.oldPurchasePriceAfterVatInUsd = result.oldPurchasePriceAfterVatInUsd;
     this.oldPurchasePriceAfterVatInVnd = result.oldPurchasePriceAfterVatInVnd;
+    this.billQuotations = result.billQuotations;
+    this.oldQuotationPriceInUsd = result.oldQuotationPriceInUsd;
+    this.lastUpdatedQuotation = result.lastUpdatedQuotation;
+    this.weightInKg = result.weightInKg;
+    this.oldWeightInKg = result.oldWeightInKg;
   }
 }
 
@@ -291,7 +323,8 @@ export class VendorStatistic {
   totalBill!: number;
   totalSalePrice!: number;
   totalProfit!: number;
-  totalProfitBeforeTax!: number;
+  totalRawProfit!: number;
+  totalRawProfitBeforeTax!: number;
 }
 
 export class CustomerStatistic {
@@ -305,14 +338,28 @@ export class CustomerStatistic {
   totalBankTransferPayment!: number;
   totalBill!: number;
   totalProfit!: number;
-  totalProfitBeforeTax!: number;
+  totalRawProfit!: number;
+  totalRawProfitBeforeTax!: number;
 }
 
-export class PurchasePrice {
-  purchasePriceInUsd?: number;
-  purchasePriceInVnd?: number;
-  purchasePriceAfterVatInUsd?: number;
-  purchasePriceAfterVatInVnd?: number;
-  vendorNetPriceInUsd?: number;
-  quotationPriceInUsd?: number;
+export class BillDeliveryHistory {
+  id?: string;
+  date?: any;
+  time?: any;
+  status?: string;
+
+  constructor(input?: any) {
+    this.id = uuidV4();
+    if (input) {
+      this.date = input.date ?? null;
+      this.time = input.time ?? null;
+      this.status = input.status;
+    }
+  }
+}
+
+export class BillQuotation {
+  startWeight?: number;
+  endWeight!: number;
+  priceInUsd?: number;
 }

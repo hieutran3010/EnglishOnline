@@ -15,6 +15,7 @@ import IntParcelVendorSelect from './IntParcelVendorSelect';
 import VendorCountriesSelection from './VendorCountriesSelection';
 import VendorWeightAdjustment from '../components/VendorWeightAdjustment';
 import { PurchasePriceCountingResult } from 'app/models/purchasePriceCounting';
+import { BillQuotation } from 'app/models/bill';
 
 const { Title, Text } = Typography;
 
@@ -41,6 +42,8 @@ interface Props {
   billForm: any;
   billId: string;
   purchasePriceInUsd: number;
+  billQuotations: BillQuotation[];
+  isUseLatestQuotation: boolean;
 }
 const PackageInfo = ({
   billValidator,
@@ -56,6 +59,8 @@ const PackageInfo = ({
   billForm,
   billId,
   purchasePriceInUsd,
+  billQuotations,
+  isUseLatestQuotation,
 }: Props) => {
   return (
     <>
@@ -109,6 +114,8 @@ const PackageInfo = ({
                 onRestoreSaleWeight={onRestoreSaleWeight}
                 oldWeightInKg={oldWeightInKg}
                 purchasePriceInUsd={purchasePriceInUsd}
+                billQuotations={billQuotations}
+                isUseLatestQuotation={isUseLatestQuotation}
               />
             )}
         </Input.Group>
@@ -146,9 +153,6 @@ const PackageInfo = ({
         label="Bill con"
         rules={billValidator.childBillId}
       >
-        <Input />
-      </Form.Item>
-      <Form.Item name="packageStatus" label="Tình trạng hàng">
         <Input />
       </Form.Item>
     </>

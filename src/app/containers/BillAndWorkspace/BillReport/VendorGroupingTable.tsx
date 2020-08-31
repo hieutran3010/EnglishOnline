@@ -71,24 +71,35 @@ const columns = [
   },
   {
     title: 'Lợi nhuận thô sau/trước thuế',
-    key: 'profit',
+    key: 'rawProfit',
     width: 350,
-    render: record => {
-      const { totalProfit, totalProfitBeforeTax } = record;
+    render: (record: VendorStatistic) => {
+      const { totalRawProfit, totalRawProfitBeforeTax } = record;
       return (
         <span>
-          {toCurrency(totalProfit)} / {toCurrency(totalProfitBeforeTax)}
+          {toCurrency(totalRawProfit)} / {toCurrency(totalRawProfitBeforeTax)}
         </span>
       );
+    },
+  },
+  {
+    title: 'Lợi nhuận thực',
+    key: 'profit',
+    width: 200,
+    render: (record: VendorStatistic) => {
+      const { totalProfit } = record;
+      return <span>{toCurrency(totalProfit)}</span>;
     },
   },
 ];
 
 interface Props {
   dateRange: any[];
+  onReturnFinalBillToAccountant: (billId: string) => void;
 }
 const VendorGroupingTable = ({
   dateRange,
+  onReturnFinalBillToAccountant,
   ...restProps
 }: Props & TableProps<VendorStatistic>) => {
   const NestedBillsVendorGrouping = useCallback(
@@ -118,11 +129,12 @@ const VendorGroupingTable = ({
             excludeFields={['isArchived']}
             extendCols={getAdminCols()}
             heightOffset={0.7}
+            onReturnFinalBillToAccountant={onReturnFinalBillToAccountant}
           />
         );
       }
     },
-    [dateRange],
+    [dateRange, onReturnFinalBillToAccountant],
   );
 
   const getMaxHeight = useCallback(() => {

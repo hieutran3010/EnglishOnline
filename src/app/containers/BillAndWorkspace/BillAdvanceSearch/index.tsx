@@ -82,6 +82,30 @@ export const BillAdvanceSearch = memo(() => {
     [],
   );
 
+  const onRestoreArchivedBill = useCallback(
+    (billId: string) => {
+      dispatch(actions.restoreArchivedBill(billId));
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [],
+  );
+
+  const onReturnFinalBillToAccountant = useCallback(
+    (billId: string) => {
+      dispatch(actions.returnFinalBillToAccountant(billId));
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [],
+  );
+
+  const onForceDeleteBill = useCallback(
+    (billId: string) => {
+      dispatch(actions.forceDeleteBill(billId));
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [],
+  );
+
   const onClearFilter = useCallback(() => {
     form.resetFields();
     form.submit();
@@ -181,6 +205,9 @@ export const BillAdvanceSearch = memo(() => {
           dontLoadInitialData={true}
           heightOffset={0.35}
           disableFilterFields={['senderName', 'receiverName']}
+          onRestoreArchivedBill={onRestoreArchivedBill}
+          onReturnFinalBillToAccountant={onReturnFinalBillToAccountant}
+          onForceDeleteBill={onForceDeleteBill}
         />
       </RootContainer>
     </>

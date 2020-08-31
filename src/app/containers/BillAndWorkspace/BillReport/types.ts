@@ -20,7 +20,6 @@ export interface BillReportState {
   totalRawProfit: number;
 
   isFetchingTotalProfit: boolean;
-  totalProfitBeforeTax: number;
   totalProfit: number;
 
   isFetchingTotalBillCount: boolean;
