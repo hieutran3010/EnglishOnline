@@ -226,7 +226,11 @@ const VendorWeightAdjustment = ({
           bill.weightInKg
         }kg và trả lại ký bán khách hàng ban đầu là ${
           oldWeightInKg || 0
-        }kg cho bill ${bill.airlineBillId || '<Chưa có bill hãng bay>'}?`,
+        }kg cho bill ${
+          bill.airlineBillId ||
+          bill.childBillId ||
+          '<Chưa có bill hãng bay/bill con>'
+        }?`,
         async () => {
           setIsSubmitting(true);
 

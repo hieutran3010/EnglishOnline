@@ -265,6 +265,7 @@ export default class Bill extends ModelBase {
   getPurchasePriceInfo(): PurchasePriceInfo {
     const info = new PurchasePriceInfo();
     info.weightInKg = this.weightInKg;
+    info.oldWeightInKg = this.oldWeightInKg;
     info.destinationCountry = this.destinationCountry;
     info.zoneName = this.zoneName;
     info.quotationPriceInUsd = this.quotationPriceInUsd;
