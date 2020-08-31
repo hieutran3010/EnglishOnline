@@ -165,6 +165,7 @@ export const Workspace = memo(() => {
         onSelect={onBillSelectionChanged(SELECTED_BILL_AREA.UNASSIGNED)}
         selectedBillId={bill.id}
         userRole={role}
+        onSelectForDeliveryHistory={onSelectForDeliveryHistory}
       />
     );
   };
