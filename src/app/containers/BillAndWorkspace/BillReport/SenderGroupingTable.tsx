@@ -75,15 +75,24 @@ const columns = [
   },
   {
     title: 'Lợi nhuận thô sau/trước thuế',
-    key: 'profit',
+    key: 'rawProfit',
     width: 350,
-    render: record => {
-      const { totalProfit, totalProfitBeforeTax } = record;
+    render: (record: CustomerStatistic) => {
+      const { totalRawProfit, totalRawProfitBeforeTax } = record;
       return (
         <span>
-          {toCurrency(totalProfit)} / {toCurrency(totalProfitBeforeTax)}
+          {toCurrency(totalRawProfit)} / {toCurrency(totalRawProfitBeforeTax)}
         </span>
       );
+    },
+  },
+  {
+    title: 'Lợi nhuận thực',
+    key: 'profit',
+    width: 200,
+    render: (record: CustomerStatistic) => {
+      const { totalProfit } = record;
+      return <span>{toCurrency(totalProfit)}</span>;
     },
   },
 ];
@@ -138,7 +147,7 @@ const SenderGroupingTable = ({
         );
       }
     },
-    [dateRange],
+    [dateRange, onReturnFinalBillToAccountant],
   );
 
   const getMaxHeight = useCallback(() => {

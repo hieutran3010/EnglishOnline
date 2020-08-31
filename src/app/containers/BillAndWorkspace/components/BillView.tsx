@@ -329,11 +329,27 @@ const BillView = ({
             Lợi Nhuận
           </Title>
           <Descriptions size="small" bordered column={1}>
-            <Descriptions.Item label="Trước Thuế">
-              {toCurrency(bill.profitBeforeTax || 0)}
+            <Descriptions.Item label="Lợi nhuận thô sau/trước thuế">
+              <Space>
+                <Text>
+                  {toCurrency(
+                    (bill.salePrice || 0) -
+                      (bill.purchasePriceAfterVatInVnd || 0),
+                  )}
+                </Text>
+                <Text>/</Text>
+                <Text>
+                  {toCurrency(
+                    (bill.salePrice || 0) - (bill.purchasePriceInVnd || 0),
+                  )}
+                </Text>
+              </Space>
             </Descriptions.Item>
-            <Descriptions.Item label="Sau Thuế">
-              {toCurrency(bill.profit || 0)}
+            <Descriptions.Item label="Lợi nhuận thực tạm tính (Khách hàng thanh toán - Thanh toán NCC)">
+              {toCurrency(
+                (bill.customerPaymentAmount || 0) -
+                  (bill.vendorPaymentAmount || 0),
+              )}
             </Descriptions.Item>
           </Descriptions>
         </div>,

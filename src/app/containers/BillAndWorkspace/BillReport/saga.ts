@@ -56,18 +56,7 @@ export function* fetchVendorDebtTask(action: PayloadAction<string>) {
 export function* fetchProfitTask(action: PayloadAction<string>) {
   const query = action.payload;
   const profit = yield call(billFetcher.sumAsync, 'Profit', 'Profit', query);
-  const profitBeforeTax = yield call(
-    billFetcher.sumAsync,
-    'ProfitBeforeTax',
-    'ProfitBeforeTax',
-    query,
-  );
-  yield put(
-    actions.fetchProfitCompleted({
-      totalProfit: profit.value,
-      totalProfitBeforeTax: profitBeforeTax.value,
-    }),
-  );
+  yield put(actions.fetchProfitCompleted(profit.value));
 }
 
 export function* fetchRawProfitTask(action: PayloadAction<string>) {

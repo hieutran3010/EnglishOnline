@@ -22,6 +22,7 @@ import {
 } from '../Workspace/styles/StyledIndex';
 import { PurchasePriceInfo } from 'app/models/bill';
 import PurchasePrice from './PurchasePrice';
+import isEmpty from 'lodash/fp/isEmpty';
 
 const { Title } = Typography;
 
@@ -41,6 +42,10 @@ interface Props {
   purchasePriceInfo: PurchasePriceInfo;
   userRole: Role;
   onPurchasePriceManuallyChanged?: (price: PurchasePriceInfo) => void;
+  shouldCountPurchasePriceWithLatestQuotation: boolean;
+  onShouldCountPurchasePriceWithLatestQuotationChanged: (
+    value: boolean,
+  ) => void;
 }
 const FeeAndPrice = ({
   billValidator,
@@ -53,6 +58,8 @@ const FeeAndPrice = ({
   purchasePriceInfo,
   userRole,
   onPurchasePriceManuallyChanged,
+  shouldCountPurchasePriceWithLatestQuotation,
+  onShouldCountPurchasePriceWithLatestQuotationChanged,
 }: Props) => {
   const onVatHavingChanged = useCallback(
     e => {
@@ -60,6 +67,11 @@ const FeeAndPrice = ({
       onVatCheckingChanged(checked);
     },
     [onVatCheckingChanged],
+  );
+
+  const _onShouldCountPurchasePriceWithLatestQuotationChanged = useCallback(
+    e => onShouldCountPurchasePriceWithLatestQuotationChanged(e.target.checked),
+    [onShouldCountPurchasePriceWithLatestQuotationChanged],
   );
 
   return (
@@ -137,18 +149,30 @@ const FeeAndPrice = ({
               userRole={userRole}
               onPurchasePriceChanged={onPurchasePriceManuallyChanged}
             />
-            <Tooltip title="Tính lại Giá mua">
-              <Button
-                size="small"
-                shape="circle"
-                type="primary"
-                icon={<RetweetOutlined />}
-                style={{ marginLeft: 10 }}
-                onClick={onCalculatePurchasePrice}
-                loading={isCalculating}
-                disabled={disabledCalculation}
-              />
-            </Tooltip>
+            <Space>
+              <Tooltip title="Tính giá mua">
+                <Button
+                  size="small"
+                  type="primary"
+                  shape="circle"
+                  icon={<RetweetOutlined />}
+                  style={{ marginLeft: 10 }}
+                  onClick={onCalculatePurchasePrice}
+                  loading={isCalculating}
+                  disabled={disabledCalculation}
+                />
+              </Tooltip>
+              {!isEmpty(purchasePriceInfo.billQuotations) && (
+                <Checkbox
+                  checked={shouldCountPurchasePriceWithLatestQuotation}
+                  onChange={
+                    _onShouldCountPurchasePriceWithLatestQuotationChanged
+                  }
+                >
+                  Tính theo báo giá mới nhất
+                </Checkbox>
+              )}
+            </Space>
           </Form.Item>
           <Form.Item
             name="salePrice"

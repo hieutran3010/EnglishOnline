@@ -110,15 +110,24 @@ const billCreateOrUpdateSlice = createSlice({
     setIsCalculatingPurchasePrice(state, action: PayloadAction<boolean>) {
       state.isCalculatingPurchasePrice = action.payload;
     },
-    calculatePurchasePrice(state, action: PayloadAction<any>) {},
+    calculatePurchasePrice(
+      state,
+      action: PayloadAction<{ billForm: any; isGetLatestQuotation: boolean }>,
+    ) {},
     calculatePurchasePriceCompleted(
       state,
-      action: PayloadAction<PurchasePriceCountingResult>,
+      action: PayloadAction<{
+        result: PurchasePriceCountingResult;
+        isGetLatestQuotation: boolean;
+      }>,
     ) {
       const newPurchasePriceInfo = new PurchasePriceInfo(
         state.purchasePriceInfo,
       );
-      newPurchasePriceInfo.updateFromCountingResult(action.payload);
+      newPurchasePriceInfo.updateFromCountingResult(
+        action.payload.result,
+        action.payload.isGetLatestQuotation,
+      );
       state.purchasePriceInfo = newPurchasePriceInfo;
     },
 

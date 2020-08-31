@@ -129,7 +129,7 @@ const countPurchasePriceWarningConfig = {
       </Space>
       <Space>
         <CheckOutlined style={{ marginBottom: 6 }} />
-        <Text>Tỷ Giá đồng USD</Text>
+        <Text>Tỉ Giá USD</Text>
       </Space>
     </div>
   ),
@@ -186,6 +186,10 @@ export const BillCreateOrUpdate = memo(
       setShouldRecalculatePurchasePrice,
     ] = useState(false);
     const [isDirty, setIsDirty] = useState<boolean>(false);
+    const [
+      shouldCountPurchasePriceWithLatestQuotation,
+      setShouldCountPurchasePriceWithLatestQuotation,
+    ] = useState<boolean>(false);
 
     const billId = useSelector(selectBillId);
     const purchasePriceInfo = useSelector(selectPurchasePriceInfo);
@@ -297,13 +301,11 @@ export const BillCreateOrUpdate = memo(
     }, [inputBill, role]);
 
     useEffect(() => {
-      if (isEmpty(inputBill.id)) {
-        const usdExchangeRate = billForm.getFieldValue('usdExchangeRate');
-        if (!usdExchangeRate) {
-          billForm.setFieldsValue({
-            usdExchangeRate: billParams.usdExchangeRate,
-          });
-        }
+      const usdExchangeRate = billForm.getFieldValue('usdExchangeRate');
+      if (!usdExchangeRate || usdExchangeRate <= 0) {
+        billForm.setFieldsValue({
+          usdExchangeRate: billParams.usdExchangeRate || 0,
+        });
       }
     }, [billForm, billParams.usdExchangeRate, inputBill.id]);
 
@@ -476,16 +478,23 @@ export const BillCreateOrUpdate = memo(
         isUndefined(weightInKg) ||
         isNil(weightInKg) ||
         isUndefined(usdExchangeRate) ||
-        isNil(usdExchangeRate)
+        isNil(usdExchangeRate) ||
+        usdExchangeRate <= 0
       ) {
         Modal.warning(countPurchasePriceWarningConfig);
         return;
       }
 
-      dispatch(actions.calculatePurchasePrice(billData));
+      dispatch(
+        actions.calculatePurchasePrice({
+          billForm: billData,
+          isGetLatestQuotation: shouldCountPurchasePriceWithLatestQuotation,
+        }),
+      );
       setShouldRecalculatePurchasePrice(false);
       setIsDirty(true);
-    }, [dispatch, getBillData]);
+      setShouldCountPurchasePriceWithLatestQuotation(false);
+    }, [dispatch, getBillData, shouldCountPurchasePriceWithLatestQuotation]);
 
     const onFinalBill = useCallback(async () => {
       const submitParams = await getSubmitActionParams();
@@ -615,6 +624,13 @@ export const BillCreateOrUpdate = memo(
       updateBillFormData,
     ]);
 
+    const onShouldCountPurchasePriceWithLatestQuotationChanged = useCallback(
+      value => {
+        setShouldCountPurchasePriceWithLatestQuotation(value);
+      },
+      [],
+    );
+
     const billValidator = useMemo(() => getBillValidator(hasVat, billId), [
       hasVat,
       billId,
@@ -695,6 +711,12 @@ export const BillCreateOrUpdate = memo(
             }
             userRole={role}
             onPurchasePriceManuallyChanged={onPurchasePriceManuallyChanged}
+            shouldCountPurchasePriceWithLatestQuotation={
+              shouldCountPurchasePriceWithLatestQuotation
+            }
+            onShouldCountPurchasePriceWithLatestQuotationChanged={
+              onShouldCountPurchasePriceWithLatestQuotationChanged
+            }
           />
 
           {authorizeHelper.canRenderWithRole(

@@ -25,6 +25,7 @@ export enum PARCEL_VENDOR {
 
 export class PurchasePriceInfo {
   weightInKg!: number;
+  oldWeightInKg?: number;
   destinationCountry!: string;
   quotationPriceInUsd?: number;
   zoneName?: string;
@@ -43,6 +44,7 @@ export class PurchasePriceInfo {
   oldPurchasePriceInVnd?: number;
   oldPurchasePriceAfterVatInUsd?: number;
   oldPurchasePriceAfterVatInVnd?: number;
+  billQuotations: BillQuotation[] = [];
 
   /**
    *
@@ -69,19 +71,28 @@ export class PurchasePriceInfo {
       this.oldPurchasePriceInVnd = input.oldPurchasePriceInVnd;
       this.oldPurchasePriceAfterVatInUsd = input.oldPurchasePriceAfterVatInUsd;
       this.oldPurchasePriceAfterVatInVnd = input.oldPurchasePriceAfterVatInVnd;
+      this.billQuotations = input.billQuotations;
+      this.oldWeightInKg = input.oldWeightInKg;
     }
   }
 
-  updateFromCountingResult(result: PurchasePriceCountingResult) {
+  updateFromCountingResult(
+    result: PurchasePriceCountingResult,
+    isGetLatestQuotation: boolean = false,
+  ) {
     this.purchasePriceInUsd = result.purchasePriceInUsd;
     this.purchasePriceInVnd = result.purchasePriceInVnd;
     this.vendorFuelChargeFeeInUsd = result.fuelChargeFeeInUsd;
     this.vendorFuelChargeFeeInVnd = result.fuelChargeFeeInVnd;
     this.quotationPriceInUsd = result.quotationPriceInUsd;
     this.vendorNetPriceInUsd = result.vendorNetPriceInUsd;
-    this.zoneName = result.zoneName;
     this.purchasePriceAfterVatInUsd = result.purchasePriceAfterVatInUsd;
     this.purchasePriceAfterVatInVnd = result.purchasePriceAfterVatInVnd;
+
+    if (isGetLatestQuotation) {
+      this.zoneName = result.zoneName;
+      this.billQuotations = result.billQuotations;
+    }
   }
 
   updateNewWeightPurchasePrice(result: PurchasePriceCountingResult) {
@@ -130,7 +141,6 @@ export default class Bill extends ModelBase {
   purchasePriceInUsd?: number;
   purchasePriceInVnd?: number;
   profit?: number;
-  profitBeforeTax?: number;
   vat?: number;
   status: BILL_STATUS;
   vendorNetPriceInUsd?: number;
@@ -155,6 +165,7 @@ export default class Bill extends ModelBase {
   oldPurchasePriceInVnd?: number;
   oldPurchasePriceAfterVatInUsd?: number;
   oldPurchasePriceAfterVatInVnd?: number;
+  billQuotations: BillQuotation[] = [];
 
   constructor(input?: Bill | any) {
     super(input);
@@ -202,13 +213,13 @@ export default class Bill extends ModelBase {
       this.customerPaymentDebt = input.customerPaymentDebt;
       this.vendorPaymentAmount = input.vendorPaymentAmount;
       this.vendorPaymentDebt = input.vendorPaymentDebt;
-      this.profitBeforeTax = input.profitBeforeTax;
       this.profit = input.profit;
       this.isPrintedVatBill = input.isPrintedVatBill;
       this.oldPurchasePriceInUsd = input.oldPurchasePriceInUsd;
       this.oldPurchasePriceInVnd = input.oldPurchasePriceInVnd;
       this.oldPurchasePriceAfterVatInUsd = input.oldPurchasePriceAfterVatInUsd;
       this.oldPurchasePriceAfterVatInVnd = input.oldPurchasePriceAfterVatInVnd;
+      this.billQuotations = input.billQuotations;
     } else {
       this.status = BILL_STATUS.LICENSE;
       this.vendorOtherFee = 0;
@@ -244,6 +255,8 @@ export default class Bill extends ModelBase {
     info.oldPurchasePriceInVnd = this.oldPurchasePriceInVnd;
     info.oldPurchasePriceAfterVatInUsd = this.oldPurchasePriceAfterVatInUsd;
     info.oldPurchasePriceAfterVatInVnd = this.oldPurchasePriceAfterVatInVnd;
+    info.billQuotations = this.billQuotations;
+    info.oldWeightInKg = this.oldWeightInKg;
     return info;
   }
 
@@ -261,6 +274,7 @@ export default class Bill extends ModelBase {
     this.oldPurchasePriceInVnd = result.oldPurchasePriceInVnd;
     this.oldPurchasePriceAfterVatInUsd = result.oldPurchasePriceAfterVatInUsd;
     this.oldPurchasePriceAfterVatInVnd = result.oldPurchasePriceAfterVatInVnd;
+    this.billQuotations = result.billQuotations;
   }
 }
 
@@ -275,7 +289,8 @@ export class VendorStatistic {
   totalBill!: number;
   totalSalePrice!: number;
   totalProfit!: number;
-  totalProfitBeforeTax!: number;
+  totalRawProfit!: number;
+  totalRawProfitBeforeTax!: number;
 }
 
 export class CustomerStatistic {
@@ -289,7 +304,8 @@ export class CustomerStatistic {
   totalBankTransferPayment!: number;
   totalBill!: number;
   totalProfit!: number;
-  totalProfitBeforeTax!: number;
+  totalRawProfit!: number;
+  totalRawProfitBeforeTax!: number;
 }
 
 export class BillDeliveryHistory {
@@ -306,4 +322,10 @@ export class BillDeliveryHistory {
       this.status = input.status;
     }
   }
+}
+
+export class BillQuotation {
+  startWeight?: number;
+  endWeight!: number;
+  priceInUsd?: number;
 }

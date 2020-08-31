@@ -48,7 +48,6 @@ const otherFields: string[] = [
   'purchasePriceAfterVatInUsd',
   'purchasePriceAfterVatInVnd',
   'profit',
-  'profitBeforeTax',
   'vendorNetPriceInUsd',
   'vendorOtherFee',
   'vendorFuelChargePercent',
@@ -67,6 +66,7 @@ const otherFields: string[] = [
   'oldPurchasePriceInVnd',
   'oldPurchasePriceAfterVatInUsd',
   'oldPurchasePriceAfterVatInVnd',
+  'billQuotations {startWeight endWeight priceInUsd}',
 ];
 
 const getBillFields = () => {
@@ -107,6 +107,7 @@ export default class BillFetcher extends GraphQLFetcherBase<Bill> {
               purchasePriceAfterVatInUsd
               purchasePriceAfterVatInVnd
               zoneName
+              billQuotations {startWeight endWeight priceInUsd}
             }
           }
         }`,
@@ -166,7 +167,8 @@ export default class BillFetcher extends GraphQLFetcherBase<Bill> {
               totalCashPayment
               totalBankTransferPayment
               totalProfit
-              totalProfitBeforeTax
+              totalRawProfit
+              totalRawProfitBeforeTax
           }
         }
       }`,
@@ -190,7 +192,8 @@ export default class BillFetcher extends GraphQLFetcherBase<Bill> {
               totalCashPayment
               totalBankTransferPayment
               totalProfit
-              totalProfitBeforeTax
+              totalRawProfit
+              totalRawProfitBeforeTax
           }
         }
       }`,

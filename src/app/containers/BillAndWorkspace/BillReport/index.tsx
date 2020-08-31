@@ -44,7 +44,6 @@ import {
   selectTotalCustomerDebt,
   selectIsFetchingTotalCustomerDebt,
   selectTotalProfit,
-  selectTotalProfitBeforeTax,
   selectIsFetchingTotalProfit,
   selectTotalVendorDebt,
   selectIsFetchingTotalVendorDebt,
@@ -111,7 +110,6 @@ export const BillReport = memo((props: Props) => {
   );
 
   const totalProfit = useSelector(selectTotalProfit);
-  const totalProfitBeforeTax = useSelector(selectTotalProfitBeforeTax);
   const isFetchingTotalProfit = useSelector(selectIsFetchingTotalProfit);
 
   const totalRawProfit = useSelector(selectTotalRawProfit);
@@ -318,7 +316,6 @@ export const BillReport = memo((props: Props) => {
     isFetchingTotalCustomerDebt,
     isFetchingTotalProfit,
     totalProfit,
-    totalProfitBeforeTax,
     totalVendorDebt,
     isFetchingTotalVendorDebt,
     totalBillCount,

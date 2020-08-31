@@ -36,11 +36,6 @@ export const selectIsFetchingTotalCustomerDebt = createSelector(
   billReportState => billReportState.isFetchingTotalCustomerDebt,
 );
 
-export const selectTotalProfitBeforeTax = createSelector(
-  [selectDomain],
-  billReportState => billReportState.totalProfitBeforeTax,
-);
-
 export const selectTotalProfit = createSelector(
   [selectDomain],
   billReportState => billReportState.totalProfit,
