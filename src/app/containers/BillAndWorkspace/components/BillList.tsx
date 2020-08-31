@@ -32,6 +32,7 @@ import UserAvatar from 'app/containers/Auth/components/UserAvatar';
 import BillStatusTag from './BillStatusTag';
 import DeliveryTimeline from '../BillDeliveryHistory/DeliveryTimeline';
 import BillFetcher from 'app/fetchers/billFetcher';
+import { checkCanEditHistory } from '../utils';
 
 const { TabPane } = Tabs;
 const { Text } = Typography;
@@ -240,7 +241,7 @@ const BillList = ({
         );
       }
 
-      if (userRole !== Role.ACCOUNTANT) {
+      if (checkCanEditHistory(user.role as Role, bill.saleUserId)) {
         MenuItems.push(
           <Menu.Item key={3}>
             <Link to={`/billStatusUpdating/${bill.id}`}>

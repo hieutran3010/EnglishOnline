@@ -4,7 +4,7 @@
  *
  */
 
-import React, { memo, useCallback, useEffect, useState } from 'react';
+import React, { memo, useCallback, useEffect, useState, useMemo } from 'react';
 import { Button, Tabs, Tooltip } from 'antd';
 import { PlusCircleOutlined } from '@ant-design/icons';
 import { useDispatch, useSelector } from 'react-redux';
@@ -43,6 +43,7 @@ import { BillCreateOrUpdate } from '../BillCreateOrUpdate';
 import { SagaInjectionModes } from 'redux-injectors';
 import { BillDeliveryHistoryPage } from '../BillDeliveryHistory';
 import useBillDeliveryHistory from '../BillDeliveryHistory/hook';
+import { checkCanEditHistory } from '../utils';
 
 enum SELECTED_BILL_AREA {
   MY_BILLS = 0,
@@ -176,6 +177,10 @@ export const Workspace = memo(() => {
     dispatch(actions.setNeedToReloadWorkingBills(false));
   }, [dispatch]);
 
+  const canEditHistory = useMemo(() => {
+    return checkCanEditHistory(role, bill.saleUserId);
+  }, [bill.saleUserId, role]);
+
   return (
     <>
       <StyledContainer role={currentRole} {...{ screenMode, collapsedMenu }}>
@@ -273,7 +278,7 @@ export const Workspace = memo(() => {
             <BillDeliveryHistoryPage
               size="small"
               inputBillId={bill.id}
-              isReadOnly={role === Role.ACCOUNTANT}
+              isReadOnly={!canEditHistory}
               delegateControl
               notAbleToViewBillInfo
             />
