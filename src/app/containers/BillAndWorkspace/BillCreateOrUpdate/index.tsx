@@ -199,8 +199,6 @@ export const BillCreateOrUpdate = memo(
       setShouldCountPurchasePriceWithLatestQuotation,
     ] = useState<boolean>(false);
 
-    const [visibleQuotationModal, setVisibleQuotationModal] = useState(false);
-
     const billId = useSelector(selectBillId);
     const purchasePriceInfo = useSelector(selectPurchasePriceInfo);
     const oldWeightInKg = useSelector(selectOldWeightInKg);
@@ -581,10 +579,15 @@ export const BillCreateOrUpdate = memo(
             oldWeight,
             newWeight,
             predictPurchasePrice,
+            isUseLatestQuotation: shouldCountPurchasePriceWithLatestQuotation,
           }),
         );
       },
-      [dispatch, updateBillFormData],
+      [
+        dispatch,
+        shouldCountPurchasePriceWithLatestQuotation,
+        updateBillFormData,
+      ],
     );
 
     const onPurchasePriceManuallyChanged = useCallback(
@@ -598,9 +601,19 @@ export const BillCreateOrUpdate = memo(
     const onRestoreSaleWeight = useCallback(
       (saleWeight: number, purchasePrice: PurchasePriceCountingResult) => {
         updateBillFormData({ weightInKg: saleWeight });
-        dispatch(actions.restoreSaleWeight({ saleWeight, purchasePrice }));
+        dispatch(
+          actions.restoreSaleWeight({
+            saleWeight,
+            purchasePrice,
+            isUseLatestQuotation: shouldCountPurchasePriceWithLatestQuotation,
+          }),
+        );
       },
-      [dispatch, updateBillFormData],
+      [
+        dispatch,
+        shouldCountPurchasePriceWithLatestQuotation,
+        updateBillFormData,
+      ],
     );
 
     const onFinishFormFailed = useCallback(() => {
@@ -643,14 +656,6 @@ export const BillCreateOrUpdate = memo(
       },
       [],
     );
-
-    const onCloseQuotationModal = useCallback(() => {
-      setVisibleQuotationModal(false);
-    }, []);
-
-    const onShowQuotationModal = useCallback(() => {
-      setVisibleQuotationModal(true);
-    }, []);
 
     const billValidator = useMemo(() => getBillValidator(hasVat, billId), [
       hasVat,
@@ -720,6 +725,7 @@ export const BillCreateOrUpdate = memo(
             billForm={billForm.getFieldsValue()}
             purchasePriceInUsd={purchasePriceInfo.purchasePriceInUsd || 0}
             billQuotations={purchasePriceInfo.billQuotations}
+            isUseLatestQuotation={shouldCountPurchasePriceWithLatestQuotation}
           />
 
           <FeeAndPrice
@@ -772,14 +778,10 @@ export const BillCreateOrUpdate = memo(
                     >
                       Tính theo báo giá mới nhất
                     </Checkbox>
-                    <Button
-                      type="primary"
-                      ghost
-                      size="small"
-                      onClick={onShowQuotationModal}
-                    >
-                      Xem báo giá đang sử dụng cho bill này
-                    </Button>
+                    <BillQuotationModal
+                      purchasePriceInfo={purchasePriceInfo}
+                      bill={billForm.getFieldsValue()}
+                    />
                   </Space>
                 </Form.Item>
               </div>
@@ -893,12 +895,6 @@ export const BillCreateOrUpdate = memo(
             </div>
           </div>
         </Form>
-        <BillQuotationModal
-          visible={visibleQuotationModal}
-          purchasePriceInfo={purchasePriceInfo}
-          onOk={onCloseQuotationModal}
-          bill={billForm.getFieldsValue()}
-        />
       </>
     );
   },

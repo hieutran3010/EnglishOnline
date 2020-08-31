@@ -104,6 +104,7 @@ export class PurchasePriceInfo {
     result: PurchasePriceCountingResult,
     newWeight: number,
     oldWeight: number,
+    isUseLatestQuotation: boolean,
   ) {
     this.oldQuotationPriceInUsd = this.quotationPriceInUsd;
     this.weightInKg = newWeight;
@@ -115,17 +116,25 @@ export class PurchasePriceInfo {
     this.oldPurchasePriceAfterVatInUsd = undefined;
     this.oldPurchasePriceAfterVatInVnd = undefined;
 
-    this.updateFromCountingResult(result);
+    this.updateFromCountingResult(result, isUseLatestQuotation);
   }
 
-  restoreOldWeightPurchasePrice(result: PurchasePriceCountingResult) {
-    this.updateFromCountingResult(result);
+  restoreOldWeightPurchasePrice(
+    result: PurchasePriceCountingResult,
+    isUseLatestQuotation: boolean,
+  ) {
+    this.updateFromCountingResult(result, isUseLatestQuotation);
 
     this.weightInKg = this.oldWeightInKg || 0;
 
     // clear old quotation
     this.oldQuotationPriceInUsd = undefined;
     this.oldWeightInKg = undefined;
+    // Clear the manual purchase price
+    this.oldPurchasePriceInUsd = undefined;
+    this.oldPurchasePriceInVnd = undefined;
+    this.oldPurchasePriceAfterVatInUsd = undefined;
+    this.oldPurchasePriceAfterVatInVnd = undefined;
   }
 }
 

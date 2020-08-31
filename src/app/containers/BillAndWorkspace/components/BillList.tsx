@@ -232,7 +232,9 @@ const BillList = ({
               purchasePriceInUsd={bill.purchasePriceInUsd || 0}
               canSelfSubmit={true}
               onSubmitSucceeded={onSubmitWeightSucceeded}
+              purchasePriceInfo={new Bill(bill).getPurchasePriceInfo()}
               billQuotations={bill.billQuotations}
+              isUseLatestQuotation={isEmpty(bill.billQuotations)}
             />
           </Menu.Item>,
         );

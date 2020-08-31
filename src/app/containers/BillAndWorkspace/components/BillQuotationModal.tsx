@@ -1,24 +1,28 @@
-import React, { memo, useMemo } from 'react';
+import React, { memo, useMemo, useCallback, useState } from 'react';
 import { Modal, Button, Typography, Table, Space } from 'antd';
 import moment from 'moment';
-import Bill, { BillQuotation, PurchasePriceInfo } from 'app/models/bill';
+import { BillQuotation, PurchasePriceInfo } from 'app/models/bill';
 import { ColumnDefinition } from 'app/components/collection/DataGrid';
 import { toCurrency } from 'utils/numberFormat';
 
 const { Text } = Typography;
 
 interface Props {
-  visible: boolean;
-  onOk: () => void;
   purchasePriceInfo: PurchasePriceInfo;
   bill?: any;
+  size?: 'large' | 'middle' | 'small';
 }
-const BillQuotationModal = ({
-  visible,
-  onOk,
-  purchasePriceInfo,
-  bill,
-}: Props) => {
+const BillQuotationModal = ({ purchasePriceInfo, bill, size }: Props) => {
+  const [visibleQuotationModal, setVisibleQuotationModal] = useState(false);
+
+  const onCloseQuotationModal = useCallback(() => {
+    setVisibleQuotationModal(false);
+  }, []);
+
+  const onShowQuotationModal = useCallback(() => {
+    setVisibleQuotationModal(true);
+  }, []);
+
   const billQuotationsColumn = useMemo((): ColumnDefinition[] => {
     return [
       {
@@ -82,38 +86,48 @@ const BillQuotationModal = ({
   ]);
 
   return (
-    <Modal
-      title={
-        <Space>
-          <Text>Báo giá đang sử dụng cho bill</Text>
-          <Text strong>
-            {bill.airlineBillId ||
-              bill.childBillId ||
-              '<chưa có bill hãng bay/bill con>'}
-          </Text>
-        </Space>
-      }
-      visible={visible}
-      onOk={onOk}
-      onCancel={onOk}
-      width="100%"
-      footer={[
-        <Button key="back" type="primary" onClick={onOk}>
-          OK
-        </Button>,
-      ]}
-    >
-      {purchasePriceInfo.lastUpdatedQuotation && (
-        <Text>{`Báo giá được chỉnh sửa lần cuối ngày ${moment(
-          purchasePriceInfo.lastUpdatedQuotation,
-        ).format('DD-MM-YYYY')}`}</Text>
-      )}
-      <Table
-        dataSource={purchasePriceInfo.billQuotations}
-        columns={billQuotationsColumn}
-        size="small"
-      />
-    </Modal>
+    <>
+      <Button
+        type="primary"
+        ghost
+        size={size ?? 'small'}
+        onClick={onShowQuotationModal}
+      >
+        Xem báo giá đang sử dụng cho bill này
+      </Button>
+      <Modal
+        title={
+          <Space>
+            <Text>Báo giá đang sử dụng cho bill</Text>
+            <Text strong>
+              {bill.airlineBillId ||
+                bill.childBillId ||
+                '<chưa có bill hãng bay/bill con>'}
+            </Text>
+          </Space>
+        }
+        visible={visibleQuotationModal}
+        onOk={onCloseQuotationModal}
+        onCancel={onCloseQuotationModal}
+        width="100%"
+        footer={[
+          <Button key="back" type="primary" onClick={onCloseQuotationModal}>
+            OK
+          </Button>,
+        ]}
+      >
+        {purchasePriceInfo.lastUpdatedQuotation && (
+          <Text>{`Báo giá được chỉnh sửa lần cuối ngày ${moment(
+            purchasePriceInfo.lastUpdatedQuotation,
+          ).format('DD-MM-YYYY')}`}</Text>
+        )}
+        <Table
+          dataSource={purchasePriceInfo.billQuotations}
+          columns={billQuotationsColumn}
+          size="small"
+        />
+      </Modal>
+    </>
   );
 };
 

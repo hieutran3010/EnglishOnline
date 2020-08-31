@@ -43,6 +43,7 @@ interface Props {
   billId: string;
   purchasePriceInUsd: number;
   billQuotations: BillQuotation[];
+  isUseLatestQuotation: boolean;
 }
 const PackageInfo = ({
   billValidator,
@@ -59,6 +60,7 @@ const PackageInfo = ({
   billId,
   purchasePriceInUsd,
   billQuotations,
+  isUseLatestQuotation,
 }: Props) => {
   return (
     <>
@@ -113,6 +115,7 @@ const PackageInfo = ({
                 oldWeightInKg={oldWeightInKg}
                 purchasePriceInUsd={purchasePriceInUsd}
                 billQuotations={billQuotations}
+                isUseLatestQuotation={isUseLatestQuotation}
               />
             )}
         </Input.Group>

@@ -137,6 +137,7 @@ const billCreateOrUpdateSlice = createSlice({
         oldWeight: number;
         newWeight: number;
         predictPurchasePrice: PurchasePriceCountingResult;
+        isUseLatestQuotation: boolean;
       }>,
     ) {
       state.oldWeightInKg = action.payload.oldWeight;
@@ -148,6 +149,7 @@ const billCreateOrUpdateSlice = createSlice({
         action.payload.predictPurchasePrice,
         action.payload.newWeight,
         action.payload.oldWeight,
+        action.payload.isUseLatestQuotation,
       );
       state.purchasePriceInfo = newPurchasePriceInfo;
     },
@@ -156,6 +158,7 @@ const billCreateOrUpdateSlice = createSlice({
       action: PayloadAction<{
         saleWeight: number;
         purchasePrice: PurchasePriceCountingResult;
+        isUseLatestQuotation: boolean;
       }>,
     ) {
       state.oldWeightInKg = undefined;
@@ -165,6 +168,7 @@ const billCreateOrUpdateSlice = createSlice({
       );
       newPurchasePriceInfo.restoreOldWeightPurchasePrice(
         action.payload.purchasePrice,
+        action.payload.isUseLatestQuotation,
       );
       state.purchasePriceInfo = newPurchasePriceInfo;
     },
