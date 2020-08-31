@@ -298,6 +298,8 @@ export default class Bill extends ModelBase {
     this.billQuotations = result.billQuotations;
     this.oldQuotationPriceInUsd = result.oldQuotationPriceInUsd;
     this.lastUpdatedQuotation = result.lastUpdatedQuotation;
+    this.weightInKg = result.weightInKg;
+    this.oldWeightInKg = result.oldWeightInKg;
   }
 }
 
