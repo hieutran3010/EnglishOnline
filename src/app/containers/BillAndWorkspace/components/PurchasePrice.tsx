@@ -1,4 +1,4 @@
-import React, { memo, useCallback, useState, useEffect, useMemo } from 'react';
+import React, { memo, useCallback, useState, useEffect } from 'react';
 import {
   Typography,
   Descriptions,
@@ -7,22 +7,16 @@ import {
   Button,
   Space,
   Tooltip,
-  Tabs,
-  Table,
+  Popover,
 } from 'antd';
-import moment from 'moment';
-import { InfoOutlined } from '@ant-design/icons';
 import isUndefined from 'lodash/fp/isUndefined';
 import isNil from 'lodash/fp/isNil';
 
 import { toCurrency } from 'utils/numberFormat';
-import { PurchasePriceInfo, BillQuotation } from 'app/models/bill';
+import { PurchasePriceInfo } from 'app/models/bill';
 import { Role } from 'app/models/user';
-import Modal from 'antd/lib/modal/Modal';
-import { ColumnDefinition } from 'app/components/collection/DataGrid';
 
 const { Text } = Typography;
-const { TabPane } = Tabs;
 
 interface PurchasePriceProps {
   info: PurchasePriceInfo;
@@ -36,7 +30,6 @@ const PurchasePrice = ({
 }: PurchasePriceProps) => {
   const [manualPurchasePriceForm] = Form.useForm();
   const [priceInfo, setPriceInfo] = useState(new PurchasePriceInfo());
-  const [visibleInfoModal, setVisibleInfoModal] = useState(false);
 
   useEffect(() => {
     setPriceInfo(info);
@@ -45,14 +38,6 @@ const PurchasePrice = ({
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [info]);
-
-  const onCloseModal = useCallback(() => {
-    setVisibleInfoModal(false);
-  }, []);
-
-  const onShowModal = useCallback(() => {
-    setVisibleInfoModal(true);
-  }, []);
 
   const onManualPurchasePriceSubmitted = useCallback(
     formData => {
@@ -156,226 +141,124 @@ const PurchasePrice = ({
     userRole,
   ]);
 
-  const billQuotationsColumn = useMemo((): ColumnDefinition[] => {
-    return [
-      {
-        title: 'TL (kg)',
-        key: 'weight',
-        render: (record: BillQuotation) => {
-          const selectedQuotation =
-            record.priceInUsd === priceInfo.quotationPriceInUsd;
-
-          const isOldQuotation =
-            priceInfo.oldQuotationPriceInUsd &&
-            priceInfo.oldQuotationPriceInUsd !==
-              priceInfo.quotationPriceInUsd &&
-            priceInfo.oldQuotationPriceInUsd === record.priceInUsd;
-
-          if (record.startWeight) {
-            return (
-              <Text
-                mark={selectedQuotation}
-                type={isOldQuotation === true ? 'danger' : undefined}
-              >{`${record.startWeight} - ${record.endWeight}`}</Text>
-            );
-          }
-
-          return (
-            <Text
-              type={isOldQuotation === true ? 'danger' : undefined}
-              mark={selectedQuotation}
-            >
-              {record.endWeight}
-            </Text>
-          );
-        },
-      },
-      {
-        title: 'Giá (USD)',
-        key: 'price',
-        render: (record: BillQuotation) => {
-          const selectedQuotation =
-            record.priceInUsd === priceInfo.quotationPriceInUsd;
-
-          const isOldQuotation =
-            priceInfo.oldQuotationPriceInUsd &&
-            priceInfo.oldQuotationPriceInUsd !==
-              priceInfo.quotationPriceInUsd &&
-            priceInfo.oldQuotationPriceInUsd === record.priceInUsd;
-          return (
-            <Text
-              mark={selectedQuotation}
-              type={isOldQuotation === true ? 'danger' : undefined}
-            >
-              {toCurrency(record.priceInUsd || 0, true)}
-            </Text>
-          );
-        },
-      },
-    ];
-  }, [priceInfo.oldQuotationPriceInUsd, priceInfo.quotationPriceInUsd]);
-
   return (
-    <>
-      <Space>
-        <Text mark>
-          <Space>
+    <Popover
+      title="Công thức cấu thành giá mua"
+      placement="top"
+      content={
+        <Descriptions bordered size="small" column={3}>
+          <Descriptions.Item label="1/ Trọng Lượng">
             <Space>
+              <Text>{priceInfo.weightInKg}kg</Text>
+              {priceInfo.oldWeightInKg && (
+                <Tooltip title="Ký bán cho khách">
+                  <Text delete>{priceInfo.oldWeightInKg}kg</Text>
+                </Tooltip>
+              )}
+            </Space>
+          </Descriptions.Item>
+          <Descriptions.Item label="2/ Nước Đến">
+            {priceInfo.destinationCountry}
+          </Descriptions.Item>
+          <Descriptions.Item label="3/ Zone">
+            {priceInfo.zoneName}
+          </Descriptions.Item>
+
+          <Descriptions.Item label="4/ Báo Giá NCC (USD)" span={3}>
+            <Space>
+              <Text>
+                {toCurrency(priceInfo.quotationPriceInUsd || 0, true)}
+              </Text>
+              {priceInfo.oldQuotationPriceInUsd &&
+                priceInfo.oldQuotationPriceInUsd !==
+                  priceInfo.quotationPriceInUsd && (
+                  <Text delete>
+                    {toCurrency(priceInfo.oldQuotationPriceInUsd || 0, true)}
+                  </Text>
+                )}
+            </Space>
+          </Descriptions.Item>
+
+          {priceInfo.vendorNetPriceInUsd === priceInfo.quotationPriceInUsd && (
+            <Descriptions.Item label="5/ Giá Net (USD) = (4)">
+              ${priceInfo.vendorNetPriceInUsd}
+            </Descriptions.Item>
+          )}
+          {(priceInfo.vendorNetPriceInUsd || 0) >
+            (priceInfo.quotationPriceInUsd || 0) && (
+            <Descriptions.Item label="5/ Giá Net (USD) = (1) x (4)">
+              ${priceInfo.vendorNetPriceInUsd}
+            </Descriptions.Item>
+          )}
+          <Descriptions.Item label="6/ Phí Khác (USD)">
+            ${priceInfo.vendorOtherFee}
+          </Descriptions.Item>
+          <Descriptions.Item label="7/ Phí Nhiên Liệu (%)">
+            {priceInfo.vendorFuelChargePercent}% = $
+            {priceInfo.vendorFuelChargeFeeInUsd || 0} ={' '}
+            {toCurrency(priceInfo.vendorFuelChargeFeeInVnd || 0)}
+          </Descriptions.Item>
+
+          <Descriptions.Item
+            label="8/ Tổng Cộng (USD) = [(5) + (6)] x (7)"
+            span={3}
+          >
+            <Space>
+              {toCurrency(priceInfo.purchasePriceInUsd || 0, true)}
+              {priceInfo.oldPurchasePriceInUsd && (
+                <Text delete>
+                  {toCurrency(priceInfo.oldPurchasePriceInUsd || 0, true)}
+                </Text>
+              )}
+              {getManualEditPurchasePriceComp()}
+            </Space>
+          </Descriptions.Item>
+
+          <Descriptions.Item label="9/ Thuế GTGT (%)">
+            {priceInfo.vat || 0}%
+          </Descriptions.Item>
+          <Descriptions.Item label="10/ Tỉ giá" span={2}>
+            {toCurrency(priceInfo.usdExchangeRate)}
+          </Descriptions.Item>
+
+          <Descriptions.Item
+            label="Tổng Cộng (VNĐ) = (8) X (9) X (10)"
+            span={3}
+          >
+            <Space>
+              {toCurrency(priceInfo.purchasePriceAfterVatInVnd || 0)}
               {priceInfo.oldPurchasePriceAfterVatInVnd && (
                 <Text delete>
                   {toCurrency(priceInfo.oldPurchasePriceAfterVatInVnd || 0)}
                 </Text>
               )}
-              {toCurrency(priceInfo.purchasePriceAfterVatInVnd || 0)}
             </Space>
-            =
-            <Space>
-              {toCurrency(priceInfo.purchasePriceAfterVatInUsd || 0, true)}
-              {priceInfo.oldPurchasePriceAfterVatInUsd && (
-                <Text delete>
-                  {toCurrency(
-                    priceInfo.oldPurchasePriceAfterVatInUsd || 0,
-                    true,
-                  )}
-                </Text>
-              )}
-            </Space>
-          </Space>
-        </Text>
-        <Tooltip title="Xem công thức & báo giá đang sử dụng cho giá mua này">
-          <Button
-            size="small"
-            shape="circle"
-            icon={<InfoOutlined />}
-            onClick={onShowModal}
-            type="primary"
-            ghost
-          />
-        </Tooltip>
-      </Space>
-      <Modal
-        title="Thông tin giá mua"
-        visible={visibleInfoModal}
-        onOk={onCloseModal}
-        onCancel={onCloseModal}
-        width="100%"
-        footer={[
-          <Button key="back" type="primary" onClick={onCloseModal}>
-            OK
-          </Button>,
-        ]}
-      >
-        <Tabs>
-          <TabPane tab="Công thức" key="1">
-            <Descriptions bordered size="small" column={3}>
-              <Descriptions.Item label="1/ Trọng Lượng">
-                <Space>
-                  <Text>{priceInfo.weightInKg}kg</Text>
-                  {priceInfo.oldWeightInKg && (
-                    <Tooltip title="Ký bán cho khách">
-                      <Text delete>{priceInfo.oldWeightInKg}kg</Text>
-                    </Tooltip>
-                  )}
-                </Space>
-              </Descriptions.Item>
-              <Descriptions.Item label="2/ Nước Đến">
-                {priceInfo.destinationCountry}
-              </Descriptions.Item>
-              <Descriptions.Item label="3/ Zone">
-                {priceInfo.zoneName}
-              </Descriptions.Item>
-
-              <Descriptions.Item label="4/ Báo Giá NCC (USD)" span={3}>
-                <Space>
-                  <Text>
-                    {toCurrency(priceInfo.quotationPriceInUsd || 0, true)}
-                  </Text>
-                  {priceInfo.oldQuotationPriceInUsd &&
-                    priceInfo.oldQuotationPriceInUsd !==
-                      priceInfo.quotationPriceInUsd && (
-                      <Text delete>
-                        {toCurrency(
-                          priceInfo.oldQuotationPriceInUsd || 0,
-                          true,
-                        )}
-                      </Text>
-                    )}
-                </Space>
-              </Descriptions.Item>
-
-              {priceInfo.vendorNetPriceInUsd ===
-                priceInfo.quotationPriceInUsd && (
-                <Descriptions.Item label="5/ Giá Net (USD) = (4)">
-                  ${priceInfo.vendorNetPriceInUsd}
-                </Descriptions.Item>
-              )}
-              {(priceInfo.vendorNetPriceInUsd || 0) >
-                (priceInfo.quotationPriceInUsd || 0) && (
-                <Descriptions.Item label="5/ Giá Net (USD) = (1) x (4)">
-                  ${priceInfo.vendorNetPriceInUsd}
-                </Descriptions.Item>
-              )}
-              <Descriptions.Item label="6/ Phí Khác (USD)">
-                ${priceInfo.vendorOtherFee}
-              </Descriptions.Item>
-              <Descriptions.Item label="7/ Phí Nhiên Liệu (%)">
-                {priceInfo.vendorFuelChargePercent}% = $
-                {priceInfo.vendorFuelChargeFeeInUsd || 0} ={' '}
-                {toCurrency(priceInfo.vendorFuelChargeFeeInVnd || 0)}
-              </Descriptions.Item>
-
-              <Descriptions.Item
-                label="8/ Tổng Cộng (USD) = [(5) + (6)] x (7)"
-                span={3}
-              >
-                <Space>
-                  {toCurrency(priceInfo.purchasePriceInUsd || 0, true)}
-                  {priceInfo.oldPurchasePriceInUsd && (
-                    <Text delete>
-                      {toCurrency(priceInfo.oldPurchasePriceInUsd || 0, true)}
-                    </Text>
-                  )}
-                  {getManualEditPurchasePriceComp()}
-                </Space>
-              </Descriptions.Item>
-
-              <Descriptions.Item label="9/ Thuế GTGT (%)">
-                {priceInfo.vat || 0}%
-              </Descriptions.Item>
-              <Descriptions.Item label="10/ Tỉ giá" span={2}>
-                {toCurrency(priceInfo.usdExchangeRate)}
-              </Descriptions.Item>
-
-              <Descriptions.Item
-                label="Tổng Cộng (VNĐ) = (8) X (9) X (10)"
-                span={3}
-              >
-                <Space>
-                  {toCurrency(priceInfo.purchasePriceAfterVatInVnd || 0)}
-                  {priceInfo.oldPurchasePriceAfterVatInVnd && (
-                    <Text delete>
-                      {toCurrency(priceInfo.oldPurchasePriceAfterVatInVnd || 0)}
-                    </Text>
-                  )}
-                </Space>
-              </Descriptions.Item>
-            </Descriptions>
-          </TabPane>
-          <TabPane tab="Báo giá đang sử dụng" key="2">
-            {priceInfo.lastUpdatedQuotation && (
-              <Text>{`Báo giá được chỉnh sửa lần cuối ngày ${moment(
-                priceInfo.lastUpdatedQuotation,
-              ).format('DD-MM-YYYY')}`}</Text>
+          </Descriptions.Item>
+        </Descriptions>
+      }
+    >
+      <Text mark>
+        <Space>
+          <Space>
+            {priceInfo.oldPurchasePriceAfterVatInVnd && (
+              <Text delete>
+                {toCurrency(priceInfo.oldPurchasePriceAfterVatInVnd || 0)}
+              </Text>
             )}
-            <Table
-              dataSource={priceInfo.billQuotations}
-              columns={billQuotationsColumn}
-              size="small"
-            />
-          </TabPane>
-        </Tabs>
-      </Modal>
-    </>
+            {toCurrency(priceInfo.purchasePriceAfterVatInVnd || 0)}
+          </Space>
+          =
+          <Space>
+            {toCurrency(priceInfo.purchasePriceAfterVatInUsd || 0, true)}
+            {priceInfo.oldPurchasePriceAfterVatInUsd && (
+              <Text delete>
+                {toCurrency(priceInfo.oldPurchasePriceAfterVatInUsd || 0, true)}
+              </Text>
+            )}
+          </Space>
+        </Space>
+      </Text>
+    </Popover>
   );
 };
 

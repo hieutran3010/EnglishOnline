@@ -251,7 +251,7 @@ export const Workspace = memo(() => {
           )}
           {currentRole !== Role.SALE && <div style={{ marginTop: 54 }}></div>}
           {billBlockActionType === BILL_BLOCK_ACTION_TYPE.EDIT_OR_VIEW && (
-            <ContentContainer style={{ marginBottom: canEdit ? 65 : 0 }}>
+            <ContentContainer style={{ marginBottom: canEdit ? 112 : 0 }}>
               {canEdit && (
                 <BillCreateOrUpdate
                   inputBill={bill}
