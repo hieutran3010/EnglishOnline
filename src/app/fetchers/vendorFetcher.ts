@@ -11,6 +11,7 @@ export default class VendorFetcher extends GraphQLFetcherBase<Vendor> {
     'otherFeeInUsd',
     'fuelChargePercent',
     'isStopped',
+    'lastUpdatedQuotation',
   ];
 
   constructor() {

@@ -146,6 +146,8 @@ const billCreateOrUpdateSlice = createSlice({
       );
       newPurchasePriceInfo.updateNewWeightPurchasePrice(
         action.payload.predictPurchasePrice,
+        action.payload.newWeight,
+        action.payload.oldWeight,
       );
       state.purchasePriceInfo = newPurchasePriceInfo;
     },

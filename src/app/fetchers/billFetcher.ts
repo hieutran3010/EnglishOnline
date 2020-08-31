@@ -67,6 +67,8 @@ const otherFields: string[] = [
   'oldPurchasePriceAfterVatInUsd',
   'oldPurchasePriceAfterVatInVnd',
   'billQuotations {startWeight endWeight priceInUsd}',
+  'oldQuotationPriceInUsd',
+  'lastUpdatedQuotation',
 ];
 
 const getBillFields = () => {
@@ -108,6 +110,7 @@ export default class BillFetcher extends GraphQLFetcherBase<Bill> {
               purchasePriceAfterVatInVnd
               zoneName
               billQuotations {startWeight endWeight priceInUsd}
+              lastUpdatedQuotation
             }
           }
         }`,

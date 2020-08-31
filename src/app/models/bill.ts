@@ -45,6 +45,8 @@ export class PurchasePriceInfo {
   oldPurchasePriceAfterVatInUsd?: number;
   oldPurchasePriceAfterVatInVnd?: number;
   billQuotations: BillQuotation[] = [];
+  oldQuotationPriceInUsd?: number;
+  lastUpdatedQuotation?: Date;
 
   /**
    *
@@ -73,6 +75,8 @@ export class PurchasePriceInfo {
       this.oldPurchasePriceAfterVatInVnd = input.oldPurchasePriceAfterVatInVnd;
       this.billQuotations = input.billQuotations;
       this.oldWeightInKg = input.oldWeightInKg;
+      this.oldQuotationPriceInUsd = input.oldQuotationPriceInUsd;
+      this.lastUpdatedQuotation = input.lastUpdatedQuotation;
     }
   }
 
@@ -92,14 +96,24 @@ export class PurchasePriceInfo {
     if (isGetLatestQuotation) {
       this.zoneName = result.zoneName;
       this.billQuotations = result.billQuotations;
+      this.lastUpdatedQuotation = result.lastUpdatedQuotation;
     }
   }
 
-  updateNewWeightPurchasePrice(result: PurchasePriceCountingResult) {
-    this.oldPurchasePriceInUsd = this.purchasePriceInUsd;
-    this.oldPurchasePriceInVnd = this.purchasePriceInVnd;
-    this.oldPurchasePriceAfterVatInUsd = this.purchasePriceAfterVatInUsd;
-    this.oldPurchasePriceAfterVatInVnd = this.purchasePriceAfterVatInVnd;
+  updateNewWeightPurchasePrice(
+    result: PurchasePriceCountingResult,
+    newWeight: number,
+    oldWeight: number,
+  ) {
+    this.oldQuotationPriceInUsd = this.quotationPriceInUsd;
+    this.weightInKg = newWeight;
+    this.oldWeightInKg = oldWeight;
+
+    // Clear the manual purchase price
+    this.oldPurchasePriceInUsd = undefined;
+    this.oldPurchasePriceInVnd = undefined;
+    this.oldPurchasePriceAfterVatInUsd = undefined;
+    this.oldPurchasePriceAfterVatInVnd = undefined;
 
     this.updateFromCountingResult(result);
   }
@@ -107,10 +121,11 @@ export class PurchasePriceInfo {
   restoreOldWeightPurchasePrice(result: PurchasePriceCountingResult) {
     this.updateFromCountingResult(result);
 
-    this.oldPurchasePriceInUsd = undefined;
-    this.oldPurchasePriceInVnd = undefined;
-    this.oldPurchasePriceAfterVatInUsd = undefined;
-    this.oldPurchasePriceAfterVatInVnd = undefined;
+    this.weightInKg = this.oldWeightInKg || 0;
+
+    // clear old quotation
+    this.oldQuotationPriceInUsd = undefined;
+    this.oldWeightInKg = undefined;
   }
 }
 
@@ -165,7 +180,9 @@ export default class Bill extends ModelBase {
   oldPurchasePriceInVnd?: number;
   oldPurchasePriceAfterVatInUsd?: number;
   oldPurchasePriceAfterVatInVnd?: number;
+  oldQuotationPriceInUsd?: number;
   billQuotations: BillQuotation[] = [];
+  lastUpdatedQuotation?: Date;
 
   constructor(input?: Bill | any) {
     super(input);
@@ -220,6 +237,8 @@ export default class Bill extends ModelBase {
       this.oldPurchasePriceAfterVatInUsd = input.oldPurchasePriceAfterVatInUsd;
       this.oldPurchasePriceAfterVatInVnd = input.oldPurchasePriceAfterVatInVnd;
       this.billQuotations = input.billQuotations;
+      this.oldQuotationPriceInUsd = input.oldQuotationPriceInUsd;
+      this.lastUpdatedQuotation = input.lastUpdatedQuotation;
     } else {
       this.status = BILL_STATUS.LICENSE;
       this.vendorOtherFee = 0;
@@ -257,6 +276,8 @@ export default class Bill extends ModelBase {
     info.oldPurchasePriceAfterVatInVnd = this.oldPurchasePriceAfterVatInVnd;
     info.billQuotations = this.billQuotations;
     info.oldWeightInKg = this.oldWeightInKg;
+    info.oldQuotationPriceInUsd = this.oldQuotationPriceInUsd;
+    info.lastUpdatedQuotation = this.lastUpdatedQuotation;
     return info;
   }
 
@@ -275,6 +296,8 @@ export default class Bill extends ModelBase {
     this.oldPurchasePriceAfterVatInUsd = result.oldPurchasePriceAfterVatInUsd;
     this.oldPurchasePriceAfterVatInVnd = result.oldPurchasePriceAfterVatInVnd;
     this.billQuotations = result.billQuotations;
+    this.oldQuotationPriceInUsd = result.oldQuotationPriceInUsd;
+    this.lastUpdatedQuotation = result.lastUpdatedQuotation;
   }
 }
 

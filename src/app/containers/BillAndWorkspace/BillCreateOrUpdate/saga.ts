@@ -208,9 +208,6 @@ export function* calculatePurchasePriceTask(
 
     const purchasePrice = yield select(selectPurchasePriceInfo);
     let isGetLatestQuotation = action.payload.isGetLatestQuotation;
-    if (!purchasePrice.billQuotations) {
-      isGetLatestQuotation = true;
-    }
 
     const params = new PurchasePriceCountingParams(billForm);
     params.isGetLatestQuotation = isGetLatestQuotation;

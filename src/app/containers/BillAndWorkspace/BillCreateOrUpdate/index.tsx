@@ -297,6 +297,9 @@ export const BillCreateOrUpdate = memo(
 
       setHasVat((inputBill.vat || 0) > 0);
       setShouldRecalculatePurchasePrice(false);
+      setShouldCountPurchasePriceWithLatestQuotation(
+        isEmpty(inputBill.billQuotations),
+      );
       // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [inputBill, role]);
 
@@ -696,6 +699,7 @@ export const BillCreateOrUpdate = memo(
             billId={billId}
             billForm={billForm.getFieldsValue()}
             purchasePriceInUsd={purchasePriceInfo.purchasePriceInUsd || 0}
+            billQuotations={purchasePriceInfo.billQuotations}
           />
 
           <FeeAndPrice

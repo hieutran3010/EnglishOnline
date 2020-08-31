@@ -10,6 +10,7 @@ import {
   Tabs,
   Table,
 } from 'antd';
+import moment from 'moment';
 import { InfoOutlined } from '@ant-design/icons';
 import isUndefined from 'lodash/fp/isUndefined';
 import isNil from 'lodash/fp/isNil';
@@ -163,15 +164,30 @@ const PurchasePrice = ({
         render: (record: BillQuotation) => {
           const selectedQuotation =
             record.priceInUsd === priceInfo.quotationPriceInUsd;
+
+          const isOldQuotation =
+            priceInfo.oldQuotationPriceInUsd &&
+            priceInfo.oldQuotationPriceInUsd !==
+              priceInfo.quotationPriceInUsd &&
+            priceInfo.oldQuotationPriceInUsd === record.priceInUsd;
+
           if (record.startWeight) {
             return (
               <Text
                 mark={selectedQuotation}
+                type={isOldQuotation === true ? 'danger' : undefined}
               >{`${record.startWeight} - ${record.endWeight}`}</Text>
             );
           }
 
-          return <Text mark={selectedQuotation}>{record.endWeight}</Text>;
+          return (
+            <Text
+              type={isOldQuotation === true ? 'danger' : undefined}
+              mark={selectedQuotation}
+            >
+              {record.endWeight}
+            </Text>
+          );
         },
       },
       {
@@ -180,15 +196,24 @@ const PurchasePrice = ({
         render: (record: BillQuotation) => {
           const selectedQuotation =
             record.priceInUsd === priceInfo.quotationPriceInUsd;
+
+          const isOldQuotation =
+            priceInfo.oldQuotationPriceInUsd &&
+            priceInfo.oldQuotationPriceInUsd !==
+              priceInfo.quotationPriceInUsd &&
+            priceInfo.oldQuotationPriceInUsd === record.priceInUsd;
           return (
-            <Text mark={selectedQuotation}>
+            <Text
+              mark={selectedQuotation}
+              type={isOldQuotation === true ? 'danger' : undefined}
+            >
               {toCurrency(record.priceInUsd || 0, true)}
             </Text>
           );
         },
       },
     ];
-  }, [priceInfo.quotationPriceInUsd]);
+  }, [priceInfo.oldQuotationPriceInUsd, priceInfo.quotationPriceInUsd]);
 
   return (
     <>
@@ -220,10 +245,11 @@ const PurchasePrice = ({
         <Tooltip title="Xem công thức & báo giá đang sử dụng cho giá mua này">
           <Button
             size="small"
-            type="primary"
             shape="circle"
             icon={<InfoOutlined />}
             onClick={onShowModal}
+            type="primary"
+            ghost
           />
         </Tooltip>
       </Space>
@@ -243,10 +269,14 @@ const PurchasePrice = ({
           <TabPane tab="Công thức" key="1">
             <Descriptions bordered size="small" column={3}>
               <Descriptions.Item label="1/ Trọng Lượng">
-                <Text>{priceInfo.weightInKg}kg</Text>
-                {priceInfo.oldWeightInKg && (
-                  <Text delete>{priceInfo.oldWeightInKg}kg</Text>
-                )}
+                <Space>
+                  <Text>{priceInfo.weightInKg}kg</Text>
+                  {priceInfo.oldWeightInKg && (
+                    <Tooltip title="Ký bán cho khách">
+                      <Text delete>{priceInfo.oldWeightInKg}kg</Text>
+                    </Tooltip>
+                  )}
+                </Space>
               </Descriptions.Item>
               <Descriptions.Item label="2/ Nước Đến">
                 {priceInfo.destinationCountry}
@@ -256,7 +286,21 @@ const PurchasePrice = ({
               </Descriptions.Item>
 
               <Descriptions.Item label="4/ Báo Giá NCC (USD)" span={3}>
-                ${priceInfo.quotationPriceInUsd}
+                <Space>
+                  <Text>
+                    {toCurrency(priceInfo.quotationPriceInUsd || 0, true)}
+                  </Text>
+                  {priceInfo.oldQuotationPriceInUsd &&
+                    priceInfo.oldQuotationPriceInUsd !==
+                      priceInfo.quotationPriceInUsd && (
+                      <Text delete>
+                        {toCurrency(
+                          priceInfo.oldQuotationPriceInUsd || 0,
+                          true,
+                        )}
+                      </Text>
+                    )}
+                </Space>
               </Descriptions.Item>
 
               {priceInfo.vendorNetPriceInUsd ===
@@ -318,6 +362,11 @@ const PurchasePrice = ({
             </Descriptions>
           </TabPane>
           <TabPane tab="Báo giá đang sử dụng" key="2">
+            {priceInfo.lastUpdatedQuotation && (
+              <Text>{`Báo giá được chỉnh sửa lần cuối ngày ${moment(
+                priceInfo.lastUpdatedQuotation,
+              ).format('DD-MM-YYYY')}`}</Text>
+            )}
             <Table
               dataSource={priceInfo.billQuotations}
               columns={billQuotationsColumn}

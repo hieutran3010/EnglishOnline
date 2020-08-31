@@ -22,7 +22,7 @@ export class PurchasePriceCountingResult {
   purchasePriceAfterVatInUsd!: number;
   purchasePriceAfterVatInVnd!: number;
   billQuotations: BillQuotation[] = [];
-  isGetLatestQuotation: boolean = false;
+  lastUpdatedQuotation?: Date;
 }
 
 export class PurchasePriceCountingParams {
