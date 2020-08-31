@@ -318,6 +318,7 @@ const VendorWeightAdjustment = ({
                       purchasePriceInfo={purchasePriceInfo as PurchasePriceInfo}
                       bill={bill}
                       size="large"
+                      showFullInfo={canSelfSubmit}
                     />
                   </div>
                 )}

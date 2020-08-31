@@ -1,18 +1,25 @@
 import React, { memo, useMemo, useCallback, useState } from 'react';
-import { Modal, Button, Typography, Table, Space } from 'antd';
+import { Modal, Button, Typography, Table, Space, Descriptions } from 'antd';
 import moment from 'moment';
-import { BillQuotation, PurchasePriceInfo } from 'app/models/bill';
+import Bill, { BillQuotation, PurchasePriceInfo } from 'app/models/bill';
 import { ColumnDefinition } from 'app/components/collection/DataGrid';
 import { toCurrency } from 'utils/numberFormat';
+import uniqueId from 'lodash/fp/uniqueId';
 
 const { Text } = Typography;
 
 interface Props {
   purchasePriceInfo: PurchasePriceInfo;
-  bill?: any;
+  bill?: Bill | any;
   size?: 'large' | 'middle' | 'small';
+  showFullInfo?: boolean;
 }
-const BillQuotationModal = ({ purchasePriceInfo, bill, size }: Props) => {
+const BillQuotationModal = ({
+  purchasePriceInfo,
+  showFullInfo,
+  bill,
+  size,
+}: Props) => {
   const [visibleQuotationModal, setVisibleQuotationModal] = useState(false);
 
   const onCloseQuotationModal = useCallback(() => {
@@ -116,15 +123,34 @@ const BillQuotationModal = ({ purchasePriceInfo, bill, size }: Props) => {
           </Button>,
         ]}
       >
+        {bill && showFullInfo && (
+          <Descriptions
+            bordered
+            size="small"
+            column={1}
+            style={{ marginBottom: 10 }}
+          >
+            <Descriptions.Item label="Nhà cung cấp">
+              <Text>{bill.vendorName}</Text>
+            </Descriptions.Item>
+            <Descriptions.Item label="Nước đến">
+              <Text>{bill.destinationCountry}</Text>
+            </Descriptions.Item>
+            <Descriptions.Item label="Zone">
+              <Text>{bill.zoneName}</Text>
+            </Descriptions.Item>
+          </Descriptions>
+        )}
         {purchasePriceInfo.lastUpdatedQuotation && (
           <Text>{`Báo giá được chỉnh sửa lần cuối ngày ${moment(
             purchasePriceInfo.lastUpdatedQuotation,
-          ).format('DD-MM-YYYY')}`}</Text>
+          ).format('DD-MM-YYYY HH:mm')}`}</Text>
         )}
         <Table
           dataSource={purchasePriceInfo.billQuotations}
           columns={billQuotationsColumn}
           size="small"
+          rowKey={record => uniqueId('bq_')}
         />
       </Modal>
     </>
