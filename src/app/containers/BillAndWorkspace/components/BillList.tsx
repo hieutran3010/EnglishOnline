@@ -464,7 +464,7 @@ const BillList = ({
             pageSize={20}
             width={width ?? 'max-content'}
             dontLoadInitialData={dontLoadInitialData}
-            heightOffset={heightOffset || 0.32}
+            heightOffset={heightOffset || 0.37}
             size="small"
             rowSelection={{}}
           />
