@@ -13,7 +13,7 @@ export enum FETCHER_KEY {
   BILL_DESCRIPTION,
 }
 
-const getDataSource = (fetcherKey: FETCHER_KEY) => {
+const getDataSource = (fetcherKey: FETCHER_KEY, extendFields?: string[]) => {
   switch (fetcherKey) {
     case FETCHER_KEY.VENDOR: {
       return new GraphQLDataSource(new VendorFetcher());
@@ -25,7 +25,7 @@ const getDataSource = (fetcherKey: FETCHER_KEY) => {
       return new GraphQLDataSource(new CustomerFetcher());
     }
     case FETCHER_KEY.BILL: {
-      return new GraphQLDataSource(new BillFetcher());
+      return new GraphQLDataSource(new BillFetcher(extendFields));
     }
     case FETCHER_KEY.BILL_DESCRIPTION: {
       return new GraphQLDataSource(new BillDescriptionFetcher());

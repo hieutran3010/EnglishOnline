@@ -57,7 +57,9 @@ const WorkingBills = ({
   const user = authStorage.getUser();
 
   const billDataSource = useMemo(() => {
-    const dataSource = getDataSource(FETCHER_KEY.BILL);
+    const dataSource = getDataSource(FETCHER_KEY.BILL, [
+      'billDeliveryHistories {date time status}',
+    ]);
     dataSource.orderByFields = 'date desc';
     dataSource.query = onGetQuery ? onGetQuery(user) : '';
 

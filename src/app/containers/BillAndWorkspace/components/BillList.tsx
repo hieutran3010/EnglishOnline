@@ -33,6 +33,9 @@ import BillStatusTag from './BillStatusTag';
 import DeliveryTimeline from '../BillDeliveryHistory/DeliveryTimeline';
 import BillFetcher from 'app/fetchers/billFetcher';
 import { checkCanEditHistory } from '../utils';
+import orderBy from 'lodash/fp/orderBy';
+import head from 'lodash/fp/head';
+import LastBillDeliveryHistory from './LastBillDeliveryHistory';
 
 const { TabPane } = Tabs;
 const { Text } = Typography;
@@ -277,6 +280,16 @@ const BillList = ({
         type: COLUMN_TYPES.STRING,
         width: 150,
         render: value => <span>{value ?? '<Không có>'}</span>,
+      },
+      {
+        title: 'Tình trạng hàng',
+        key: 'billDeliveryHistories',
+        dataIndex: 'billDeliveryHistories',
+        type: COLUMN_TYPES.STRING,
+        width: 250,
+        render: (value: BillDeliveryHistory[]) => {
+          return <LastBillDeliveryHistory histories={value} />;
+        },
       },
       {
         title: 'Ngày',

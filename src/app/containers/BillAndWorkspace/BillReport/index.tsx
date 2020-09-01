@@ -524,7 +524,7 @@ export const BillReport = memo((props: Props) => {
         <BillList
           billDataSource={billDataSource}
           isReset={isReset}
-          excludeFields={['isArchived']}
+          excludeFields={['isArchived', 'billDeliveryHistories']}
           extendCols={getAdminCols()}
           heightOffset={user.role === Role.ADMIN ? 0.51 : 0.47}
           onReturnFinalBillToAccountant={onReturnFinalBillToAccountant}

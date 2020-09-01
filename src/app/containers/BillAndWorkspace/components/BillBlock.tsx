@@ -1,7 +1,7 @@
 import React, { memo, useCallback, useState } from 'react';
 import moment from 'moment';
 import type Bill from 'app/models/bill';
-import { Card, Typography, Tooltip, Space, Tag } from 'antd';
+import { Card, Typography, Tooltip, Space, Tag, Alert } from 'antd';
 import {
   EyeOutlined,
   EyeTwoTone,
@@ -10,6 +10,8 @@ import {
 } from '@ant-design/icons';
 import BillStatusTag from './BillStatusTag';
 import { Role } from 'app/models/user';
+import { isEmpty } from 'lodash';
+import LastBillDeliveryHistory from './LastBillDeliveryHistory';
 
 const { Text } = Typography;
 
@@ -19,7 +21,7 @@ export enum BILL_BLOCK_ACTION_TYPE {
 }
 
 interface Props {
-  bill: Bill;
+  bill: Bill | any;
   onSelect: (bill: Bill) => void;
   onSelectForDeliveryHistory?: (bill: Bill) => void;
   selectedBillId?: string;
@@ -104,6 +106,19 @@ const BillBlock = ({
             <Text>{bill.receiverName || '<Không có>'}</Text>
           </Space>
         </Tooltip>
+        {!isEmpty(bill.billDeliveryHistories) && (
+          <Tooltip title="Tình trạng hàng">
+            <Alert
+              type="success"
+              style={{ marginTop: 5, padding: '1px 7px' }}
+              message={
+                <LastBillDeliveryHistory
+                  histories={bill.billDeliveryHistories}
+                />
+              }
+            />
+          </Tooltip>
+        )}
       </div>
     </Card>
   );

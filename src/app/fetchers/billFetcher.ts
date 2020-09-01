@@ -10,6 +10,7 @@ import type {
 } from 'app/models/purchasePriceCounting';
 import { authStorage } from 'app/services/auth';
 import { Role } from 'app/models/user';
+import { concat, isEmpty } from 'lodash';
 
 const normalFields: string[] = [
   'id',
@@ -71,27 +72,37 @@ const otherFields: string[] = [
   'lastUpdatedQuotation',
 ];
 
-const getBillFields = () => {
+const getBillFields = (extendFields?: string[]) => {
   const role = authStorage.getRole() as Role;
 
+  let result = normalFields;
   switch (role) {
-    case Role.LICENSE:
-      return normalFields;
-    case Role.SALE:
-      return [...normalFields, ...saleExtendFields];
+    case Role.LICENSE: {
+      break;
+    }
+    case Role.SALE: {
+      result = concat(saleExtendFields, normalFields);
+      break;
+    }
     case Role.ADMIN:
-    case Role.ACCOUNTANT:
-      return [...normalFields, ...saleExtendFields, ...otherFields];
+    case Role.ACCOUNTANT: {
+      result = concat(saleExtendFields, normalFields, otherFields);
+      break;
+    }
     default:
       break;
   }
 
-  return [];
+  if (!isEmpty(extendFields)) {
+    return concat(result, extendFields as string[]);
+  }
+
+  return result;
 };
 
 export default class BillFetcher extends GraphQLFetcherBase<Bill> {
-  constructor() {
-    super('Bill', getBillFields);
+  constructor(extendFields?: string[]) {
+    super('Bill', () => getBillFields(extendFields));
   }
 
   countPurchasePrice = (queryParams: PurchasePriceCountingParams) => {
