@@ -461,7 +461,7 @@ const BillList = ({
           <DataGrid
             dataSource={billDataSource}
             columns={columns}
-            pageSize={20}
+            pageSize={50}
             width={width ?? 'max-content'}
             dontLoadInitialData={dontLoadInitialData}
             heightOffset={heightOffset || 0.37}
