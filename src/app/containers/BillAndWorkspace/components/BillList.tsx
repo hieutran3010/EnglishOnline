@@ -33,8 +33,6 @@ import BillStatusTag from './BillStatusTag';
 import DeliveryTimeline from '../BillDeliveryHistory/DeliveryTimeline';
 import BillFetcher from 'app/fetchers/billFetcher';
 import { checkCanEditHistory } from '../utils';
-import orderBy from 'lodash/fp/orderBy';
-import head from 'lodash/fp/head';
 import LastBillDeliveryHistory from './LastBillDeliveryHistory';
 
 const { TabPane } = Tabs;
