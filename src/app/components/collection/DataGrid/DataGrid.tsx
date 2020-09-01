@@ -265,7 +265,7 @@ export default function DataGrid({
       pagination={{
         pageSizeOptions,
         showSizeChanger: true,
-        defaultPageSize: 10,
+        defaultPageSize: 20,
         pageSize: pagination.pageSize,
         current: pagination.current,
         total,
@@ -277,7 +277,7 @@ export default function DataGrid({
 }
 
 DataGrid.defaultProps = {
-  pageSizeOptions: ['10', '20', '30', '40'],
-  pageSize: 10,
+  pageSizeOptions: ['10', '20', '30', '40', '50', '80', '100'],
+  pageSize: 20,
   size: 'small',
 };

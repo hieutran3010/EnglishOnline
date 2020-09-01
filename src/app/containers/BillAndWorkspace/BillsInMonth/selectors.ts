@@ -9,3 +9,13 @@ export const selectNeedToReload = createSelector(
   [selectDomain],
   workspaceState => workspaceState.needToReload,
 );
+
+export const selectSelectedMonth = createSelector(
+  [selectDomain],
+  workspaceState => workspaceState.selectedMonth,
+);
+
+export const selectIsViewArchivedBills = createSelector(
+  [selectDomain],
+  workspaceState => workspaceState.isViewArchivedBills,
+);

@@ -1,4 +1,5 @@
 import toString from 'lodash/fp/toString';
+import { padStart } from 'lodash';
 
 const toCurrency = (value: number, isUsd: boolean = false) => {
   const formatted = toString(value).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
@@ -14,4 +15,11 @@ const toCurrency = (value: number, isUsd: boolean = false) => {
   return `${formatted}đ`;
 };
 
-export { toCurrency };
+const toFullString = (value: number) => {
+  const str = toString(value);
+  if (str.length === 1) {
+    return padStart(str, 2, '0');
+  }
+};
+
+export { toCurrency, toFullString };

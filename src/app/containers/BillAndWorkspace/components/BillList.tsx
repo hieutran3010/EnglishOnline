@@ -33,6 +33,7 @@ import BillStatusTag from './BillStatusTag';
 import DeliveryTimeline from '../BillDeliveryHistory/DeliveryTimeline';
 import BillFetcher from 'app/fetchers/billFetcher';
 import { checkCanEditHistory } from '../utils';
+import LastBillDeliveryHistory from './LastBillDeliveryHistory';
 
 const { TabPane } = Tabs;
 const { Text } = Typography;
@@ -279,6 +280,16 @@ const BillList = ({
         render: value => <span>{value ?? '<Không có>'}</span>,
       },
       {
+        title: 'Tình trạng hàng',
+        key: 'billDeliveryHistories',
+        dataIndex: 'billDeliveryHistories',
+        type: COLUMN_TYPES.STRING,
+        width: 250,
+        render: (value: BillDeliveryHistory[]) => {
+          return <LastBillDeliveryHistory histories={value} />;
+        },
+      },
+      {
         title: 'Ngày',
         dataIndex: 'date',
         key: 'date',
@@ -448,10 +459,10 @@ const BillList = ({
           <DataGrid
             dataSource={billDataSource}
             columns={columns}
-            pageSize={20}
+            pageSize={50}
             width={width ?? 'max-content'}
             dontLoadInitialData={dontLoadInitialData}
-            heightOffset={heightOffset || 0.32}
+            heightOffset={heightOffset || 0.37}
             size="small"
             rowSelection={{}}
           />

@@ -6,10 +6,11 @@
 
 import React, { memo, useMemo, useCallback, useEffect } from 'react';
 import moment from 'moment';
-import { Switch } from 'antd';
+import { Switch, Space, Typography, Select } from 'antd';
 import { useDispatch, useSelector } from 'react-redux';
+import map from 'lodash/fp/map';
 
-import { RootContainer } from 'app/components/Layout';
+import { ContentContainer } from 'app/components/Layout';
 import getDataSource, { FETCHER_KEY } from 'app/collection-datasource';
 import { authStorage } from 'app/services/auth';
 import { Role } from 'app/models/user';
@@ -17,41 +18,53 @@ import { useInjectReducer, useInjectSaga } from 'utils/redux-injectors';
 
 import { actions, reducer, sliceKey } from './slice';
 import { billsInMonthSaga } from './saga';
-import { selectNeedToReload } from './selectors';
+import {
+  selectNeedToReload,
+  selectSelectedMonth,
+  selectIsViewArchivedBills,
+} from './selectors';
 import BillList from '../components/BillList';
 import type Bill from 'app/models/bill';
+import { toFullString } from 'utils/numberFormat';
+
+const { Text } = Typography;
+const { Option } = Select;
 
 export const BillsInMonth = memo(() => {
   useInjectReducer({ key: sliceKey, reducer });
   useInjectSaga({ key: sliceKey, saga: billsInMonthSaga });
 
-  const needToReload = useSelector(selectNeedToReload);
   const user = authStorage.getUser();
   const dispatch = useDispatch();
 
-  const getQuery = useCallback(
-    (isViewArchivedBills: boolean) => {
-      let query = `Period  = "${moment().format('MM-YYYY')}"`;
+  const needToReload = useSelector(selectNeedToReload);
+  const selectedMonth = useSelector(selectSelectedMonth);
+  const isViewArchivedBills = useSelector(selectIsViewArchivedBills);
 
-      if (user.role === Role.SALE) {
-        query = `${query} and saleUserId = "${user.id}"`;
-      } else if (user.role === Role.LICENSE) {
-        query = `${query} and licenseUserId = "${user.id}"`;
-      }
+  const getQuery = useCallback(() => {
+    let query = `Period  = "${toFullString(selectedMonth)}-${moment().format(
+      'YYYY',
+    )}"`;
 
-      if (!isViewArchivedBills) {
-        query = `${query} and IsArchived = false`;
-      }
+    if (user.role === Role.SALE) {
+      query = `${query} and saleUserId = "${user.id}"`;
+    } else if (user.role === Role.LICENSE) {
+      query = `${query} and licenseUserId = "${user.id}"`;
+    }
 
-      return query;
-    },
-    [user.id, user.role],
-  );
+    if (!isViewArchivedBills) {
+      query = `${query} and IsArchived = false`;
+    }
+
+    return query;
+  }, [isViewArchivedBills, selectedMonth, user.id, user.role]);
 
   const billDataSource = useMemo(() => {
-    const billDataSource = getDataSource(FETCHER_KEY.BILL);
+    const billDataSource = getDataSource(FETCHER_KEY.BILL, [
+      'billDeliveryHistories {date time status}',
+    ]);
     billDataSource.orderByFields = 'date descending';
-    billDataSource.query = getQuery(false);
+    billDataSource.query = getQuery();
 
     return billDataSource;
   }, [getQuery]);
@@ -61,7 +74,13 @@ export const BillsInMonth = memo(() => {
       billDataSource.onReloadData();
       dispatch(actions.setNeedToReload(false));
     }
-  }, [billDataSource, dispatch, needToReload]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [needToReload]);
+
+  useEffect(() => {
+    billDataSource.onReloadData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isViewArchivedBills, selectedMonth]);
 
   const onArchiveBill = useCallback(
     (billId: string) => {
@@ -72,10 +91,9 @@ export const BillsInMonth = memo(() => {
 
   const onViewArchivedBillChanged = useCallback(
     checked => {
-      billDataSource.query = getQuery(checked);
-      billDataSource.onReloadData();
+      dispatch(actions.setIsViewArchivedBills(checked));
     },
-    [billDataSource, getQuery],
+    [dispatch],
   );
 
   const onCheckPrintedVat = useCallback(
@@ -110,8 +128,44 @@ export const BillsInMonth = memo(() => {
     [],
   );
 
+  const onMonthChanged = useCallback(
+    value => {
+      dispatch(actions.setSelectedMonth(value));
+    },
+    [dispatch],
+  );
+
+  const months = useMemo(() => {
+    const results: number[] = [];
+
+    const now = moment();
+    results.push(now.month() + 1);
+
+    for (let index = 0; index < 2; index++) {
+      const time = moment().subtract(index + 1, 'months');
+      results.push(time.month() + 1);
+    }
+
+    return map((m: number) => (
+      <Option key={m} value={m}>
+        {m}
+      </Option>
+    ))(results);
+  }, []);
+
   return (
-    <RootContainer title={`Danh sách Bill tháng ${moment().format('MM-YYYY')}`}>
+    <ContentContainer
+      title={
+        <Space>
+          <Text>Danh sách Bill tháng</Text>
+          <Select value={selectedMonth} onChange={onMonthChanged}>
+            {months}
+          </Select>
+          <Text>/</Text>
+          <Text>{moment().year()}</Text>
+        </Space>
+      }
+    >
       <Switch
         checkedChildren="Bao gồm bill đã hủy"
         unCheckedChildren="Đã loại trừ bill đã hủy"
@@ -126,6 +180,6 @@ export const BillsInMonth = memo(() => {
         onReturnFinalBillToAccountant={onReturnFinalBillToAccountant}
         onForceDeleteBill={onForceDeleteBill}
       />
-    </RootContainer>
+    </ContentContainer>
   );
 });

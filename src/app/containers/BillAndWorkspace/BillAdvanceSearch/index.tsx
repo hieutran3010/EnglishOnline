@@ -208,6 +208,7 @@ export const BillAdvanceSearch = memo(() => {
           onRestoreArchivedBill={onRestoreArchivedBill}
           onReturnFinalBillToAccountant={onReturnFinalBillToAccountant}
           onForceDeleteBill={onForceDeleteBill}
+          excludeFields={['billDeliveryHistories']}
         />
       </RootContainer>
     </>
