@@ -39,12 +39,12 @@ export class PurchasePriceCountingParams {
   constructor(bill?: Bill) {
     if (bill) {
       this.destinationCountry = bill.destinationCountry;
-      this.fuelChargePercent = bill.vendorFuelChargePercent;
-      this.otherFeeInUsd = bill.vendorOtherFee;
-      this.usdExchangeRate = bill.usdExchangeRate;
+      this.fuelChargePercent = bill.vendorFuelChargePercent || 0;
+      this.otherFeeInUsd = bill.vendorOtherFee || 0;
+      this.usdExchangeRate = bill.usdExchangeRate || 0;
       this.vat = bill.vat;
       this.vendorId = bill.vendorId;
-      this.weightInKg = bill.weightInKg;
+      this.weightInKg = bill.weightInKg || 0;
       this.billQuotations = bill.billQuotations;
     }
   }

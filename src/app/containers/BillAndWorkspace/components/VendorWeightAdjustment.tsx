@@ -86,8 +86,8 @@ const VendorWeightAdjustment = ({
 
       const countingParams = new PurchasePriceCountingParams();
       countingParams.destinationCountry = bill.destinationCountry;
-      countingParams.fuelChargePercent = bill.vendorFuelChargePercent;
-      countingParams.otherFeeInUsd = bill.vendorOtherFee;
+      countingParams.fuelChargePercent = bill.vendorFuelChargePercent || 0;
+      countingParams.otherFeeInUsd = bill.vendorOtherFee || 0;
       countingParams.usdExchangeRate = bill.usdExchangeRate || 0;
       countingParams.vat = bill.vat;
       countingParams.vendorId = bill.vendorId;
