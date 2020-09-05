@@ -11,5 +11,4 @@ export default class Vendor extends ModelBase {
   isStopped!: boolean;
   zones?: Zone[];
   vendorQuotations?: VendorQuotation[];
-  lastUpdatedQuotation?: Date;
 }
