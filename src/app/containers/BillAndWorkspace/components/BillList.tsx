@@ -179,7 +179,7 @@ const BillList = ({
       if (checkCanEditHistory(user.role as Role, bill.saleUserId)) {
         MenuItems.push(
           <Menu.Item key={3}>
-            <Link to={`/billStatusUpdating/${bill.id}`}>
+            <Link to={`/billStatusUpdating/${bill.id}`} target="_blank">
               Cập nhật tình trạng hàng
             </Link>
           </Menu.Item>,

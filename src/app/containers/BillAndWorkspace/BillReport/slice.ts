@@ -1,4 +1,5 @@
 import isEmpty from 'lodash/fp/isEmpty';
+import moment from 'moment';
 import { PayloadAction } from '@reduxjs/toolkit';
 import { createSlice } from 'utils/@reduxjs/toolkit';
 import { ContainerState } from './types';
@@ -31,6 +32,8 @@ export const initialState: ContainerState = {
   isFetchingVendorGroupingList: false,
   billsGroupedByVendor: [],
   checkingExportSession: false,
+
+  dateRange: [moment(), moment()],
 };
 
 const billReportSlice = createSlice({
@@ -153,6 +156,11 @@ const billReportSlice = createSlice({
       }
     },
     downloadBills() {},
+    setDateRange(state, action: PayloadAction<any[]>) {
+      state.dateRange = action.payload;
+      state.billsGroupedByCustomer = [];
+      state.billsGroupedByVendor = [];
+    },
 
     reset(state) {
       state.totalSalePriceOfSale = initialState.totalSalePriceOfSale;

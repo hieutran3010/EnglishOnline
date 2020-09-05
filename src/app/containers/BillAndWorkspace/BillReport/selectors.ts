@@ -134,3 +134,8 @@ export const selectExportSession = createSelector(
   [selectDomain],
   billReportState => billReportState.exportSession,
 );
+
+export const selectDateRange = createSelector(
+  [selectDomain],
+  billReportState => billReportState.dateRange,
+);
