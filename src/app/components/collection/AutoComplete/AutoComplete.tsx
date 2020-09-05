@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useMemo } from 'react';
-import { AutoComplete, Spin } from 'antd';
+import { AutoComplete } from 'antd';
 import { AutoCompleteProps } from 'antd/lib/auto-complete';
 import isEmpty from 'lodash/fp/isEmpty';
 import uniqueId from 'lodash/fp/uniqueId';
@@ -8,6 +8,8 @@ import get from 'lodash/fp/get';
 import set from 'lodash/fp/set';
 import map from 'lodash/fp/map';
 import filter from 'lodash/fp/filter';
+import size from 'lodash/fp/size';
+import head from 'lodash/fp/head';
 
 import {
   IDataSource,
@@ -74,7 +76,6 @@ const DefaultAutoComplete = React.forwardRef(
   ) => {
     const [items, setItems] = useState<any[]>();
     const [isFetchedFirstTime, setIsFetchedFirstTime] = useState(false);
-    const [isFetchingFirstTime, setIsFetchingFirstTime] = useState(false);
 
     const fetchData = useCallback(
       async (searchKey: string) => {
@@ -87,13 +88,14 @@ const DefaultAutoComplete = React.forwardRef(
         const data = await fetchDataSource.queryManyAsync(queryParams, true);
         if (!isEmpty(data)) {
           setItems(data);
+          if (size(data) === 1) {
+            onSelected && onSelected(head(data));
+          }
         } else {
           setItems([]);
         }
-
-        setIsFetchingFirstTime(false);
       },
-      [fetchDataSource, pageSize, searchPropNames],
+      [fetchDataSource, onSelected, pageSize, searchPropNames],
     );
 
     const onSearchChange = useCallback(
@@ -128,7 +130,6 @@ const DefaultAutoComplete = React.forwardRef(
         if (open === true && isEmpty(items) && !isFetchedFirstTime) {
           fetchData('');
           setIsFetchedFirstTime(true);
-          setIsFetchingFirstTime(true);
         }
       },
       [fetchData, isFetchedFirstTime, items],
@@ -166,7 +167,7 @@ const DefaultAutoComplete = React.forwardRef(
         onDropdownVisibleChange={onDropdownVisibleChanged}
         {...restProps}
       >
-        {isFetchingFirstTime ? <Spin size="small" /> : source}
+        {source}
       </AutoComplete>
     );
   },

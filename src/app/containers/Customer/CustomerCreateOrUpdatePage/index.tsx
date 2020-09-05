@@ -6,12 +6,11 @@
 
 import React, { memo, useMemo, useCallback, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import { Form, Input, Space, Button, Select } from 'antd';
+import { Form, Input, Space, Button } from 'antd';
 import { useHistory, useParams } from 'react-router-dom';
 import toUpper from 'lodash/fp/toUpper';
 import capitalize from 'lodash/fp/capitalize';
 import isEmpty from 'lodash/fp/isEmpty';
-import map from 'lodash/fp/map';
 import { Store } from 'antd/lib/form/interface';
 
 import { useInjectReducer, useInjectSaga } from 'utils/redux-injectors';
@@ -23,14 +22,9 @@ import {
   selectIsSubmitting,
   selectIsFetchingCustomer,
   selectCustomer,
-  selectIsFetchingSaleUsers,
-  selectSaleUsers,
 } from './selectors';
 import { customerCreateOrUpdatePageSaga } from './saga';
-import User, { Role } from 'app/models/user';
 import { authStorage } from 'app/services/auth';
-
-const { Option } = Select;
 
 export const CustomerCreateOrUpdatePage = memo(() => {
   useInjectReducer({ key: sliceKey, reducer: reducer });
@@ -46,8 +40,6 @@ export const CustomerCreateOrUpdatePage = memo(() => {
   const isSubmitting = useSelector(selectIsSubmitting);
   const isFetchingCustomer = useSelector(selectIsFetchingCustomer);
   const customer = useSelector(selectCustomer);
-  const isFetchingSaleUsers = useSelector(selectIsFetchingSaleUsers);
-  const saleUsers = useSelector(selectSaleUsers);
 
   const customerValidator = useMemo(() => getCustomerValidator(customerId), [
     customerId,
@@ -63,20 +55,8 @@ export const CustomerCreateOrUpdatePage = memo(() => {
   useEffect(() => {
     if (isEditMode && customer && !isEmpty(customer)) {
       customerForm.setFieldsValue(customer as Store);
-      if (user.role === Role.SALE && isEmpty(customer.saleUserId)) {
-        customerForm.setFieldsValue({ saleUserId: user.id });
-      }
-    }
-
-    if (!isEditMode && user.role === Role.SALE) {
-      customerForm.setFieldsValue({ saleUserId: user.id });
     }
   }, [customer, customerForm, customerId, isEditMode, user.id, user.role]);
-
-  useEffect(() => {
-    dispatch(actions.fetchSaleUsers());
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
   const onBack = useCallback(() => {
     history.push('/customers');
@@ -86,7 +66,6 @@ export const CustomerCreateOrUpdatePage = memo(() => {
     customer => {
       customer.code = toUpper(customer.code);
       customer.name = capitalize(customer.name);
-      customer.nickName = capitalize(customer.nickName);
 
       if (isEditMode) {
         dispatch(actions.updateCustomer(customer));
@@ -100,14 +79,6 @@ export const CustomerCreateOrUpdatePage = memo(() => {
   const onCreateNew = useCallback(() => {
     history.push('/customerCreation');
   }, [history]);
-
-  const saleUserOptions = useMemo(() => {
-    return map((u: User) => (
-      <Option key={u.id} value={u.id}>
-        {u.displayName}
-      </Option>
-    ))(saleUsers);
-  }, [saleUsers]);
 
   const title = isEditMode ? 'Cập nhật khách hàng' : 'Thêm khách hàng mới';
 
@@ -137,12 +108,6 @@ export const CustomerCreateOrUpdatePage = memo(() => {
                 style={{ textTransform: 'capitalize' }}
               />
             </Form.Item>
-            <Form.Item label="Nickname" name="nickName">
-              <Input
-                disabled={isSubmitting}
-                style={{ textTransform: 'capitalize' }}
-              />
-            </Form.Item>
             <Form.Item
               label="Số điện thoại"
               name="phone"
@@ -162,9 +127,6 @@ export const CustomerCreateOrUpdatePage = memo(() => {
             </Form.Item>
             <Form.Item label="Thông tin gợi nhớ" name="hint">
               <Input />
-            </Form.Item>
-            <Form.Item label="Sale" name="saleUserId">
-              <Select loading={isFetchingSaleUsers}>{saleUserOptions}</Select>
             </Form.Item>
             <Form.Item>
               <Space>

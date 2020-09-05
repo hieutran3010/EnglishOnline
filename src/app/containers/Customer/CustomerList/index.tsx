@@ -16,8 +16,6 @@ import {
   ColumnDefinition,
   COLUMN_TYPES,
 } from 'app/components/collection/DataGrid';
-import UserAvatar from 'app/containers/Auth/components/UserAvatar';
-import isEmpty from 'lodash/fp/isEmpty';
 import { authStorage } from 'app/services/auth';
 import { Role } from 'app/models/user';
 import { useInjectReducer, useInjectSaga } from 'utils/redux-injectors';
@@ -39,12 +37,8 @@ export function CustomerList() {
   const customerDataSource = useMemo(() => {
     const dataSource = getDataSource(FETCHER_KEY.CUSTOMER);
     dataSource.orderByFields = 'name';
-    if (user.role === Role.SALE) {
-      dataSource.query = `SaleUserId = "${user.id}" || SaleUserId = null || SaleUserId = ""`;
-    }
-
     return dataSource;
-  }, [user.id, user.role]);
+  }, []);
 
   const needToReload = useSelector(selectNeedToReload);
 
@@ -80,15 +74,7 @@ export function CustomerList() {
   );
 
   const columns = useMemo((): ColumnDefinition[] => {
-    let result = [
-      {
-        title: 'Mã KH',
-        dataIndex: 'code',
-        key: 'code',
-        width: 40,
-        canFilter: true,
-        type: COLUMN_TYPES.STRING,
-      },
+    let result: ColumnDefinition[] = [
       {
         title: 'Tên KH',
         dataIndex: 'name',
@@ -96,6 +82,7 @@ export function CustomerList() {
         width: 80,
         canFilter: true,
         type: COLUMN_TYPES.STRING,
+        fixed: true,
       },
       {
         title: 'Số ĐT',
@@ -104,13 +91,14 @@ export function CustomerList() {
         type: COLUMN_TYPES.STRING,
         width: 50,
         canFilter: true,
+        fixed: true,
       },
       {
         title: 'Địa Chỉ',
         dataIndex: 'address',
         key: 'address',
         type: COLUMN_TYPES.STRING,
-        width: 80,
+        width: 200,
         canFilter: true,
       },
       {
@@ -118,20 +106,7 @@ export function CustomerList() {
         dataIndex: 'hint',
         key: 'hint',
         type: COLUMN_TYPES.STRING,
-        width: 60,
-      },
-      {
-        title: 'Sale',
-        dataIndex: 'saleUserId',
-        key: 'saleUserId',
-        type: COLUMN_TYPES.STRING,
-        render: value => {
-          if (isEmpty(value)) {
-            return <></>;
-          }
-          return <UserAvatar title="Sale" userId={value} />;
-        },
-        width: 50,
+        width: 150,
       },
       {
         title: 'Tác Vụ',
@@ -182,7 +157,6 @@ export function CustomerList() {
           dataSource={customerDataSource}
           columns={columns}
           pageSize={20}
-          locale={{ emptyText: 'Không tìm thấy khách hàng nào :(' }}
           heightOffset={0.3}
         />
       </RootContainer>

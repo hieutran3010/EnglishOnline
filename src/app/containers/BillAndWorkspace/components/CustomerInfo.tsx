@@ -139,17 +139,7 @@ const CustomerInfo = ({
           label="Địa chỉ"
           rules={billValidator.receiverAddress}
         >
-          <AutoComplete
-            fetchDataSource={customerDataSource}
-            searchPropNames={['address']}
-            displayPath="address"
-            minSearchLength={2}
-            valuePath="address"
-            placeholder="Nhập địa chỉ để tìm"
-            excludeValue={senderId}
-            onSelected={onReceiverSelectionChanged}
-            excludePath="id"
-          />
+          <Input />
         </Form.Item>
         {(!receiverId || isEmpty(receiverId)) && (
           <Form.Item

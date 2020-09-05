@@ -1,4 +1,5 @@
 import { Rule } from 'antd/lib/form';
+import { REGEX_PATTERN } from 'utils/numberFormat';
 
 type UserValidator = {
   email: Rule[];
@@ -15,7 +16,10 @@ const getUserValidator = (): UserValidator => ({
   password: [{ required: true, message: 'Chưa nhập Mật khẩu' }],
   name: [{ required: true, message: 'Chưa nhập Tên người dùng' }],
   phoneNumber: [
-    { pattern: new RegExp('^[0-9]*$'), message: 'Số điện thoại không đúng!' },
+    {
+      pattern: new RegExp(REGEX_PATTERN.PHONE),
+      message: 'Số điện thoại chỉ cho phép các ký số từ 1 tới 9',
+    },
   ],
   role: [{ required: true, message: 'Chưa chọn quyền' }],
 });

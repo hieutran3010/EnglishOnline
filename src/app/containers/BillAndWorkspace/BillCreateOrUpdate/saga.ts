@@ -8,6 +8,7 @@ import find from 'lodash/fp/find';
 import isUndefined from 'lodash/fp/isUndefined';
 import assign from 'lodash/fp/assign';
 import omit from 'lodash/fp/omit';
+import trim from 'lodash/fp/trim';
 import * as Sentry from '@sentry/react';
 
 import VendorFetcher from 'app/fetchers/vendorFetcher';
@@ -38,6 +39,7 @@ import AppParamsFetcher from 'app/fetchers/appParamsFetcher';
 import AppParam, { APP_PARAM_KEY, BillParams } from 'app/models/appParam';
 import User from 'app/models/user';
 import { SubmitBillAction } from './types';
+import { trimStart } from 'lodash';
 
 const vendorFetcher = new VendorFetcher();
 const billFetcher = new BillFetcher();
@@ -92,26 +94,25 @@ export function* submitBillTask(action: PayloadAction<Bill | any>) {
     } = billFormValues;
 
     if (isSaveSender === true && !senderId) {
-      const { senderName, senderPhone, senderAddress } = action.payload;
-
-      const sender = yield call(customerFetcher.addAsync, {
-        code: `${new Date().getTime()}`,
-        name: senderName,
-        phone: senderPhone,
-        address: senderAddress,
-      });
-      billFormValues.senderId = sender.id;
+      const { senderName, senderPhone, senderAddress } = billFormValues;
+      const sender = yield call(
+        getCustomer,
+        senderName,
+        senderPhone,
+        senderAddress,
+      );
+      billFormValues.senderId = sender ? sender.id : undefined;
     }
 
     if (isSaveReceiver === true && !receiverId) {
-      const { receiverName, receiverPhone, receiverAddress } = action.payload;
-      const receiver = yield call(customerFetcher.addAsync, {
-        code: `${new Date().getTime()}`,
-        name: receiverName,
-        phone: receiverPhone,
-        address: receiverAddress,
-      });
-      billFormValues.receiverId = receiver.id;
+      const { receiverName, receiverPhone, receiverAddress } = billFormValues;
+      const receiver = yield call(
+        getCustomer,
+        receiverName,
+        receiverPhone,
+        receiverAddress,
+      );
+      billFormValues.receiverId = receiver ? receiver.id : undefined;
     }
 
     const vendors = (yield select(selectVendors)) as Vendor[];
@@ -308,6 +309,26 @@ function* mergeBillFormWithStore(billFormValues: any) {
 
   const cachedBill = yield select(selectBill);
   return assign(cachedBill)(omit(['isPrintedVatBill'])(bill));
+}
+
+function* getCustomer(name: string, phone: string, address: string) {
+  if (isEmpty(name) || isEmpty(phone)) {
+    return undefined;
+  }
+
+  let customer = yield call(customerFetcher.queryOneAsync, {
+    query: `Phone = "${phone}"`,
+  });
+  if (!customer) {
+    const formattedName = trimStart(trim(name), '-');
+    customer = yield call(customerFetcher.addAsync, {
+      name: trim(formattedName),
+      phone,
+      address: trim(address),
+    });
+  }
+
+  return customer;
 }
 
 export function* billCreateOrUpdateSaga() {
