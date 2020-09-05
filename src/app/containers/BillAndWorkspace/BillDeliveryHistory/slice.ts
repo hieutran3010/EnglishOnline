@@ -2,6 +2,7 @@ import map from 'lodash/fp/map';
 import findIndex from 'lodash/fp/findIndex';
 import remove from 'lodash/fp/remove';
 import equals from 'lodash/fp/equals';
+import orderBy from 'lodash/fp/orderBy';
 
 import { PayloadAction } from '@reduxjs/toolkit';
 import { createSlice } from 'utils/@reduxjs/toolkit';
@@ -38,7 +39,7 @@ const billDeliveryHistorySlice = createSlice({
         histories,
       );
 
-      state.histories = newHistories;
+      state.histories = orderBy('date')('desc')(newHistories);
       state.cachedHistories = newHistories;
       state.isDirty = false;
       state.isFetchingHistories = false;

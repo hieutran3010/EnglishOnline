@@ -32,11 +32,9 @@ const DeliveryTimeline = ({
 }: Props) => {
   const groupedHistories = useMemo((): GroupedHistory[] => {
     if (!isEmpty(histories)) {
-      const orderedHistories = orderBy('date')('desc')(histories);
-
-      const groupedByDate = groupBy((bdh: BillDeliveryHistory) => bdh.date)(
-        orderedHistories,
-      );
+      const groupedByDate = groupBy((bdh: BillDeliveryHistory) =>
+        bdh.date ? moment(bdh.date).format('YYYY-MM-DD') : bdh.date,
+      )(histories);
 
       const dates = keys(groupedByDate);
       const result: GroupedHistory[] = map(
