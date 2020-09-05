@@ -158,8 +158,8 @@ const getBillValidator = (hasVat: boolean, id?: string): BillValidator => ({
   description: [{ required: true, message: 'Chưa nhập Loại hàng' }],
   destinationCountry: [{ required: true, message: 'Chưa chọn Quốc gia đến' }],
   vendorId: [{ required: true, message: 'Chưa chọn Nhà cung cấp' }],
-  weightInKg: [{ required: true, message: 'Chưa nhập Trọng lượng hàng' }],
-  salePrice: [{ required: true, message: 'Chưa nhập Giá bán' }],
+  weightInKg: [{ required: true, message: 'Chưa nhập trọng lượng hàng' }],
+  salePrice: [{ required: true, message: 'Chưa nhập giá bán' }],
   vendorOtherFee: [{ required: true, message: 'Chưa nhập Phí khác' }],
   vendorFuelChargePercent: [
     { required: true, message: 'Chưa nhập Phí nhiên liệu' },

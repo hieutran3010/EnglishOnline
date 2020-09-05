@@ -106,3 +106,18 @@ export const selectBillParams = createSelector(
   [selectDomain],
   billCreateOrUpdateState => billCreateOrUpdateState.billParams,
 );
+
+export const selectServices = createSelector(
+  [selectDomain],
+  billCreateOrUpdateState => billCreateOrUpdateState.services,
+);
+
+export const selectIsFetchingServices = createSelector(
+  [selectDomain],
+  billCreateOrUpdateState => billCreateOrUpdateState.isFetchingServices,
+);
+
+export const selectRelatedZones = createSelector(
+  [selectDomain],
+  billCreateOrUpdateState => billCreateOrUpdateState.relatedZones,
+);

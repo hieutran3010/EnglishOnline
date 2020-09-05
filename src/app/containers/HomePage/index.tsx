@@ -5,19 +5,11 @@
  *
  */
 
-import React, { useEffect, useCallback, useState, useMemo } from 'react';
-import { Route, Switch, useHistory } from 'react-router-dom';
-import {
-  TeamOutlined,
-  SmileOutlined,
-  RadarChartOutlined,
-  LaptopOutlined,
-  FileSearchOutlined,
-  FundOutlined,
-  SettingOutlined,
-} from '@ant-design/icons';
+import React, { useEffect, useCallback, useState } from 'react';
+import { Route, Switch, useHistory, Redirect } from 'react-router-dom';
 import { Spin } from 'antd';
-import filter from 'lodash/fp/filter';
+import find from 'lodash/fp/find';
+import isEmpty from 'lodash/fp/isEmpty';
 
 import { MenuItem } from 'app/components/AppNavigation/index.d';
 import { AppLayout } from 'app/components/Layout';
@@ -27,11 +19,11 @@ import { getScreenMode } from 'app/components/AppNavigation';
 import { useInjectReducer } from 'utils/redux-injectors';
 import { useSelector, useDispatch } from 'react-redux';
 
-import { VendorList } from '../Vendor/VendorList/Loadable';
-import { VendorCreation } from '../Vendor/VendorCreation/Loadable';
-import { VendorQuotation } from '../Vendor/VendorQuotation/Loadable';
-import { VendorQuotationDetail } from '../Vendor/VendorQuotationDetail/Loadable';
-import { VendorDetail } from '../Vendor/VendorDetail/Loadable';
+import { VendorList } from '../VendorAndService/VendorList/Loadable';
+import { VendorCreation } from '../VendorAndService/VendorCreation/Loadable';
+import { VendorQuotation } from '../VendorAndService/VendorQuotation/Loadable';
+import { VendorQuotationDetail } from '../VendorAndService/VendorQuotationDetail/Loadable';
+import { VendorDetail } from '../VendorAndService/VendorDetail/Loadable';
 import { CustomerList } from '../Customer/CustomerList/Loadable';
 import { CustomerCreateOrUpdatePage } from '../Customer/CustomerCreateOrUpdatePage/Loadable';
 import { Workspace } from '../BillAndWorkspace/Workspace/Loadable';
@@ -41,7 +33,6 @@ import { UserCreateOrUpdatePage } from '../Auth/UserCreateOrUpdatePage/Loadable'
 import { Login } from '../Auth/Login/Loadable';
 import { EmailVerification } from '../Auth/EmailVerification/Loadable';
 import { BillAdvanceSearch } from '../BillAndWorkspace/BillAdvanceSearch/Loadable';
-import ChildNavigation from './ChildNavigation';
 import UserNavigation from './UserNavigation';
 import { BillReport } from '../BillAndWorkspace/BillReport/Loadable';
 import { UserProfile } from '../Auth/UserProfile/Loadable';
@@ -50,56 +41,13 @@ import { reducer, actions, sliceKey } from './slice';
 import { selectScreenMode, selectCollapsedMenu } from './selectors';
 import { BillUpdating } from '../BillAndWorkspace/BillUpdating/Loadable';
 import { BillDeliveryHistoryPage } from '../BillAndWorkspace/BillDeliveryHistory/Loadable';
+import { ServiceList } from '../VendorAndService/ServiceList/Loadable';
+import { ServiceCreateOrUpdate } from '../VendorAndService/ServiceCreateOrUpdate/Loadable';
+import { useMenu } from './hooks';
+import { QuickQuotation } from '../BillAndWorkspace/QuickQuotation/Loadable';
 
 const logo = require('assets/logo.png');
 const logoSmall = require('assets/logo-compact.png');
-
-const menus: MenuItem[] = [
-  {
-    path: '/',
-    displayName: 'Bàn Làm Việc',
-    icon: <LaptopOutlined />,
-    index: 1,
-  },
-  {
-    path: '/vendors',
-    displayName: 'Quản Lý Nhà Cung Cấp',
-    icon: <RadarChartOutlined />,
-    index: 2,
-  },
-  {
-    path: '/customers',
-    displayName: 'Quản Lý Khách Hàng',
-    icon: <SmileOutlined />,
-    index: 3,
-  },
-  {
-    path: '/users',
-    displayName: 'Quản Lý Người Dùng',
-    icon: <TeamOutlined />,
-    index: 4,
-    allowRoles: [Role.ADMIN],
-  },
-  {
-    path: '/billAdvanceSearch',
-    displayName: 'Tìm kiếm Bill',
-    icon: <FileSearchOutlined />,
-    index: 5,
-  },
-  {
-    path: '/billReport',
-    displayName: 'Báo Cáo',
-    icon: <FundOutlined />,
-    index: 6,
-  },
-  {
-    path: '/setting',
-    displayName: 'Cài Đặt',
-    icon: <SettingOutlined />,
-    index: 7,
-    allowRoles: [Role.ADMIN, Role.ACCOUNTANT],
-  },
-];
 
 export function HomePage() {
   const history = useHistory();
@@ -113,13 +61,11 @@ export function HomePage() {
   const [isVerifiedAuth, setIsVerifiedAuth] = useState(false);
 
   const currentUserRole = authStorage.getRole();
-  const authorizedMenus = useMemo((): MenuItem[] => {
-    return filter(
-      (menuItem: MenuItem) =>
-        !menuItem.allowRoles ||
-        (menuItem.allowRoles && menuItem.allowRoles?.includes(currentUserRole)),
-    )(menus);
-  }, [currentUserRole]);
+  const { authorizedMenus, selectedMenuIndex, onSelectedMenuChanged } = useMenu(
+    {
+      role: currentUserRole,
+    },
+  );
 
   const onSizeChanged = useCallback(() => {
     dispatch(actions.setScreenMode(getScreenMode()));
@@ -155,8 +101,16 @@ export function HomePage() {
   }, [history]);
 
   const onRenderTopLeftMenu = useCallback(() => {
-    return <ChildNavigation />;
-  }, []);
+    const menu = find((a: MenuItem) => a.index === selectedMenuIndex)(
+      authorizedMenus,
+    );
+
+    if (menu && menu.childMenu && !isEmpty(menu.childMenu)) {
+      return menu.childMenu;
+    }
+
+    return <></>;
+  }, [authorizedMenus, selectedMenuIndex]);
 
   const onRenderUser = useCallback(() => {
     return <UserNavigation />;
@@ -208,20 +162,65 @@ export function HomePage() {
       renderTopRightComponent={onRenderUser}
       isCollapsed={collapsedMenu}
       onCollapsed={onCollapsed}
+      onSelectedMenuChanged={onSelectedMenuChanged}
+      selectedMenuKeys={[`${selectedMenuIndex}`]}
     >
       <Switch>
+        <Route exact path="/">
+          <Redirect to="/workspace" />
+        </Route>
         <Route
           breadcrumbName="Bàn Làm Việc"
           exact
-          path="/"
+          path="/workspace"
           component={Workspace}
         />
         <Route
+          breadcrumbName="Danh sách Bill trong tháng"
+          exact
+          path="/workspace/billsInMonth"
+          component={BillsInMonth}
+        />
+        <Route
+          breadcrumbName="Báo giá nhanh"
+          exact
+          path="/workspace/quickQuotation"
+          component={QuickQuotation}
+        />
+        <Route
+          breadcrumbName="NCC & Dịch Vụ"
+          exact
+          path="/vendors-and-services"
+        >
+          <Redirect to="/vendors-and-services/vendors" />
+        </Route>
+        <Route
           breadcrumbName="Quản lý Nhà Cung Cấp"
           exact
-          path="/vendors"
+          path="/vendors-and-services/vendors"
           component={VendorList}
         />
+        <Route
+          breadcrumbName="Quản lý Dịch Vụ"
+          exact
+          path="/vendors-and-services/services"
+          component={ServiceList}
+        />
+
+        <Route
+          breadcrumbName="Thêm dịch vụ mới"
+          exact
+          path="/serviceCreation"
+          component={ServiceCreateOrUpdate}
+        />
+
+        <Route
+          breadcrumbName="Cập nhật dịch vụ"
+          exact
+          path="/serviceUpdating/:serviceId"
+          component={ServiceCreateOrUpdate}
+        />
+
         <Route
           breadcrumbName="Thêm nhà cung cấp mới"
           exact
@@ -231,7 +230,7 @@ export function HomePage() {
         <Route
           breadcrumbName="Cập nhật thông tin Nhà cung cấp"
           exact
-          path="/vendorCreation/:vendorId"
+          path="/vendorUpdating/:vendorId"
           component={VendorCreation}
         />
         <Route
@@ -269,13 +268,6 @@ export function HomePage() {
           exact
           path="/customerUpdating/:customerId"
           component={CustomerCreateOrUpdatePage}
-        />
-
-        <Route
-          breadcrumbName="Danh sách Bill trong tháng"
-          exact
-          path="/billsInMonth"
-          component={BillsInMonth}
         />
 
         <Route

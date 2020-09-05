@@ -85,6 +85,7 @@ const WorkingBills = ({
         'senderName',
         'senderPhone',
       ]}
+      pageSize={50}
     />
   );
 };

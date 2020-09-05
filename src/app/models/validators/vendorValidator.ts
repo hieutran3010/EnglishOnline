@@ -4,6 +4,7 @@ import { Rule } from 'antd/lib/form';
 
 import VendorFetcher from 'app/fetchers/vendorFetcher';
 import { REGEX_PATTERN } from 'utils/numberFormat';
+import trim from 'lodash/fp/trim';
 
 const vendorFetcher = new VendorFetcher();
 
@@ -15,7 +16,7 @@ const isValidVendorName = (vendorId?: string) => async (
     return Promise.resolve();
   }
 
-  let query = `Name.ToLower() == "${toLower(value)}"`;
+  let query = `Name.ToLower() == "${toLower(trim(value))}"`;
   if (vendorId && !isEmpty(vendorId)) {
     query = `${query} and Id != "${vendorId}"`;
   }

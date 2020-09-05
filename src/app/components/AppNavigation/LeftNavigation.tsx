@@ -8,8 +8,15 @@ interface LeftNavigation {
   isCollapsed: boolean;
   menus: MenuItem[];
   appName?: string;
+  onSelectedMenuChanged?: (index: number) => void;
+  selectedMenuKeys?: string[];
 }
-const LeftNavigation = ({ isCollapsed, menus }: LeftNavigation) => {
+const LeftNavigation = ({
+  isCollapsed,
+  menus,
+  onSelectedMenuChanged,
+  selectedMenuKeys,
+}: LeftNavigation) => {
   return (
     <Sider
       trigger={null}
@@ -23,7 +30,11 @@ const LeftNavigation = ({ isCollapsed, menus }: LeftNavigation) => {
         position: 'fixed',
       }}
     >
-      <Menu items={menus} />
+      <Menu
+        items={menus}
+        onSelectedMenuChanged={onSelectedMenuChanged}
+        selectedMenuKeys={selectedMenuKeys}
+      />
     </Sider>
   );
 };

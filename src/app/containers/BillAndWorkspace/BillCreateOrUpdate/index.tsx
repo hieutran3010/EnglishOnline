@@ -17,6 +17,7 @@ import {
   Modal,
   Checkbox,
 } from 'antd';
+import { toast } from 'react-toastify';
 import { CheckOutlined } from '@ant-design/icons';
 import toNumber from 'lodash/fp/toNumber';
 import find from 'lodash/fp/find';
@@ -26,6 +27,10 @@ import some from 'lodash/fp/some';
 import toString from 'lodash/fp/toString';
 import isUndefined from 'lodash/fp/isUndefined';
 import isNil from 'lodash/fp/isNil';
+import size from 'lodash/fp/size';
+import head from 'lodash/fp/head';
+import { SagaInjectionModes } from 'redux-injectors';
+import { useInjectReducer, useInjectSaga } from 'utils/redux-injectors';
 
 import type Customer from 'app/models/customer';
 import type Vendor from 'app/models/vendor';
@@ -36,8 +41,25 @@ import {
 import getBillValidator from 'app/models/validators/billValidator';
 import { authStorage, authorizeHelper } from 'app/services/auth';
 import { Role } from 'app/models/user';
-import { showConfirm } from 'app/components/Modal/utils';
+import Bill, {
+  BILL_STATUS,
+  PAYMENT_TYPE,
+  PurchasePriceInfo,
+} from 'app/models/bill';
+import Zone from 'app/models/zone';
 
+import { getMarginLeft } from 'app/components/Layout/AppLayout';
+import { ScreenMode } from 'app/components/AppNavigation';
+import { showConfirm } from 'app/components/Modal/utils';
+import {
+  selectScreenMode,
+  selectCollapsedMenu,
+} from 'app/containers/HomePage/selectors';
+import { ZONE_VENDOR_ASSOCIATION_SEPARATOR } from 'app/containers/VendorAndService/constants';
+
+import { reducer, sliceKey } from './slice';
+import { billCreateOrUpdateSaga } from './saga';
+import { SubmitBillAction } from './types';
 import { actions } from './slice';
 import {
   selectVendors,
@@ -59,32 +81,17 @@ import {
   selectBillStatus,
   selectSenderId,
   selectReceiverId,
+  selectServices,
+  selectRelatedZones,
 } from './selectors';
+import BillQuotationModal from '../components/BillQuotationModal';
 import { StyledDateAndAssigneeContainer } from '../components/styles';
 import FeeAndPrice from '../components/FeeAndPrice';
 import PackageInfo from '../components/PackageInfo';
 import CustomerInfo from '../components/CustomerInfo';
 import ResponsibilityEmp from '../components/ResponsibilityEmp';
-import Bill, {
-  BILL_STATUS,
-  PAYMENT_TYPE,
-  PurchasePriceInfo,
-} from 'app/models/bill';
 import BillStatusTag from '../components/BillStatusTag';
 import Payment from '../components/Payment';
-import { useInjectReducer, useInjectSaga } from 'utils/redux-injectors';
-import { reducer, sliceKey } from './slice';
-import { billCreateOrUpdateSaga } from './saga';
-import { toast } from 'react-toastify';
-import { SagaInjectionModes } from 'redux-injectors';
-import { getMarginLeft } from 'app/components/Layout/AppLayout';
-import { ScreenMode } from 'app/components/AppNavigation';
-import {
-  selectScreenMode,
-  selectCollapsedMenu,
-} from 'app/containers/HomePage/selectors';
-import { SubmitBillAction } from './types';
-import BillQuotationModal from '../components/BillQuotationModal';
 
 const { Text } = Typography;
 
@@ -124,6 +131,10 @@ const countPurchasePriceWarningConfig = {
       <Space>
         <CheckOutlined style={{ marginBottom: 6 }} />
         <Text>Nước Đến</Text>
+      </Space>
+      <Space>
+        <CheckOutlined style={{ marginBottom: 6 }} />
+        <Text>Dịch Vụ</Text>
       </Space>
       <Space>
         <CheckOutlined style={{ marginBottom: 6 }} />
@@ -227,6 +238,9 @@ export const BillCreateOrUpdate = memo(
     const screenMode = useSelector(selectScreenMode);
     const collapsedMenu = useSelector(selectCollapsedMenu);
 
+    const services = useSelector(selectServices);
+    const relatedZones = useSelector(selectRelatedZones);
+
     const isBusy =
       isSubmitting ||
       isFinalBill ||
@@ -254,6 +268,7 @@ export const BillCreateOrUpdate = memo(
         dispatch(actions.fetchVendor());
         dispatch(actions.fetchResponsibilityUsers());
         dispatch(actions.fetchBillParams());
+
         if (!isEmpty(inputBill.id) && !isEmpty(inputBill.vendorId)) {
           dispatch(actions.fetchVendorCountries(inputBill.vendorId));
         }
@@ -318,7 +333,28 @@ export const BillCreateOrUpdate = memo(
           usdExchangeRate: billParams.usdExchangeRate || 0,
         });
       }
-    }, [billForm, billParams.usdExchangeRate, inputBill.id]);
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [billParams.usdExchangeRate, inputBill.id]);
+
+    useEffect(() => {
+      if (size(relatedZones) === 1) {
+        const z = head(relatedZones) as Zone;
+        if (z.name.includes(ZONE_VENDOR_ASSOCIATION_SEPARATOR)) {
+          const [serviceName] = z.name.split(ZONE_VENDOR_ASSOCIATION_SEPARATOR);
+          billForm.setFieldsValue({ internationalParcelVendor: serviceName });
+        }
+      }
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [relatedZones]);
+
+    useEffect(() => {
+      if (purchasePriceInfo) {
+        billForm.setFieldsValue({
+          vendorPaymentDebt: purchasePriceInfo.purchasePriceAfterVatInVnd,
+        });
+      }
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [purchasePriceInfo.purchasePriceAfterVatInVnd]);
 
     const getBillData = useCallback(() => {
       const bill = billForm.getFieldsValue();
@@ -358,7 +394,17 @@ export const BillCreateOrUpdate = memo(
         const vendor = find((v: Vendor) => v.id === vendorId)(vendors);
         if (vendor) {
           const { id } = vendor;
+          const destinationCountry = billForm.getFieldValue(
+            'destinationCountry',
+          );
           dispatch(actions.fetchVendorCountries(id));
+          dispatch(actions.fetchServices(id));
+          dispatch(
+            actions.fetchRelatedZones({
+              vendorId,
+              destinationCountry,
+            }),
+          );
 
           updateBillFormData({
             vendorOtherFee: vendor.otherFeeInUsd,
@@ -366,7 +412,21 @@ export const BillCreateOrUpdate = memo(
           });
         }
       },
+      // eslint-disable-next-line react-hooks/exhaustive-deps
       [dispatch, updateBillFormData, vendors],
+    );
+
+    const onSelectedCountryChanged = useCallback(
+      (country?: string) => {
+        const vendorId = billForm.getFieldValue('vendorId');
+        dispatch(
+          actions.fetchRelatedZones({
+            vendorId,
+            destinationCountry: country,
+          }),
+        );
+      },
+      [billForm, dispatch],
     );
 
     const onSenderSelectionChanged = useCallback(
@@ -499,8 +559,14 @@ export const BillCreateOrUpdate = memo(
     const onCalculatePurchasePrice = useCallback(() => {
       const billData = getBillData();
 
-      const { destinationCountry, weightInKg, usdExchangeRate } = billData;
+      const {
+        destinationCountry,
+        weightInKg,
+        usdExchangeRate,
+        internationalParcelVendor,
+      } = billData;
       if (
+        isEmpty(internationalParcelVendor) ||
         isEmpty(destinationCountry) ||
         isUndefined(weightInKg) ||
         isNil(weightInKg) ||
@@ -512,16 +578,25 @@ export const BillCreateOrUpdate = memo(
         return;
       }
 
+      const isGetLatestQuotation =
+        isNil(purchasePriceInfo.billQuotations) ||
+        isEmpty(purchasePriceInfo.billQuotations) ||
+        shouldCountPurchasePriceWithLatestQuotation;
       dispatch(
         actions.calculatePurchasePrice({
           billForm: billData,
-          isGetLatestQuotation: shouldCountPurchasePriceWithLatestQuotation,
+          isGetLatestQuotation,
         }),
       );
       setShouldRecalculatePurchasePrice(false);
       setIsDirty(true);
       setShouldCountPurchasePriceWithLatestQuotation(false);
-    }, [dispatch, getBillData, shouldCountPurchasePriceWithLatestQuotation]);
+    }, [
+      dispatch,
+      getBillData,
+      purchasePriceInfo.billQuotations,
+      shouldCountPurchasePriceWithLatestQuotation,
+    ]);
 
     const onFinalBill = useCallback(async () => {
       const submitParams = await getSubmitActionParams();
@@ -733,6 +808,7 @@ export const BillCreateOrUpdate = memo(
             isFetchingVendors={isFetchingVendors}
             vendors={vendors}
             onVendorSelectionChanged={onVendorSelectionChanged}
+            onSelectedCountryChanged={onSelectedCountryChanged}
             billValidator={billValidator}
             vendorCountries={vendorCountries}
             userRole={role}
@@ -744,6 +820,8 @@ export const BillCreateOrUpdate = memo(
             purchasePriceInUsd={purchasePriceInfo.purchasePriceInUsd || 0}
             billQuotations={purchasePriceInfo.billQuotations}
             isUseLatestQuotation={shouldCountPurchasePriceWithLatestQuotation}
+            services={services}
+            relatedZones={relatedZones}
           />
 
           <FeeAndPrice

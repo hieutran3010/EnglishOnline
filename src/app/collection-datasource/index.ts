@@ -4,9 +4,14 @@ import CustomerFetcher from 'app/fetchers/customerFetcher';
 import BillFetcher from 'app/fetchers/billFetcher';
 import BillDescriptionFetcher from 'app/fetchers/billDescriptionFetcher';
 import GraphQLDataSource from './graphql';
+import ParcelServiceFetcher, {
+  ParcelServiceZoneFetcher,
+} from 'app/fetchers/parcelServiceFetcher';
 
 export enum FETCHER_KEY {
   VENDOR,
+  PARCEL_SERVICE,
+  PARCEL_SERVICE_ZONE,
   ZONE,
   CUSTOMER,
   BILL,
@@ -17,6 +22,12 @@ const getDataSource = (fetcherKey: FETCHER_KEY, extendFields?: string[]) => {
   switch (fetcherKey) {
     case FETCHER_KEY.VENDOR: {
       return new GraphQLDataSource(new VendorFetcher());
+    }
+    case FETCHER_KEY.PARCEL_SERVICE: {
+      return new GraphQLDataSource(new ParcelServiceFetcher());
+    }
+    case FETCHER_KEY.PARCEL_SERVICE_ZONE: {
+      return new GraphQLDataSource(new ParcelServiceZoneFetcher());
     }
     case FETCHER_KEY.ZONE: {
       return new GraphQLDataSource(new ZoneFetcher());

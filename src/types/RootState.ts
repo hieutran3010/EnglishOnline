@@ -1,7 +1,7 @@
-import { VendorCreationState } from 'app/containers/Vendor/VendorCreation/types';
-import { VendorQuotationState } from 'app/containers/Vendor/VendorQuotation/types';
-import { VendorQuotationDetailState } from 'app/containers/Vendor/VendorQuotationDetail/types';
-import { VendorDetailState } from 'app/containers/Vendor/VendorDetail/types';
+import { VendorCreationState } from 'app/containers/VendorAndService/VendorCreation/types';
+import { VendorQuotationState } from 'app/containers/VendorAndService/VendorQuotation/types';
+import { VendorQuotationDetailState } from 'app/containers/VendorAndService/VendorQuotationDetail/types';
+import { VendorDetailState } from 'app/containers/VendorAndService/VendorDetail/types';
 import { CustomerCreateOrUpdatePageState } from 'app/containers/Customer/CustomerCreateOrUpdatePage/types';
 import { WorkspaceState } from 'app/containers/BillAndWorkspace/Workspace/types';
 import { BillAdvanceSearchState } from 'app/containers/BillAndWorkspace/BillAdvanceSearch/types';
@@ -18,6 +18,9 @@ import { BillCreateOrUpdateState } from 'app/containers/BillAndWorkspace/BillCre
 import { BillUpdatingState } from 'app/containers/BillAndWorkspace/BillUpdating/types';
 import { BillDeliveryHistoryState } from 'app/containers/BillAndWorkspace/BillDeliveryHistory/types';
 import { BillViewState } from 'app/containers/BillAndWorkspace/BillViewPage/types';
+import { ServiceListState } from 'app/containers/VendorAndService/ServiceList/types';
+import { ServiceCreateOrUpdateState } from 'app/containers/VendorAndService/ServiceCreateOrUpdate/types';
+import { QuickQuotationState } from 'app/containers/BillAndWorkspace/QuickQuotation/types';
 // [IMPORT NEW CONTAINERSTATE ABOVE] < Needed for generating containers seamlessly
 
 /* 
@@ -45,5 +48,8 @@ export interface RootState {
   billUpdating?: BillUpdatingState;
   billDeliveryHistory?: BillDeliveryHistoryState;
   billView?: BillViewState;
+  serviceList?: ServiceListState;
+  serviceCreateOrUpdate?: ServiceCreateOrUpdateState;
+  quickQuotation?: QuickQuotationState;
   // [INSERT NEW REDUCER KEY ABOVE] < Needed for generating containers seamlessly
 }

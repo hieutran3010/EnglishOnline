@@ -17,10 +17,10 @@ export enum PAYMENT_TYPE {
 
 export enum PARCEL_VENDOR {
   DHL_VN = 'DHL VN',
-  DHL_SING = 'DHL SING',
+  DHL_SING = 'DHL Sing',
   UPS = 'UPS',
   TNT = 'TNT',
-  FEDEX = 'FEDEX',
+  FEDEX = 'Fedex',
 }
 
 export class PurchasePriceInfo {

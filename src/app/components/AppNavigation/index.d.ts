@@ -7,4 +7,6 @@ export declare interface MenuItem {
   path: string;
   displayName: string;
   allowRoles?: Role[];
+  activePaths?: string[];
+  childMenu?: ReactElement;
 }

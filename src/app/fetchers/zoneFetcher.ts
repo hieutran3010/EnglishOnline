@@ -7,4 +7,23 @@ export default class ZoneFetcher extends GraphQLFetcherBase<Zone> {
   constructor() {
     super('Zone', () => this.selectFields);
   }
+
+  getZoneByVendorAndCountry = (
+    vendorId: string,
+    destinationCountry: string,
+  ): Promise<Zone> => {
+    return this.executeAsync(
+      'getZoneByVendorAndCountry',
+      `query($vendorId: GUID!, $destinationCountry: String!) {
+        zone {
+          getZoneByVendorAndCountry(vendorId: $vendorId, destinationCountry: $destinationCountry) {
+              id
+              name
+              countries
+            }
+        }
+      }`,
+      { vendorId, destinationCountry },
+    );
+  };
 }
