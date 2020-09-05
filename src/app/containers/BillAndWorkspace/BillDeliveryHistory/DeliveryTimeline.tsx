@@ -48,7 +48,7 @@ const DeliveryTimeline = ({
             groupedKey !== 'undefined';
           const date = isValidDate
             ? moment(groupedKey).format('DD-MM-YYYY')
-            : null;
+            : undefined;
 
           const historyValues = orderBy('time')('desc')(
             values,
@@ -57,7 +57,7 @@ const DeliveryTimeline = ({
           return {
             date,
             histories: historyValues,
-            rawDate: isValidDate ? groupedKey : undefined,
+            rawDate: isValidDate ? moment(groupedKey) : undefined,
           };
         },
       )(dates);
@@ -137,7 +137,7 @@ const DeliveryTimeline = ({
                       <div style={{ display: 'flex', alignItems: 'center' }}>
                         {time && (
                           <Text strong style={{ marginRight: 5 }}>
-                            {moment(time).format('HH:mm')}:
+                            {moment(time).format('HH:mm:ss')}:
                           </Text>
                         )}
                         <Text style={{ marginRight: 5 }}>{status}</Text>

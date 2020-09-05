@@ -3,6 +3,7 @@ import findIndex from 'lodash/fp/findIndex';
 import remove from 'lodash/fp/remove';
 import equals from 'lodash/fp/equals';
 import orderBy from 'lodash/fp/orderBy';
+import moment from 'moment';
 
 import { PayloadAction } from '@reduxjs/toolkit';
 import { createSlice } from 'utils/@reduxjs/toolkit';
@@ -39,7 +40,10 @@ const billDeliveryHistorySlice = createSlice({
         histories,
       );
 
-      state.histories = orderBy('date')('desc')(newHistories);
+      state.histories = orderBy((his: BillDeliveryHistory) =>
+        his.date ? moment(his.date).format('YYYY-MM-DD') : his.date,
+      )('desc')(newHistories);
+
       state.cachedHistories = newHistories;
       state.isDirty = false;
       state.isFetchingHistories = false;
@@ -48,19 +52,12 @@ const billDeliveryHistorySlice = createSlice({
     },
 
     addNew(state, action: PayloadAction<any>) {
-      const { date } = action.payload;
       const newHistory = new BillDeliveryHistory(action.payload);
-      if (date) {
-        newHistory.date = new Date(
-          date.year(),
-          date.month(),
-          date.date(),
-          0,
-          0,
-          0,
-        );
-      }
       state.histories.push(newHistory);
+      state.histories = orderBy((his: BillDeliveryHistory) =>
+        his.date ? moment(his.date).format('YYYY-MM-DD') : his.date,
+      )('desc')(state.histories);
+
       checkIsDirty(state);
     },
 
@@ -71,16 +68,6 @@ const billDeliveryHistorySlice = createSlice({
       )(state.histories);
 
       if (existedIndex >= 0) {
-        if (history.date) {
-          history.date = new Date(
-            history.date.year(),
-            history.date.month(),
-            history.date.date(),
-            0,
-            0,
-            0,
-          );
-        }
         state.histories.splice(existedIndex, 1, history);
         checkIsDirty(state);
       }

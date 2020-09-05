@@ -1,4 +1,5 @@
 import React, { memo, useCallback, useEffect } from 'react';
+import moment from 'moment';
 import {
   Modal,
   Form,
@@ -9,8 +10,6 @@ import {
   TimePicker,
 } from 'antd';
 import { BillDeliveryHistory } from 'app/models/bill';
-import moment from 'moment';
-import { isNil } from 'lodash';
 
 const { Text } = Typography;
 
@@ -36,14 +35,15 @@ const DeliveryHistoryModal = ({
     if (selectedHistory) {
       const { date, time, status } = selectedHistory;
       form.setFieldsValue({
-        date: !isNil(date) ? moment(date) : undefined,
-        time: !isNil(time) ? moment(time) : undefined,
+        date,
+        time,
         status,
       });
     } else {
       form.setFieldsValue({
         date: moment(),
         time: moment(),
+        status: undefined,
       });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
