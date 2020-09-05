@@ -7,8 +7,8 @@ export const showConfirm = (message: string, onOk?, onCancel?) => {
     title: 'Xác Nhận',
     icon: <ExclamationCircleOutlined />,
     content: message,
-    okText: 'Ok',
-    cancelText: 'Hủy',
+    okText: 'OK',
+    cancelText: 'Đóng',
     onOk,
     onCancel,
   });

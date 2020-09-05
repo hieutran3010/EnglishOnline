@@ -17,6 +17,7 @@ import { HomepageState } from 'app/containers/HomePage/types';
 import { BillCreateOrUpdateState } from 'app/containers/BillAndWorkspace/BillCreateOrUpdate/types';
 import { BillUpdatingState } from 'app/containers/BillAndWorkspace/BillUpdating/types';
 import { BillDeliveryHistoryState } from 'app/containers/BillAndWorkspace/BillDeliveryHistory/types';
+import { BillViewState } from 'app/containers/BillAndWorkspace/BillViewPage/types';
 // [IMPORT NEW CONTAINERSTATE ABOVE] < Needed for generating containers seamlessly
 
 /* 
@@ -43,5 +44,6 @@ export interface RootState {
   billCreateOrUpdate?: BillCreateOrUpdateState;
   billUpdating?: BillUpdatingState;
   billDeliveryHistory?: BillDeliveryHistoryState;
+  billView?: BillViewState;
   // [INSERT NEW REDUCER KEY ABOVE] < Needed for generating containers seamlessly
 }

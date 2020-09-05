@@ -18,14 +18,10 @@ import { useInjectReducer, useInjectSaga } from 'utils/redux-injectors';
 
 import { actions, reducer, sliceKey } from './slice';
 import { billsInMonthSaga } from './saga';
-import {
-  selectNeedToReload,
-  selectSelectedMonth,
-  selectIsViewArchivedBills,
-} from './selectors';
+import { selectSelectedMonth, selectIsViewArchivedBills } from './selectors';
 import BillList from '../components/BillList';
-import type Bill from 'app/models/bill';
 import { toFullString } from 'utils/numberFormat';
+import { useBillView } from '../BillViewPage/hook';
 
 const { Text } = Typography;
 const { Option } = Select;
@@ -33,11 +29,11 @@ const { Option } = Select;
 export const BillsInMonth = memo(() => {
   useInjectReducer({ key: sliceKey, reducer });
   useInjectSaga({ key: sliceKey, saga: billsInMonthSaga });
+  useBillView();
 
   const user = authStorage.getUser();
   const dispatch = useDispatch();
 
-  const needToReload = useSelector(selectNeedToReload);
   const selectedMonth = useSelector(selectSelectedMonth);
   const isViewArchivedBills = useSelector(selectIsViewArchivedBills);
 
@@ -70,62 +66,15 @@ export const BillsInMonth = memo(() => {
   }, [getQuery]);
 
   useEffect(() => {
-    if (needToReload) {
-      billDataSource.onReloadData();
-      dispatch(actions.setNeedToReload(false));
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [needToReload]);
-
-  useEffect(() => {
     billDataSource.onReloadData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isViewArchivedBills, selectedMonth]);
-
-  const onArchiveBill = useCallback(
-    (billId: string) => {
-      dispatch(actions.archivedBill(billId));
-    },
-    [dispatch],
-  );
 
   const onViewArchivedBillChanged = useCallback(
     checked => {
       dispatch(actions.setIsViewArchivedBills(checked));
     },
     [dispatch],
-  );
-
-  const onCheckPrintedVat = useCallback(
-    (bill: Bill) => {
-      dispatch(actions.checkPrintedVatBill(bill));
-    },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [],
-  );
-
-  const onRestoreArchivedBill = useCallback(
-    (billId: string) => {
-      dispatch(actions.restoreArchivedBill(billId));
-    },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [],
-  );
-
-  const onReturnFinalBillToAccountant = useCallback(
-    (billId: string) => {
-      dispatch(actions.returnFinalBillToAccountant(billId));
-    },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [],
-  );
-
-  const onForceDeleteBill = useCallback(
-    (billId: string) => {
-      dispatch(actions.forceDeleteBill(billId));
-    },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [],
   );
 
   const onMonthChanged = useCallback(
@@ -158,7 +107,7 @@ export const BillsInMonth = memo(() => {
       title={
         <Space>
           <Text>Danh sách Bill tháng</Text>
-          <Select value={selectedMonth} onChange={onMonthChanged}>
+          <Select size="small" value={selectedMonth} onChange={onMonthChanged}>
             {months}
           </Select>
           <Text>/</Text>
@@ -172,14 +121,7 @@ export const BillsInMonth = memo(() => {
         onChange={onViewArchivedBillChanged}
         style={{ marginBottom: 10, marginLeft: 10 }}
       ></Switch>
-      <BillList
-        billDataSource={billDataSource}
-        onArchiveBill={onArchiveBill}
-        onPrintedVatBill={onCheckPrintedVat}
-        onRestoreArchivedBill={onRestoreArchivedBill}
-        onReturnFinalBillToAccountant={onReturnFinalBillToAccountant}
-        onForceDeleteBill={onForceDeleteBill}
-      />
+      <BillList billDataSource={billDataSource} />
     </ContentContainer>
   );
 });
