@@ -90,14 +90,18 @@ const DefaultAutoComplete = React.forwardRef(
         const data = await fetchDataSource.queryManyAsync(queryParams, true);
         if (!isEmpty(data)) {
           setItems(data);
-          // if (size(data) === 1) {
-          //   onSelected && onSelected(head(data));
-          // }
+          if (size(data) === 1) {
+            const uniqueData = head(data);
+            const val = get(valuePath)(uniqueData) || uniqueData;
+            if (val === searchKey) {
+              onSelected && onSelected(head(data));
+            }
+          }
         } else {
           setItems([]);
         }
       },
-      [fetchDataSource, pageSize, searchPropNames],
+      [fetchDataSource, onSelected, pageSize, searchPropNames, valuePath],
     );
 
     const onSearchChange = useCallback(

@@ -7,7 +7,6 @@ import { AutoComplete } from 'app/components/collection/AutoComplete';
 import { BillValidator } from 'app/models/validators/billValidator';
 import getDataSource, { FETCHER_KEY } from 'app/collection-datasource';
 import type Customer from 'app/models/customer';
-import { REGEX_PATTERN } from 'utils/numberFormat';
 
 import {
   StyledCustomerContainer,
