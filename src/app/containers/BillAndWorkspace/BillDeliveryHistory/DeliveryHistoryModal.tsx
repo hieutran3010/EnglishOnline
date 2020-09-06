@@ -1,8 +1,15 @@
 import React, { memo, useCallback, useEffect } from 'react';
-import { Modal, Form, DatePicker, Input, Space, Typography } from 'antd';
-import { BillDeliveryHistory } from 'app/models/bill';
 import moment from 'moment';
-import { isNil } from 'lodash';
+import {
+  Modal,
+  Form,
+  DatePicker,
+  Input,
+  Space,
+  Typography,
+  TimePicker,
+} from 'antd';
+import { BillDeliveryHistory } from 'app/models/bill';
 
 const { Text } = Typography;
 
@@ -24,20 +31,27 @@ const DeliveryHistoryModal = ({
 }: Props) => {
   const [form] = Form.useForm();
 
-  const { date, time, status } = selectedHistory || {};
-
   useEffect(() => {
-    form.setFieldsValue({
-      date: !isNil(date) ? moment(date) : undefined,
-      time,
-      status,
-    });
-  }, [date, form, selectedHistory, status, time]);
+    if (selectedHistory) {
+      const { date, time, status } = selectedHistory;
+      form.setFieldsValue({
+        date,
+        time,
+        status,
+      });
+    } else {
+      form.setFieldsValue({
+        date: moment(),
+        time: moment(),
+        status: undefined,
+      });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedHistory]);
 
   const _onClose = useCallback(() => {
-    form.resetFields();
     onClose();
-  }, [form, onClose]);
+  }, [onClose]);
 
   const onSubmit = useCallback(
     formData => {
@@ -79,7 +93,7 @@ const DeliveryHistoryModal = ({
           <DatePicker format="DD-MM-YYYY" />
         </Form.Item>
         <Form.Item label="Giờ" name="time">
-          <DatePicker picker="time" format="HH:mm" />
+          <TimePicker format="HH:mm" />
         </Form.Item>
         <Form.Item
           label="Tình trạng"

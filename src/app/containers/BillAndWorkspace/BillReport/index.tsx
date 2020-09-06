@@ -18,7 +18,7 @@ import {
   Descriptions,
   Alert,
   Typography,
-  Badge,
+  Tag,
 } from 'antd';
 
 import isEmpty from 'lodash/fp/isEmpty';
@@ -28,7 +28,7 @@ import isNil from 'lodash/fp/isNil';
 import { useInjectReducer, useInjectSaga } from 'utils/redux-injectors';
 import getDataSource, { FETCHER_KEY } from 'app/collection-datasource';
 import { authStorage, authorizeHelper } from 'app/services/auth';
-import { Role } from 'app/models/user';
+import User, { Role } from 'app/models/user';
 import { QueryCriteria } from 'app/components/collection/types';
 import { GRAPHQL_QUERY_OPERATOR } from 'app/collection-datasource/graphql/constants';
 import { parseQueryCriteriaToGraphQLDoorQuery } from 'app/collection-datasource/graphql/utils';
@@ -61,6 +61,7 @@ import {
   selectIsFetchingTotalRawProfit,
   selectTotalFinalBill,
   selectIsFetchingTotalFinalBill,
+  selectDateRange,
 } from './selectors';
 import BillList from '../components/BillList';
 import BillStatistic, { BillStatisticProps } from './BillStatistic';
@@ -68,6 +69,7 @@ import VendorGroupingTable from './VendorGroupingTable';
 import SenderGroupingTable from './SenderGroupingTable';
 import { getDefaultReportQueryCriteria, getAdminCols } from './utils';
 import { EXPORT_SESSION_STATUS } from 'app/models/exportSession';
+import { useBillView } from '../BillViewPage/hook';
 
 const { Text } = Typography;
 
@@ -77,10 +79,36 @@ enum BillListType {
   GroupByCustomer,
 }
 
+const getQuery = (user: User, dateRange: any[]) => {
+  const criteria: QueryCriteria[] = getDefaultReportQueryCriteria(dateRange);
+
+  switch (user.role) {
+    case Role.SALE: {
+      criteria.push({
+        field: 'SaleUserId',
+        operator: GRAPHQL_QUERY_OPERATOR.EQUALS,
+        value: user.id,
+      });
+      break;
+    }
+    case Role.LICENSE: {
+      criteria.push({
+        field: 'LicenseUserId',
+        operator: GRAPHQL_QUERY_OPERATOR.EQUALS,
+        value: user.id,
+      });
+    }
+  }
+
+  return parseQueryCriteriaToGraphQLDoorQuery(criteria);
+};
+
 interface Props {}
 export const BillReport = memo((props: Props) => {
   useInjectReducer({ key: sliceKey, reducer });
   useInjectSaga({ key: sliceKey, saga: billReportSaga });
+  useBillView();
+
   const dispatch = useDispatch();
   const [filterForm] = Form.useForm();
 
@@ -89,9 +117,10 @@ export const BillReport = memo((props: Props) => {
     BillListType.Normal,
   );
   const [isFilterError, setIsFilterError] = useState(false);
-  const [dateRange, setDateRange] = useState<any[]>([]);
 
   const user = authStorage.getUser();
+
+  const dateRange = useSelector(selectDateRange);
 
   const totalSalePrice = useSelector(selectTotalSalePriceOfSale);
   const isFetchingTotalSalePrice = useSelector(selectIsFetchingTotalSalePrice);
@@ -143,7 +172,7 @@ export const BillReport = memo((props: Props) => {
   }, [dispatch]);
 
   useEffect(() => {
-    if (user.role === Role.ADMIN) {
+    if (user.role === Role.ADMIN || user.role === Role.ACCOUNTANT) {
       dispatch(actions.checkExportSession(user.id));
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -167,46 +196,35 @@ export const BillReport = memo((props: Props) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [billExportStatus]);
 
-  const getQuery = useCallback(
-    (dateRange: any[]) => {
-      const criteria: QueryCriteria[] = getDefaultReportQueryCriteria(
-        dateRange,
-      );
-
-      switch (user.role) {
-        case Role.SALE: {
-          criteria.push({
-            field: 'SaleUserId',
-            operator: GRAPHQL_QUERY_OPERATOR.EQUALS,
-            value: user.id,
-          });
-          break;
-        }
-        case Role.LICENSE: {
-          criteria.push({
-            field: 'LicenseUserId',
-            operator: GRAPHQL_QUERY_OPERATOR.EQUALS,
-            value: user.id,
-          });
-        }
-      }
-
-      return parseQueryCriteriaToGraphQLDoorQuery(criteria);
-    },
-    [user.id, user.role],
-  );
-
   const billDataSource = useMemo(() => {
     const billDataSource = getDataSource(FETCHER_KEY.BILL);
     billDataSource.orderByFields = 'date descending';
-    billDataSource.query = getQuery([]);
+    billDataSource.query = getQuery(user, dateRange);
 
     return billDataSource;
-  }, [getQuery]);
+  }, [dateRange, user]);
 
   useEffect(() => {
-    if (adminBillListType !== BillListType.Normal) {
-      const query = getQuery(dateRange);
+    if (isEmpty(dateRange)) {
+      setIsReset(true);
+    } else {
+      filterForm.setFieldsValue({
+        fromDate: dateRange[0],
+        toDate: dateRange[1],
+      });
+      const query = getQuery(user, dateRange);
+      refreshBillList(query);
+      loadStatistic(query);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [dateRange]);
+
+  useEffect(() => {
+    if (
+      adminBillListType !== BillListType.Normal &&
+      (isEmpty(billsVendorGrouping) || isEmpty(billsCustomerGrouping))
+    ) {
+      const query = getQuery(user, dateRange);
       refreshBillList(query);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -242,40 +260,44 @@ export const BillReport = memo((props: Props) => {
     [adminBillListType, billDataSource, dispatch],
   );
 
+  const loadStatistic = useCallback(
+    (query: string) => {
+      setIsReset(false);
+
+      dispatch(actions.fetchTotalBillCount(query));
+
+      switch (user.role) {
+        case Role.SALE: {
+          dispatch(actions.fetchTotalSalePrice(query));
+          break;
+        }
+        case Role.ADMIN: {
+          dispatch(actions.fetchTotalRevenue(query));
+          dispatch(actions.fetchCustomerDebt(query));
+          dispatch(actions.fetchVendorDebt(query));
+          dispatch(actions.fetchProfit(query));
+          dispatch(actions.fetchRawProfit(query));
+          dispatch(actions.fetchTotalFinalBill(query));
+          break;
+        }
+        case Role.ACCOUNTANT: {
+          dispatch(actions.fetchCustomerDebt(query));
+          dispatch(actions.fetchVendorDebt(query));
+          dispatch(actions.fetchTotalFinalBill(query));
+          break;
+        }
+      }
+    },
+    [dispatch, user],
+  );
+
   const onSubmitReport = useCallback(() => {
     setIsFilterError(false);
 
     const _dateRange = getFilter();
 
-    setDateRange(_dateRange || []);
-    const query = getQuery(_dateRange);
-    refreshBillList(query);
-    setIsReset(false);
-
-    dispatch(actions.fetchTotalBillCount(query));
-
-    switch (user.role) {
-      case Role.SALE: {
-        dispatch(actions.fetchTotalSalePrice(query));
-        break;
-      }
-      case Role.ADMIN: {
-        dispatch(actions.fetchTotalRevenue(query));
-        dispatch(actions.fetchCustomerDebt(query));
-        dispatch(actions.fetchVendorDebt(query));
-        dispatch(actions.fetchProfit(query));
-        dispatch(actions.fetchRawProfit(query));
-        dispatch(actions.fetchTotalFinalBill(query));
-        break;
-      }
-      case Role.ACCOUNTANT: {
-        dispatch(actions.fetchCustomerDebt(query));
-        dispatch(actions.fetchVendorDebt(query));
-        dispatch(actions.fetchTotalFinalBill(query));
-        break;
-      }
-    }
-  }, [dispatch, getFilter, getQuery, refreshBillList, user.role]);
+    dispatch(actions.setDateRange(_dateRange));
+  }, [dispatch, getFilter]);
 
   const onAdminBillListTypeChanged = useCallback(e => {
     setAdminBillListType(e.target.value);
@@ -291,7 +313,7 @@ export const BillReport = memo((props: Props) => {
 
     setIsFilterError(false);
     const _dateRange = getFilter();
-    const query = getQuery(_dateRange);
+    const query = getQuery(user, _dateRange);
     dispatch(
       actions.requestBillExport({
         query,
@@ -300,7 +322,7 @@ export const BillReport = memo((props: Props) => {
         )} đến ngày ${_dateRange[1].format('DD-MM-YYYY')}`,
       }),
     );
-  }, [dispatch, filterForm, getFilter, getQuery]);
+  }, [dispatch, filterForm, getFilter, user]);
 
   const onDownloadBill = useCallback(() => {
     dispatch(actions.downloadBills());
@@ -348,14 +370,6 @@ export const BillReport = memo((props: Props) => {
   const onSubmitReportFailed = useCallback(() => {
     setIsFilterError(true);
   }, []);
-
-  const onReturnFinalBillToAccountant = useCallback(
-    (billId: string) => {
-      dispatch(actions.returnFinalBillToAccountant(billId));
-    },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [],
-  );
 
   return (
     <RootContainer
@@ -510,10 +524,9 @@ export const BillReport = memo((props: Props) => {
               {isFetchingTotalFinalBill ? (
                 <Spin size="small" />
               ) : (
-                <Badge
-                  count={totalFinalBill}
-                  style={{ backgroundColor: '#52c41a', marginBottom: 2 }}
-                />
+                <Tag color="#2db7f5" style={{ marginRight: 0 }}>
+                  {totalFinalBill}
+                </Tag>
               )}
               <Text>bill đã chốt</Text>
             </Space>,
@@ -527,7 +540,6 @@ export const BillReport = memo((props: Props) => {
           excludeFields={['isArchived', 'billDeliveryHistories']}
           extendCols={getAdminCols()}
           heightOffset={user.role === Role.ADMIN ? 0.51 : 0.47}
-          onReturnFinalBillToAccountant={onReturnFinalBillToAccountant}
         />
       )}
       {adminBillListType === BillListType.GroupByVendor && !isReset && (
@@ -535,7 +547,6 @@ export const BillReport = memo((props: Props) => {
           loading={isFetchingBillsVendorGrouping}
           dataSource={billsVendorGrouping}
           dateRange={dateRange}
-          onReturnFinalBillToAccountant={onReturnFinalBillToAccountant}
         />
       )}
       {adminBillListType === BillListType.GroupByCustomer && !isReset && (
@@ -543,7 +554,6 @@ export const BillReport = memo((props: Props) => {
           loading={isFetchingBillsCustomerGrouping}
           dataSource={billsCustomerGrouping}
           dateRange={dateRange}
-          onReturnFinalBillToAccountant={onReturnFinalBillToAccountant}
         />
       )}
     </RootContainer>

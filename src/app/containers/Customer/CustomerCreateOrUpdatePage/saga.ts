@@ -8,11 +8,8 @@ import { toast } from 'react-toastify';
 import { actions } from './slice';
 import { CustomerSubmitActionType } from './types';
 import { selectCustomer } from './selectors';
-import User, { Role } from 'app/models/user';
-import UserFetcher from 'app/fetchers/userFetcher';
 
 const customerFetcher = new CustomerFetcher();
-const userFetcher = new UserFetcher();
 
 export function* submitCustomerTask(
   payload: PayloadAction<CustomerSubmitActionType>,
@@ -63,22 +60,8 @@ export function* updateCustomerTask(payload: PayloadAction<Customer>) {
   yield put(actions.setIsSubmitting(false));
 }
 
-export function* fetchSaleUsersTask() {
-  let saleUsers: User[] = [];
-  try {
-    saleUsers = yield call(userFetcher.getMany, undefined, {
-      roles: [Role.SALE],
-    });
-  } catch (error) {
-    //TODO: should log here
-  }
-
-  yield put(actions.fetchSaleUsersCompleted(saleUsers));
-}
-
 export function* customerCreateOrUpdatePageSaga() {
   yield takeLatest(actions.submitCustomer.type, submitCustomerTask);
   yield takeLatest(actions.fetchCustomer.type, fetchCustomerTask);
   yield takeLatest(actions.updateCustomer.type, updateCustomerTask);
-  yield takeLatest(actions.fetchSaleUsers.type, fetchSaleUsersTask);
 }

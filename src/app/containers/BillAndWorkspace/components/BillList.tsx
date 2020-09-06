@@ -21,12 +21,10 @@ import {
   DataGrid,
 } from 'app/components/collection/DataGrid';
 import Bill, { BILL_STATUS, BillDeliveryHistory } from 'app/models/bill';
-import { showConfirm } from 'app/components/Modal/utils';
 import { IDataSource } from 'app/components/collection/types';
-import { authorizeHelper, authStorage } from 'app/services/auth';
+import { authStorage } from 'app/services/auth';
 import User, { Role } from 'app/models/user';
 
-import BillView from './BillView';
 import VendorWeightAdjustment from './VendorWeightAdjustment';
 import UserAvatar from 'app/containers/Auth/components/UserAvatar';
 import BillStatusTag from './BillStatusTag';
@@ -34,6 +32,7 @@ import DeliveryTimeline from '../BillDeliveryHistory/DeliveryTimeline';
 import BillFetcher from 'app/fetchers/billFetcher';
 import { checkCanEditHistory } from '../utils';
 import LastBillDeliveryHistory from './LastBillDeliveryHistory';
+import { BillViewPage } from '../BillViewPage';
 
 const { TabPane } = Tabs;
 const { Text } = Typography;
@@ -65,34 +64,24 @@ const canEdit = (user: User, bill: Bill) => {
 };
 
 interface Props {
-  onArchiveBill?: (billId: string) => void;
   billDataSource: IDataSource;
   isReset?: boolean;
   excludeFields?: string[];
   extendCols?: ColumnDefinition[];
-  onPrintedVatBill?: (bill: Bill) => void;
   dontLoadInitialData?: boolean;
   heightOffset?: number;
   width?: number;
   disableFilterFields?: string[];
-  onRestoreArchivedBill?: (billId: string) => void;
-  onReturnFinalBillToAccountant?: (billId: string) => void;
-  onForceDeleteBill?: (billId: string) => void;
 }
 const BillList = ({
-  onArchiveBill,
   billDataSource,
   isReset,
   excludeFields,
   extendCols,
-  onPrintedVatBill,
   dontLoadInitialData,
   heightOffset,
   width,
   disableFilterFields,
-  onRestoreArchivedBill,
-  onReturnFinalBillToAccountant,
-  onForceDeleteBill,
 }: Props) => {
   const user = authStorage.getUser();
 
@@ -105,20 +94,6 @@ const BillList = ({
   const [histories, setHistories] = useState<BillDeliveryHistory[]>([]);
   const [activatedTab, setActivatedTab] = useState('1');
   const [loadedHistories, setLoadedHistories] = useState(false);
-
-  const _onArchiveBill = useCallback(
-    (bill: Bill) => () => {
-      showConfirm(
-        `Bạn có chắc muốn hủy Bill ${bill.airlineBillId}? Bill này sẽ không được dùng trong các loại báo cáo cũng như không được hiển thị nữa!`,
-        () => {
-          if (onArchiveBill) {
-            onArchiveBill(bill.id);
-          }
-        },
-      );
-    },
-    [onArchiveBill],
-  );
 
   const onViewBill = useCallback(
     (bill: Bill) => () => {
@@ -134,17 +109,6 @@ const BillList = ({
   const onCancelViewBill = useCallback(() => {
     setVisibleBillView(false);
   }, []);
-
-  const onArchiveBillFromViewMode = useCallback(
-    (bill: Bill) => () => {
-      if (onArchiveBill) {
-        onArchiveBill(bill.id);
-      }
-
-      onCancelViewBill();
-    },
-    [onArchiveBill, onCancelViewBill],
-  );
 
   const onSubmitWeightSucceeded = useCallback(() => {
     billDataSource.onReloadData();
@@ -171,36 +135,6 @@ const BillList = ({
       }
     },
     [histories, loadedHistories, selectedBill.id],
-  );
-
-  const _onRestoreArchivedBill = useCallback(
-    (billId: string) => {
-      if (onRestoreArchivedBill) {
-        onRestoreArchivedBill(billId);
-        onCancelViewBill();
-      }
-    },
-    [onCancelViewBill, onRestoreArchivedBill],
-  );
-
-  const _onReturnFinalBillToAccountant = useCallback(
-    (billId: string) => {
-      if (onReturnFinalBillToAccountant) {
-        onReturnFinalBillToAccountant(billId);
-        onCancelViewBill();
-      }
-    },
-    [onCancelViewBill, onReturnFinalBillToAccountant],
-  );
-
-  const _onForceDeleteBill = useCallback(
-    (billId: string) => {
-      if (onForceDeleteBill) {
-        onForceDeleteBill(billId);
-        onCancelViewBill();
-      }
-    },
-    [onCancelViewBill, onForceDeleteBill],
   );
 
   const getUpdateMenuItems = useCallback(
@@ -245,7 +179,7 @@ const BillList = ({
       if (checkCanEditHistory(user.role as Role, bill.saleUserId)) {
         MenuItems.push(
           <Menu.Item key={3}>
-            <Link to={`/billStatusUpdating/${bill.id}`}>
+            <Link to={`/billStatusUpdating/${bill.id}`} target="_blank">
               Cập nhật tình trạng hàng
             </Link>
           </Menu.Item>,
@@ -256,6 +190,11 @@ const BillList = ({
     },
     [onSubmitWeightSucceeded, user],
   );
+
+  const onBillViewActionsExecuteCompleted = useCallback(() => {
+    billDataSource.onReloadData();
+    setVisibleBillView(false);
+  }, [billDataSource]);
 
   const columns = useMemo((): ColumnDefinition[] => {
     const moreCols = extendCols ? extendCols : [];
@@ -411,24 +350,6 @@ const BillList = ({
                   </Dropdown>
                 </>
               )}
-
-              {onArchiveBill &&
-                record.status === BILL_STATUS.DONE &&
-                !record.isArchived &&
-                authorizeHelper.canRenderWithRole(
-                  [Role.ADMIN, Role.ACCOUNTANT],
-                  <>
-                    <Divider type="vertical" style={{ margin: 0 }} />
-                    <Button
-                      size="small"
-                      type="link"
-                      danger
-                      onClick={_onArchiveBill(record)}
-                    >
-                      Hủy
-                    </Button>
-                  </>,
-                )}
             </Space>
           );
         },
@@ -443,12 +364,10 @@ const BillList = ({
 
     return result;
   }, [
-    _onArchiveBill,
     disableFilterFields,
     excludeFields,
     extendCols,
     getUpdateMenuItems,
-    onArchiveBill,
     onViewBill,
   ]);
 
@@ -480,15 +399,9 @@ const BillList = ({
           >
             <Tabs onChange={onTabChanged} type="card" activeKey={activatedTab}>
               <TabPane tab="Thông tin bill" key={1}>
-                <BillView
+                <BillViewPage
                   bill={selectedBill}
-                  onArchiveBill={
-                    onArchiveBill ? onArchiveBillFromViewMode : undefined
-                  }
-                  onPrintedVat={onPrintedVatBill}
-                  onRestoreArchivedBill={_onRestoreArchivedBill}
-                  onReturnFinalBillToAccountant={_onReturnFinalBillToAccountant}
-                  onForceDeleteBill={_onForceDeleteBill}
+                  onActionExecuteCompleted={onBillViewActionsExecuteCompleted}
                 />
               </TabPane>
               <TabPane tab="Tình trạng hàng" key={2}>

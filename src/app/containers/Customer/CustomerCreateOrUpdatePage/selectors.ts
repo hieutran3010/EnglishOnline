@@ -22,14 +22,3 @@ export const selectCustomer = createSelector(
   [selectDomain],
   customerCreateOrUpdatePageState => customerCreateOrUpdatePageState.customer,
 );
-
-export const selectIsFetchingSaleUsers = createSelector(
-  [selectDomain],
-  customerCreateOrUpdatePageState =>
-    customerCreateOrUpdatePageState.isFetchingSaleUsers,
-);
-
-export const selectSaleUsers = createSelector(
-  [selectDomain],
-  customerCreateOrUpdatePageState => customerCreateOrUpdatePageState.saleUsers,
-);

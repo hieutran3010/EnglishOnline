@@ -22,4 +22,8 @@ const toFullString = (value: number) => {
   }
 };
 
-export { toCurrency, toFullString };
+const REGEX_PATTERN = {
+  PHONE: '^[0-9]*$',
+};
+
+export { toCurrency, toFullString, REGEX_PATTERN };

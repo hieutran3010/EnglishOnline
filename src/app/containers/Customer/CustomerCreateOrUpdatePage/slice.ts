@@ -3,16 +3,12 @@ import { createSlice } from 'utils/@reduxjs/toolkit';
 import Customer from 'app/models/customer';
 
 import { ContainerState, CustomerSubmitActionType } from './types';
-import User from 'app/models/user';
 
 // The initial state of the CustomerCreateOrUpdatePage container
 export const initialState: ContainerState = {
   isSubmitting: false,
   isFetchingCustomer: false,
   customer: new Customer(),
-
-  isFetchingSaleUsers: false,
-  saleUsers: [],
 };
 
 const customerCreateOrUpdatePageSlice = createSlice({
@@ -33,14 +29,6 @@ const customerCreateOrUpdatePageSlice = createSlice({
     },
 
     updateCustomer(state, action: PayloadAction<Customer>) {},
-
-    fetchSaleUsers(state) {
-      state.isFetchingSaleUsers = true;
-    },
-    fetchSaleUsersCompleted(state, action: PayloadAction<User[]>) {
-      state.isFetchingSaleUsers = false;
-      state.saleUsers = action.payload;
-    },
   },
 });
 

@@ -476,8 +476,24 @@ export const BillCreateOrUpdate = memo(
             vendorPaymentDebt: vendorDebt > 0 ? vendorDebt : 0,
           });
         }
+
+        if (
+          changedFields.includes('senderName') ||
+          changedFields.includes('senderPhone') ||
+          changedFields.includes('senderAddress')
+        ) {
+          dispatch(actions.setSenderId(undefined));
+        }
+
+        if (
+          changedFields.includes('receiverName') ||
+          changedFields.includes('receiverPhone') ||
+          changedFields.includes('receiverAddress')
+        ) {
+          dispatch(actions.setReceiverId(undefined));
+        }
       },
-      [billForm, shouldRecalculatePurchasePrice, updateBillFormData],
+      [billForm, dispatch, shouldRecalculatePurchasePrice, updateBillFormData],
     );
 
     const onCalculatePurchasePrice = useCallback(() => {

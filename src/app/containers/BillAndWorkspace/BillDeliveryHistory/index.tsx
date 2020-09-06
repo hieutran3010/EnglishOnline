@@ -14,6 +14,7 @@ import {
   EyeOutlined,
 } from '@ant-design/icons';
 import isEmpty from 'lodash/fp/isEmpty';
+import moment from 'moment';
 
 import { ContentContainer } from 'app/components/Layout';
 import { BillDeliveryHistory } from 'app/models/bill';
@@ -100,11 +101,16 @@ export const BillDeliveryHistoryPage = memo(
 
     const onAddNewAtADate = useCallback(
       (date: any) => {
-        setSelectedHistory({ date });
+        setSelectedHistory({ date, time: moment() });
         onVisibleModal();
       },
       [onVisibleModal],
     );
+
+    const onAddNew = useCallback(() => {
+      setSelectedHistory(undefined);
+      onVisibleModal();
+    }, [onVisibleModal]);
 
     const onEdit = useCallback(
       (history: BillDeliveryHistory) => {
@@ -220,7 +226,7 @@ export const BillDeliveryHistoryPage = memo(
                     type="primary"
                     shape="circle"
                     size="small"
-                    onClick={onVisibleModal}
+                    onClick={onAddNew}
                     icon={<PlusOutlined />}
                     disabled={isSaving}
                   />

@@ -7,7 +7,7 @@
 import React, { memo, useMemo, useCallback, useEffect } from 'react';
 import { Button, Form, DatePicker, Input } from 'antd';
 import isEmpty from 'lodash/fp/isEmpty';
-import { useDispatch, useSelector } from 'react-redux';
+import { useSelector } from 'react-redux';
 
 import { RootContainer } from 'app/components/Layout';
 import getDataSource, { FETCHER_KEY } from 'app/collection-datasource';
@@ -18,19 +18,18 @@ import { QueryCriteria } from 'app/collection-datasource/types';
 import { parseQueryCriteriaToGraphQLDoorQuery } from 'app/collection-datasource/graphql/utils';
 import { GRAPHQL_QUERY_OPERATOR } from 'app/collection-datasource/graphql/constants';
 import { useInjectReducer, useInjectSaga } from 'utils/redux-injectors';
-import { reducer, sliceKey, actions } from './slice';
+import { reducer, sliceKey } from './slice';
 import { billAdvanceSearchSaga } from './saga';
 import { selectNeedToReload } from './selectors';
 import BillList from '../components/BillList';
-import Bill from 'app/models/bill';
+import { useBillView } from '../BillViewPage/hook';
 
 const { RangePicker } = DatePicker;
 
 export const BillAdvanceSearch = memo(() => {
   useInjectReducer({ key: sliceKey, reducer });
   useInjectSaga({ key: sliceKey, saga: billAdvanceSearchSaga });
-
-  const dispatch = useDispatch();
+  useBillView();
 
   const user = authStorage.getUser();
 
@@ -65,45 +64,6 @@ export const BillAdvanceSearch = memo(() => {
       return query;
     },
     [user.id, user.role],
-  );
-
-  const onArchiveBill = useCallback(
-    (billId: string) => {
-      dispatch(actions.archiveBill(billId));
-    },
-    [dispatch],
-  );
-
-  const onCheckPrintedVat = useCallback(
-    (bill: Bill) => {
-      dispatch(actions.checkPrintedVatBill(bill));
-    },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [],
-  );
-
-  const onRestoreArchivedBill = useCallback(
-    (billId: string) => {
-      dispatch(actions.restoreArchivedBill(billId));
-    },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [],
-  );
-
-  const onReturnFinalBillToAccountant = useCallback(
-    (billId: string) => {
-      dispatch(actions.returnFinalBillToAccountant(billId));
-    },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [],
-  );
-
-  const onForceDeleteBill = useCallback(
-    (billId: string) => {
-      dispatch(actions.forceDeleteBill(billId));
-    },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [],
   );
 
   const onClearFilter = useCallback(() => {
@@ -199,15 +159,10 @@ export const BillAdvanceSearch = memo(() => {
           </Form.Item>
         </Form>
         <BillList
-          onArchiveBill={onArchiveBill}
           billDataSource={billDataSource}
-          onPrintedVatBill={onCheckPrintedVat}
           dontLoadInitialData={true}
           heightOffset={0.35}
           disableFilterFields={['senderName', 'receiverName']}
-          onRestoreArchivedBill={onRestoreArchivedBill}
-          onReturnFinalBillToAccountant={onReturnFinalBillToAccountant}
-          onForceDeleteBill={onForceDeleteBill}
           excludeFields={['billDeliveryHistories']}
         />
       </RootContainer>

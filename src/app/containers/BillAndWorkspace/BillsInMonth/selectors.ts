@@ -5,11 +5,6 @@ import { initialState } from './slice';
 
 const selectDomain = (state: RootState) => state.billsInMonth || initialState;
 
-export const selectNeedToReload = createSelector(
-  [selectDomain],
-  workspaceState => workspaceState.needToReload,
-);
-
 export const selectSelectedMonth = createSelector(
   [selectDomain],
   workspaceState => workspaceState.selectedMonth,

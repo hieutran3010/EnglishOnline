@@ -4,6 +4,7 @@ import toLower from 'lodash/fp/toLower';
 import toUpper from 'lodash/fp/toUpper';
 
 import CustomerFetcher from 'app/fetchers/customerFetcher';
+import { REGEX_PATTERN } from 'utils/numberFormat';
 
 const customerFetcher = new CustomerFetcher();
 
@@ -67,6 +68,10 @@ const getCustomerValidator = (id?: string): ZoneValidator => ({
   name: [{ required: true, message: 'Chưa nhập Tên khách hàng' }],
   phone: [
     { required: true, message: 'Chưa nhập Số điện thoại' },
+    {
+      pattern: new RegExp(REGEX_PATTERN.PHONE),
+      message: 'Số điện thoại chỉ cho phép các ký số từ 1 tới 9',
+    },
     {
       validator: isValidPhone(id),
       validateTrigger: 'onFinish',

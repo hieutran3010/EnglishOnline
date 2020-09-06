@@ -1,4 +1,4 @@
-import React, { memo, useState, useCallback, useMemo } from 'react';
+import React, { memo, useCallback, useMemo } from 'react';
 import moment from 'moment';
 import {
   Divider,
@@ -8,6 +8,7 @@ import {
   Space,
   Tag,
   Tooltip,
+  Spin,
 } from 'antd';
 import isUndefined from 'lodash/fp/isUndefined';
 import isNil from 'lodash/fp/isNil';
@@ -27,6 +28,7 @@ import {
 import PurchasePrice from './PurchasePrice';
 import UserAvatar from 'app/containers/Auth/components/UserAvatar';
 import { showConfirm } from 'app/components/Modal/utils';
+import Modal from 'antd/lib/modal/Modal';
 
 const { Title, Text } = Typography;
 
@@ -40,11 +42,12 @@ const getPaymentDisplay = (paymentType: PAYMENT_TYPE | undefined) => {
 
 interface Props {
   bill: Bill;
-  onArchiveBill?: (bill: Bill) => () => void;
-  onPrintedVat?: (bill: Bill) => void;
+  onArchiveBill?: (billId: string) => void;
+  onPrintedVat?: (billId: string) => void;
   onRestoreArchivedBill?: (billId: string) => void;
   onReturnFinalBillToAccountant?: (billId: string) => void;
   onForceDeleteBill?: (billId: string) => void;
+  isSubmitting?: boolean;
 }
 const BillView = ({
   bill,
@@ -53,13 +56,11 @@ const BillView = ({
   onRestoreArchivedBill,
   onReturnFinalBillToAccountant,
   onForceDeleteBill,
+  isSubmitting,
 }: Props) => {
-  const [isRequestedPrinted, setIsRequestedPrinted] = useState(false);
-
   const onRequestPrintedVat = useCallback(() => {
     if (onPrintedVat) {
-      onPrintedVat(bill);
-      setIsRequestedPrinted(true);
+      onPrintedVat(bill.id);
     }
   }, [bill, onPrintedVat]);
 
@@ -90,6 +91,17 @@ const BillView = ({
     }
   }, [bill.id, onForceDeleteBill]);
 
+  const _onArchiveBill = useCallback(() => {
+    showConfirm(
+      `Bạn có chắc muốn hủy bill ${
+        bill.airlineBillId || bill.childBillId
+      }? Bill này sẽ không được dùng trong các loại báo cáo cũng như không được hiển thị nữa!`,
+      () => {
+        onArchiveBill && onArchiveBill(bill.id);
+      },
+    );
+  }, [bill.airlineBillId, bill.childBillId, bill.id, onArchiveBill]);
+
   return (
     <>
       <StyledDateAndAssigneeContainer>
@@ -106,12 +118,12 @@ const BillView = ({
                 Xóa Bill
               </Button>,
             )}
-          {bill.status === BILL_STATUS.DONE &&
+          {onArchiveBill &&
+            bill.status === BILL_STATUS.DONE &&
             !bill.isArchived &&
-            onArchiveBill &&
             authorizeHelper.canRenderWithRole(
               [Role.ACCOUNTANT, Role.ADMIN],
-              <Button danger onClick={onArchiveBill(bill)} size="small">
+              <Button danger onClick={_onArchiveBill} size="small">
                 Hủy bill
               </Button>,
             )}
@@ -120,7 +132,7 @@ const BillView = ({
             authorizeHelper.canRenderWithRole(
               [Role.ADMIN],
               <Button danger size="small" onClick={_onRestoreArchivedBill}>
-                Bỏ Hủy bill
+                Khôi phục bill
               </Button>,
             )}
 
@@ -149,7 +161,6 @@ const BillView = ({
             (bill.vat || 0) > 0 &&
             !bill.isPrintedVatBill &&
             onPrintedVat &&
-            !isRequestedPrinted &&
             authorizeHelper.canRenderWithRole(
               [Role.ADMIN, Role.ACCOUNTANT],
               <span>
@@ -354,6 +365,25 @@ const BillView = ({
           </Descriptions>
         </div>,
       )}
+      <Modal
+        visible={isSubmitting}
+        mask={false}
+        maskClosable={false}
+        keyboard={false}
+        footer={false}
+        closable={false}
+        bodyStyle={{
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}
+        centered
+        width={150}
+      >
+        <Spin />
+        <Text strong>Đang xử lý...</Text>
+      </Modal>
     </>
   );
 };

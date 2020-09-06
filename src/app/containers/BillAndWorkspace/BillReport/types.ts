@@ -36,6 +36,8 @@ export interface BillReportState {
 
   isFetchingTotalFinalBill: boolean;
   totalFinalBill: number;
+
+  dateRange: any[];
 }
 
 export type ContainerState = BillReportState;

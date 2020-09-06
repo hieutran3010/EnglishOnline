@@ -157,14 +157,6 @@ export default class BillFetcher extends GraphQLFetcherBase<Bill> {
     );
   };
 
-  archiveBill = (billId: string) => {
-    return this.executeCustomMutationAsync(
-      'archiveBill',
-      { billId },
-      { input: 'ArchiveBillInput!' },
-    );
-  };
-
   getVendorStatistic = (query: string): Promise<VendorStatistic[]> => {
     return this.executeAsync<VendorStatistic[]>(
       'getVendorStatistic',
@@ -214,20 +206,6 @@ export default class BillFetcher extends GraphQLFetcherBase<Bill> {
       { query },
     );
   };
-
-  checkPrintedVatBill = (billId: string): Promise<any> => {
-    return this.executeAsync<CustomerStatistic[]>(
-      'checkPrintedVatBill',
-      `mutation($billId: GUID!) {
-        bill {
-          checkPrintedVatBill(billId: $billId) {
-            didSuccess
-          }
-        }
-      }`,
-      { billId },
-    );
-  };
 }
 
 export class BillPatchExecutor extends RestfulFetcherBase<Bill> {
@@ -242,11 +220,19 @@ export class BillPatchExecutor extends RestfulFetcherBase<Bill> {
     return this.patch(histories, `updateDeliveryHistory/${billId}`);
   };
 
-  restoreFinalBill = (billId: string) => {
-    return this.patch(undefined, `restoreFinalBill/${billId}`);
+  returnFinalBillToAccountant = (billId: string) => {
+    return this.patch(undefined, `returnFinalBillToAccountant/${billId}`);
   };
 
   restoreArchivedBill = (billId: string) => {
     return this.patch(undefined, `restoreArchivedBill/${billId}`);
+  };
+
+  archiveBill = (billId: string) => {
+    return this.patch(undefined, `archiveBill/${billId}`);
+  };
+
+  checkPrintedVatBill = (billId: string): Promise<any> => {
+    return this.patch(undefined, `checkPrintedVatBill/${billId}`);
   };
 }

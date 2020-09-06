@@ -351,8 +351,8 @@ export class BillDeliveryHistory {
   constructor(input?: any) {
     this.id = uuidV4();
     if (input) {
-      this.date = input.date ?? null;
-      this.time = input.time ?? null;
+      this.date = input.date ? moment(input.date) : undefined;
+      this.time = input.time ? moment(input.time) : undefined;
       this.status = input.status;
     }
   }

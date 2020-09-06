@@ -5,8 +5,32 @@ import toNumber from 'lodash/fp/toNumber';
 import trim from 'lodash/fp/trim';
 
 import BillFetcher from 'app/fetchers/billFetcher';
+import { REGEX_PATTERN } from 'utils/numberFormat';
 
 const billFetcher = new BillFetcher();
+
+const isValidAddress = async (_rule, value): Promise<void> => {
+  if (!value || isEmpty(value)) {
+    return Promise.resolve();
+  }
+
+  const invalidAddresses = [
+    'khongco',
+    'secapnhat',
+    'kobiet',
+    'khôngcó',
+    'khôngco',
+    'không',
+    'ko',
+    'kco',
+    'koco',
+  ];
+  if (invalidAddresses.includes(value)) {
+    return Promise.reject(`Địa chỉ không đúng`);
+  }
+
+  return Promise.resolve();
+};
 
 const isValidChildBillId = (id?: string) => async (
   _rule,
@@ -88,11 +112,33 @@ export type BillValidator = {
 };
 const getBillValidator = (hasVat: boolean, id?: string): BillValidator => ({
   senderName: [{ required: true, message: 'Chưa có Tên khách gởi' }],
-  senderPhone: [{ required: true, message: 'Chưa có Điện thoại khách gởi' }],
-  senderAddress: [{ required: true, message: 'Chưa có Địa chỉ khách gởi' }],
+  senderPhone: [
+    { required: true, message: 'Chưa có Điện thoại khách gởi' },
+    {
+      pattern: new RegExp(REGEX_PATTERN.PHONE),
+      message: 'Số điện thoại chỉ cho phép các ký số từ 1 tới 9',
+    },
+  ],
+  senderAddress: [
+    { required: true, message: 'Chưa có Địa chỉ khách gởi' },
+    {
+      validator: isValidAddress,
+    },
+  ],
   receiverName: [{ required: true, message: 'Chưa có Tên khách nhận' }],
-  receiverPhone: [{ required: true, message: 'Chưa có Điện thoại khách nhận' }],
-  receiverAddress: [{ required: true, message: 'Chưa có Địa chỉ khách nhận' }],
+  receiverPhone: [
+    { required: true, message: 'Chưa có Điện thoại khách nhận' },
+    {
+      pattern: new RegExp(REGEX_PATTERN.PHONE),
+      message: 'Số điện thoại chỉ cho phép các ký số từ 1 tới 9',
+    },
+  ],
+  receiverAddress: [
+    { required: true, message: 'Chưa có Địa chỉ khách nhận' },
+    {
+      validator: isValidAddress,
+    },
+  ],
   date: [{ required: true, message: 'Chưa chọn ngày lập Bill' }],
   childBillId: [
     {

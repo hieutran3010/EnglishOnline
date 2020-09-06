@@ -3,6 +3,7 @@ import isEmpty from 'lodash/fp/isEmpty';
 import { Rule } from 'antd/lib/form';
 
 import VendorFetcher from 'app/fetchers/vendorFetcher';
+import { REGEX_PATTERN } from 'utils/numberFormat';
 
 const vendorFetcher = new VendorFetcher();
 
@@ -44,7 +45,10 @@ const getZoneValidator = (vendorId?: string): VendorValidator => ({
   otherFeeInUsd: [{ required: true, message: 'Chưa nhập Phí khác' }],
   fuelChargePercent: [{ required: true, message: 'Chưa nhập Phí nhiên liệu' }],
   phone: [
-    { pattern: new RegExp('^[0-9]*$'), message: 'Số điện thoại không đúng!' },
+    {
+      pattern: new RegExp(REGEX_PATTERN.PHONE),
+      message: 'Số điện thoại chỉ cho phép các ký số từ 1 tới 9',
+    },
   ],
 });
 
