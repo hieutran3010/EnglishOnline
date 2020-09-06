@@ -56,6 +56,7 @@ interface Props {
   pageSize?: number;
   excludeValue?: any;
   excludePath?: string;
+  onNormalizeSearchKey?: (searchKey: string) => string;
 }
 const DefaultAutoComplete = React.forwardRef(
   (
@@ -70,6 +71,7 @@ const DefaultAutoComplete = React.forwardRef(
       pageSize,
       excludeValue,
       excludePath,
+      onNormalizeSearchKey,
       ...restProps
     }: Props & AutoCompleteProps,
     ref: any,
@@ -88,14 +90,14 @@ const DefaultAutoComplete = React.forwardRef(
         const data = await fetchDataSource.queryManyAsync(queryParams, true);
         if (!isEmpty(data)) {
           setItems(data);
-          if (size(data) === 1) {
-            onSelected && onSelected(head(data));
-          }
+          // if (size(data) === 1) {
+          //   onSelected && onSelected(head(data));
+          // }
         } else {
           setItems([]);
         }
       },
-      [fetchDataSource, onSelected, pageSize, searchPropNames],
+      [fetchDataSource, pageSize, searchPropNames],
     );
 
     const onSearchChange = useCallback(
@@ -105,13 +107,18 @@ const DefaultAutoComplete = React.forwardRef(
           return;
         }
 
-        if (value.length < minSearchLength) {
+        let searchKey = value;
+        if (onNormalizeSearchKey) {
+          searchKey = onNormalizeSearchKey(searchKey);
+        }
+
+        if (searchKey.length < minSearchLength) {
           return;
         }
 
-        fetchData(value);
+        fetchData(searchKey);
       },
-      [fetchData, minSearchLength],
+      [fetchData, minSearchLength, onNormalizeSearchKey],
     );
 
     const onInternalSelected = useCallback(

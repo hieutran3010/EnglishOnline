@@ -1,11 +1,13 @@
-import React, { memo } from 'react';
+import React, { memo, useCallback } from 'react';
 import { Typography, Form, Input, Checkbox } from 'antd';
+import { replace, trim, isEmpty, trimStart } from 'lodash';
 
 import { AutoComplete } from 'app/components/collection/AutoComplete';
 
 import { BillValidator } from 'app/models/validators/billValidator';
 import getDataSource, { FETCHER_KEY } from 'app/collection-datasource';
 import type Customer from 'app/models/customer';
+import { REGEX_PATTERN } from 'utils/numberFormat';
 
 import {
   StyledCustomerContainer,
@@ -13,12 +15,20 @@ import {
   StyledCustomerSelectionContainer,
   StyledReceiverContainer,
 } from '../Workspace/styles/StyledIndex';
-import { isEmpty } from 'lodash';
 
 const { Title } = Typography;
 
 const customerDataSource = getDataSource(FETCHER_KEY.CUSTOMER);
 customerDataSource.orderByFields = 'name';
+
+const formatPhoneNumber = (phoneNumber: string): string => {
+  const formatted = trimStart(
+    replace(trim(phoneNumber), new RegExp(/\D+/g), ''),
+    '0',
+  );
+
+  return formatted;
+};
 
 interface Props {
   billValidator: BillValidator;
@@ -34,6 +44,29 @@ const CustomerInfo = ({
   senderId,
   receiverId,
 }: Props) => {
+  const onNormalizePhoneNumber = useCallback(
+    (value, _prevValue, _prevValues) => {
+      return formatPhoneNumber(value);
+    },
+    [],
+  );
+
+  const onNormalizePhoneSearchKey = useCallback((searchKey: string) => {
+    return formatPhoneNumber(searchKey);
+  }, []);
+
+  const onNormalizeNameAndAddress = useCallback(
+    (value, _prevValue, _prevValues) => {
+      const formatted = trimStart(value, '- ');
+      return formatted;
+    },
+    [],
+  );
+
+  const onNormalizeNameSearchKey = useCallback((searchKey: string) => {
+    return trimStart(searchKey, '- ');
+  }, []);
+
   return (
     <StyledCustomerContainer>
       <StyledSenderContainer>
@@ -46,6 +79,7 @@ const CustomerInfo = ({
           name="senderName"
           label="Tên"
           rules={billValidator.senderName}
+          normalize={onNormalizeNameAndAddress}
         >
           <AutoComplete
             fetchDataSource={customerDataSource}
@@ -57,12 +91,14 @@ const CustomerInfo = ({
             excludeValue={receiverId}
             excludePath="id"
             onSelected={onSenderSelectionChanged}
+            onNormalizeSearchKey={onNormalizeNameSearchKey}
           />
         </Form.Item>
         <Form.Item
           name="senderPhone"
           label="Số ĐT"
           rules={billValidator.senderPhone}
+          normalize={onNormalizePhoneNumber}
         >
           <AutoComplete
             fetchDataSource={customerDataSource}
@@ -74,12 +110,14 @@ const CustomerInfo = ({
             excludeValue={receiverId}
             excludePath="id"
             onSelected={onSenderSelectionChanged}
+            onNormalizeSearchKey={onNormalizePhoneSearchKey}
           />
         </Form.Item>
         <Form.Item
           name="senderAddress"
           label="Địa chỉ"
           rules={billValidator.senderAddress}
+          normalize={onNormalizeNameAndAddress}
         >
           <Input />
         </Form.Item>
@@ -104,6 +142,7 @@ const CustomerInfo = ({
           name="receiverName"
           label="Tên"
           rules={billValidator.receiverName}
+          normalize={onNormalizeNameAndAddress}
         >
           <AutoComplete
             fetchDataSource={customerDataSource}
@@ -115,12 +154,14 @@ const CustomerInfo = ({
             excludeValue={senderId}
             onSelected={onReceiverSelectionChanged}
             excludePath="id"
+            onNormalizeSearchKey={onNormalizeNameSearchKey}
           />
         </Form.Item>
         <Form.Item
           name="receiverPhone"
           label="Số ĐT"
           rules={billValidator.receiverPhone}
+          normalize={onNormalizePhoneNumber}
         >
           <AutoComplete
             fetchDataSource={customerDataSource}
@@ -132,12 +173,14 @@ const CustomerInfo = ({
             excludeValue={senderId}
             onSelected={onReceiverSelectionChanged}
             excludePath="id"
+            onNormalizeSearchKey={onNormalizePhoneSearchKey}
           />
         </Form.Item>
         <Form.Item
           name="receiverAddress"
           label="Địa chỉ"
           rules={billValidator.receiverAddress}
+          normalize={onNormalizeNameAndAddress}
         >
           <Input />
         </Form.Item>

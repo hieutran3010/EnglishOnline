@@ -101,7 +101,9 @@ export function* submitBillTask(action: PayloadAction<Bill | any>) {
         senderPhone,
         senderAddress,
       );
-      billFormValues.senderId = sender ? sender.id : undefined;
+      const senderId = sender ? sender.id : undefined;
+      billFormValues.senderId = senderId;
+      yield put(actions.setSenderId(senderId));
     }
 
     if (isSaveReceiver === true && !receiverId) {
@@ -112,7 +114,9 @@ export function* submitBillTask(action: PayloadAction<Bill | any>) {
         receiverPhone,
         receiverAddress,
       );
-      billFormValues.receiverId = receiver ? receiver.id : undefined;
+      const receiverId = receiver ? receiver.id : undefined;
+      billFormValues.receiverId = receiverId;
+      yield put(actions.setReceiverId(receiverId));
     }
 
     const vendors = (yield select(selectVendors)) as Vendor[];
