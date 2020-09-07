@@ -14,20 +14,12 @@ import {
   StyledCustomerSelectionContainer,
   StyledReceiverContainer,
 } from '../Workspace/styles/StyledIndex';
+import { formatPhoneNumber } from 'utils/numberFormat';
 
 const { Title } = Typography;
 
 const customerDataSource = getDataSource(FETCHER_KEY.CUSTOMER);
 customerDataSource.orderByFields = 'name';
-
-const formatPhoneNumber = (phoneNumber: string): string => {
-  const formatted = trimStart(
-    replace(trim(phoneNumber), new RegExp(/\D+/g), ''),
-    '0',
-  );
-
-  return formatted;
-};
 
 interface Props {
   billValidator: BillValidator;
