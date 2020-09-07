@@ -16,8 +16,6 @@ import {
   ColumnDefinition,
   COLUMN_TYPES,
 } from 'app/components/collection/DataGrid';
-import { authStorage } from 'app/services/auth';
-import { Role } from 'app/models/user';
 import { useInjectReducer, useInjectSaga } from 'utils/redux-injectors';
 import { reducer, sliceKey, actions } from './slice';
 import { customerListSaga } from './saga';
@@ -31,8 +29,6 @@ export function CustomerList() {
 
   const history = useHistory();
   const dispatch = useDispatch();
-
-  const user = authStorage.getUser();
 
   const customerDataSource = useMemo(() => {
     const dataSource = getDataSource(FETCHER_KEY.CUSTOMER);
@@ -83,6 +79,7 @@ export function CustomerList() {
         canFilter: true,
         type: COLUMN_TYPES.STRING,
         fixed: true,
+        sorter: true,
       },
       {
         title: 'Số ĐT',
@@ -92,6 +89,7 @@ export function CustomerList() {
         width: 50,
         canFilter: true,
         fixed: true,
+        sorter: true,
       },
       {
         title: 'Địa Chỉ',
@@ -100,6 +98,7 @@ export function CustomerList() {
         type: COLUMN_TYPES.STRING,
         width: 200,
         canFilter: true,
+        sorter: true,
       },
       {
         title: 'Gợi nhớ',
@@ -107,6 +106,7 @@ export function CustomerList() {
         key: 'hint',
         type: COLUMN_TYPES.STRING,
         width: 150,
+        sorter: true,
       },
       {
         title: 'Tác Vụ',
@@ -131,27 +131,18 @@ export function CustomerList() {
       },
     ];
 
-    if (user.role === Role.ACCOUNTANT) {
-      result.pop();
-    }
-
     return result;
-  }, [onDeleteCustomer, onUpdateCustomer, user.role]);
-
-  const rightActions =
-    user.role === Role.ACCOUNTANT
-      ? []
-      : [
-          <Button key="1" type="primary" onClick={onCreateNewCustomer}>
-            Thêm mới
-          </Button>,
-        ];
+  }, [onDeleteCustomer, onUpdateCustomer]);
 
   return (
     <>
       <RootContainer
         title="Danh sách Khách hàng"
-        rightComponents={rightActions}
+        rightComponents={[
+          <Button key="1" type="primary" onClick={onCreateNewCustomer}>
+            Thêm mới
+          </Button>,
+        ]}
       >
         <DataGrid
           dataSource={customerDataSource}
