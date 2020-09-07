@@ -1,5 +1,4 @@
-import toString from 'lodash/fp/toString';
-import { padStart } from 'lodash';
+import { padStart, trimStart, replace, trim, toString } from 'lodash';
 
 const toCurrency = (value: number, isUsd: boolean = false) => {
   const formatted = toString(value).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
@@ -22,8 +21,17 @@ const toFullString = (value: number) => {
   }
 };
 
+const formatPhoneNumber = (phoneNumber: string): string => {
+  const formatted = trimStart(
+    replace(trim(phoneNumber), new RegExp(/\D+/g), ''),
+    '0',
+  );
+
+  return formatted;
+};
+
 const REGEX_PATTERN = {
   PHONE: '^[0-9]*$',
 };
 
-export { toCurrency, toFullString, REGEX_PATTERN };
+export { toCurrency, toFullString, REGEX_PATTERN, formatPhoneNumber };
