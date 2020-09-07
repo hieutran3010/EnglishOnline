@@ -29,7 +29,6 @@ import {
   selectBillId,
   selectOldWeightInKg,
   selectPurchasePriceInfo,
-  selectVendors,
   selectBillStatus,
   selectBill,
   selectSenderId,
@@ -90,7 +89,6 @@ export function* submitBillTask(action: PayloadAction<Bill | any>) {
       isSaveReceiver,
       senderId,
       receiverId,
-      vendorId,
     } = billFormValues;
 
     if (isSaveSender === true && !senderId) {
@@ -118,10 +116,6 @@ export function* submitBillTask(action: PayloadAction<Bill | any>) {
       billFormValues.receiverId = receiverId;
       yield put(actions.setReceiverId(receiverId));
     }
-
-    const vendors = (yield select(selectVendors)) as Vendor[];
-    const vendor = find((v: Vendor) => v.id === vendorId)(vendors);
-    billFormValues.vendorName = vendor?.name || '';
 
     const billId = yield select(selectBillId);
     const isUpdate = !isEmpty(billId);
@@ -312,7 +306,9 @@ function* mergeBillFormWithStore(billFormValues: any) {
   bill.updatePurchasePriceInfo(yield select(selectPurchasePriceInfo));
 
   const cachedBill = yield select(selectBill);
-  return assign(cachedBill)(omit(['isPrintedVatBill'])(bill));
+  const result = assign(cachedBill)(omit(['isPrintedVatBill'])(bill));
+
+  return omit(['vendorName'])(result);
 }
 
 function* getCustomer(name: string, phone: string, address: string) {
