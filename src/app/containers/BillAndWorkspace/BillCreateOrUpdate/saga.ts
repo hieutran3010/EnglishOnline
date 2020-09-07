@@ -216,7 +216,7 @@ export function* calculatePurchasePriceTask(
 
     const params = new PurchasePriceCountingParams(billForm);
     params.isGetLatestQuotation = isGetLatestQuotation;
-    params.billQuotations = purchasePrice.billQuotations;
+    params.billQuotations = purchasePrice.billQuotations || [];
 
     const result = (yield call(
       billFetcher.countPurchasePrice,

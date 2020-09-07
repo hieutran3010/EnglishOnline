@@ -45,7 +45,7 @@ export class PurchasePriceCountingParams {
       this.vat = bill.vat;
       this.vendorId = bill.vendorId;
       this.weightInKg = bill.weightInKg || 0;
-      this.billQuotations = bill.billQuotations;
+      this.billQuotations = bill.billQuotations || [];
     }
   }
 }

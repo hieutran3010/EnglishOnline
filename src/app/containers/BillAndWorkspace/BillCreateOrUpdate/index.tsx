@@ -306,7 +306,7 @@ export const BillCreateOrUpdate = memo(
       setHasVat((inputBill.vat || 0) > 0);
       setShouldRecalculatePurchasePrice(false);
       setShouldCountPurchasePriceWithLatestQuotation(
-        isEmpty(inputBill.billQuotations),
+        isEmpty(inputBill.billQuotations) || isNil(inputBill.billQuotations),
       );
       // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [inputBill, role]);
@@ -678,7 +678,9 @@ export const BillCreateOrUpdate = memo(
       billId,
     ]);
 
-    const hasSubActionsBar = !isEmpty(purchasePriceInfo.billQuotations);
+    const hasSubActionsBar =
+      !isEmpty(purchasePriceInfo.billQuotations) &&
+      !isNil(purchasePriceInfo.billQuotations);
 
     return (
       <>

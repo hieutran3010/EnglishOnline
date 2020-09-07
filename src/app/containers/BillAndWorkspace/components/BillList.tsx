@@ -2,6 +2,7 @@ import React, { memo, useMemo, useCallback, useState, ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import isEmpty from 'lodash/fp/isEmpty';
 import filter from 'lodash/fp/filter';
+import isNil from 'lodash/fp/isNil';
 import {
   Space,
   Button,
@@ -170,7 +171,9 @@ const BillList = ({
               onSubmitSucceeded={onSubmitWeightSucceeded}
               purchasePriceInfo={new Bill(bill).getPurchasePriceInfo()}
               billQuotations={bill.billQuotations}
-              isUseLatestQuotation={isEmpty(bill.billQuotations)}
+              isUseLatestQuotation={
+                isEmpty(bill.billQuotations) || isNil(bill.billQuotations)
+              }
             />
           </Menu.Item>,
         );

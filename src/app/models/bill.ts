@@ -73,7 +73,7 @@ export class PurchasePriceInfo {
       this.oldPurchasePriceInVnd = input.oldPurchasePriceInVnd;
       this.oldPurchasePriceAfterVatInUsd = input.oldPurchasePriceAfterVatInUsd;
       this.oldPurchasePriceAfterVatInVnd = input.oldPurchasePriceAfterVatInVnd;
-      this.billQuotations = input.billQuotations;
+      this.billQuotations = input.billQuotations || [];
       this.oldWeightInKg = input.oldWeightInKg;
       this.oldQuotationPriceInUsd = input.oldQuotationPriceInUsd;
       this.lastUpdatedQuotation = input.lastUpdatedQuotation;
@@ -95,7 +95,7 @@ export class PurchasePriceInfo {
 
     if (isGetLatestQuotation) {
       this.zoneName = result.zoneName;
-      this.billQuotations = result.billQuotations;
+      this.billQuotations = result.billQuotations || [];
       this.lastUpdatedQuotation = result.lastUpdatedQuotation;
     }
   }
@@ -245,7 +245,7 @@ export default class Bill extends ModelBase {
       this.oldPurchasePriceInVnd = input.oldPurchasePriceInVnd;
       this.oldPurchasePriceAfterVatInUsd = input.oldPurchasePriceAfterVatInUsd;
       this.oldPurchasePriceAfterVatInVnd = input.oldPurchasePriceAfterVatInVnd;
-      this.billQuotations = input.billQuotations;
+      this.billQuotations = input.billQuotations || [];
       this.oldQuotationPriceInUsd = input.oldQuotationPriceInUsd;
       this.lastUpdatedQuotation = input.lastUpdatedQuotation;
     } else {
@@ -284,7 +284,7 @@ export default class Bill extends ModelBase {
     info.oldPurchasePriceInVnd = this.oldPurchasePriceInVnd;
     info.oldPurchasePriceAfterVatInUsd = this.oldPurchasePriceAfterVatInUsd;
     info.oldPurchasePriceAfterVatInVnd = this.oldPurchasePriceAfterVatInVnd;
-    info.billQuotations = this.billQuotations;
+    info.billQuotations = this.billQuotations || [];
     info.oldWeightInKg = this.oldWeightInKg;
     info.oldQuotationPriceInUsd = this.oldQuotationPriceInUsd;
     info.lastUpdatedQuotation = this.lastUpdatedQuotation;
