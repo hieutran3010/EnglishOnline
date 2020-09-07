@@ -16,6 +16,7 @@ import { toast } from 'react-toastify';
 import { InfoCircleOutlined } from '@ant-design/icons';
 import isUndefined from 'lodash/fp/isUndefined';
 import isNil from 'lodash/fp/isNil';
+import isEmpty from 'lodash/fp/isEmpty';
 import moment from 'moment';
 
 import Bill, { BillQuotation, PurchasePriceInfo } from 'app/models/bill';
@@ -26,7 +27,6 @@ import {
 } from 'app/models/purchasePriceCounting';
 import BillFetcher from 'app/fetchers/billFetcher';
 import { showConfirm } from 'app/components/Modal/utils';
-import isEmpty from 'lodash/fp/isEmpty';
 import BillQuotationModal from './BillQuotationModal';
 
 const getPurchasePrice = (
@@ -94,7 +94,9 @@ const VendorWeightAdjustment = ({
       countingParams.weightInKg = weight;
       countingParams.billQuotations = billQuotations || [];
       countingParams.isGetLatestQuotation =
-        isUseLatestQuotation || isEmpty(billQuotations);
+        isUseLatestQuotation ||
+        isEmpty(billQuotations) ||
+        isNil(billQuotations);
 
       const purchasePriceCountingResult = await getPurchasePrice(
         countingParams,
