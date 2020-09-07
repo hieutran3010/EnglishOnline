@@ -1,4 +1,6 @@
 import { PayloadAction } from '@reduxjs/toolkit';
+import moment from 'moment';
+import { isEmpty } from 'lodash';
 
 import { createSlice } from 'utils/@reduxjs/toolkit';
 import Bill from 'app/models/bill';
@@ -11,6 +13,12 @@ export const initialState: ContainerState = {
   numberOfUncheckedVatBills: 0,
 
   needToReloadWorkingBills: false,
+
+  myBills: [],
+  isFetchingMyBills: false,
+  selectedMonth: moment().month() + 1,
+  page: 0,
+  pageSize: 10,
 };
 
 const workspaceSlice = createSlice({
@@ -38,6 +46,26 @@ const workspaceSlice = createSlice({
     resetState(state) {
       state.bill = new Bill();
       state.needToReloadWorkingBills = false;
+    },
+
+    fetchMyBills(state, action: PayloadAction<number>) {
+      state.selectedMonth = action.payload;
+      state.isFetchingMyBills = true;
+    },
+    fetchMyBillsCompleted(
+      state,
+      action: PayloadAction<{ bills: Bill[]; newPage: number }>,
+    ) {
+      const { bills, newPage } = action.payload;
+      if (isEmpty(state.myBills)) {
+        state.myBills = bills;
+      } else {
+        if (!isEmpty(bills)) {
+          state.myBills.push(...bills);
+        }
+      }
+      state.page = newPage;
+      state.isFetchingMyBills = false;
     },
   },
 });

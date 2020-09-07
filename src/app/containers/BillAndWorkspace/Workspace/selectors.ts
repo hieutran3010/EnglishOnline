@@ -19,3 +19,18 @@ export const selectNeedToReloadWorkingBills = createSelector(
   [selectDomain],
   workspaceState => workspaceState.needToReloadWorkingBills,
 );
+
+export const selectSelectedMonth = createSelector(
+  [selectDomain],
+  workspaceState => workspaceState.selectedMonth,
+);
+
+export const selectPage = createSelector(
+  [selectDomain],
+  workspaceState => workspaceState.page,
+);
+
+export const selectPageSize = createSelector(
+  [selectDomain],
+  workspaceState => workspaceState.pageSize,
+);
