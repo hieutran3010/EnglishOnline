@@ -1,6 +1,6 @@
 import React, { memo, useCallback } from 'react';
 import { Typography, Form, Input, Checkbox } from 'antd';
-import { replace, trim, isEmpty, trimStart } from 'lodash';
+import { isEmpty, trimStart } from 'lodash';
 
 import { AutoComplete } from 'app/components/collection/AutoComplete';
 

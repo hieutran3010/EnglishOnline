@@ -25,6 +25,8 @@ import {
 } from './selectors';
 import { customerCreateOrUpdatePageSaga } from './saga';
 import { authStorage } from 'app/services/auth';
+import { formatPhoneNumber } from 'utils/numberFormat';
+import { trimStart } from 'lodash';
 
 export const CustomerCreateOrUpdatePage = memo(() => {
   useInjectReducer({ key: sliceKey, reducer: reducer });
@@ -80,6 +82,21 @@ export const CustomerCreateOrUpdatePage = memo(() => {
     history.push('/customerCreation');
   }, [history]);
 
+  const onNormalizePhoneNumber = useCallback(
+    (value, _prevValue, _prevValues) => {
+      return formatPhoneNumber(value);
+    },
+    [],
+  );
+
+  const onNormalizeNameAndAddress = useCallback(
+    (value, _prevValue, _prevValues) => {
+      const formatted = trimStart(value, '- ');
+      return formatted;
+    },
+    [],
+  );
+
   const title = isEditMode ? 'Cập nhật khách hàng' : 'Thêm khách hàng mới';
 
   return (
@@ -102,6 +119,7 @@ export const CustomerCreateOrUpdatePage = memo(() => {
               label="Tên KH"
               name="name"
               rules={customerValidator.name}
+              normalize={onNormalizeNameAndAddress}
             >
               <Input
                 disabled={isSubmitting}
@@ -112,6 +130,7 @@ export const CustomerCreateOrUpdatePage = memo(() => {
               label="Số điện thoại"
               name="phone"
               rules={customerValidator.phone}
+              normalize={onNormalizePhoneNumber}
             >
               <Input disabled={isSubmitting} />
             </Form.Item>
@@ -119,6 +138,7 @@ export const CustomerCreateOrUpdatePage = memo(() => {
               label="Địa chỉ"
               name="address"
               rules={customerValidator.address}
+              normalize={onNormalizeNameAndAddress}
             >
               <Input
                 disabled={isSubmitting}

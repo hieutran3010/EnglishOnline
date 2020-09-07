@@ -116,7 +116,8 @@ const getBillValidator = (hasVat: boolean, id?: string): BillValidator => ({
     { required: true, message: 'Chưa có Điện thoại khách gởi' },
     {
       pattern: new RegExp(REGEX_PATTERN.PHONE),
-      message: 'Số điện thoại chỉ cho phép các ký số từ 1 tới 9',
+      message:
+        'Số điện thoại có số đầu phải khác 0, và các số còn lại là các số từ 0 tới 9',
     },
   ],
   senderAddress: [
@@ -130,7 +131,8 @@ const getBillValidator = (hasVat: boolean, id?: string): BillValidator => ({
     { required: true, message: 'Chưa có Điện thoại khách nhận' },
     {
       pattern: new RegExp(REGEX_PATTERN.PHONE),
-      message: 'Số điện thoại chỉ cho phép các ký số từ 1 tới 9',
+      message:
+        'Số điện thoại có số đầu phải khác 0, và các số còn lại là các số từ 0 tới 9',
     },
   ],
   receiverAddress: [

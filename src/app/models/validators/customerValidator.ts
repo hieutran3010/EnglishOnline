@@ -70,7 +70,8 @@ const getCustomerValidator = (id?: string): ZoneValidator => ({
     { required: true, message: 'Chưa nhập Số điện thoại' },
     {
       pattern: new RegExp(REGEX_PATTERN.PHONE),
-      message: 'Số điện thoại chỉ cho phép các ký số từ 1 tới 9',
+      message:
+        'Số điện thoại có số đầu phải khác 0, và các số còn lại là các số từ 0 tới 9',
     },
     {
       validator: isValidPhone(id),
