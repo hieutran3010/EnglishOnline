@@ -6,12 +6,6 @@ export interface WorkspaceState {
 
   numberOfUncheckedVatBills: number;
   needToReloadWorkingBills: boolean;
-
-  myBills: Bill[];
-  isFetchingMyBills: boolean;
-  selectedMonth: number;
-  page: number;
-  pageSize: number;
 }
 
 export type ContainerState = WorkspaceState;
