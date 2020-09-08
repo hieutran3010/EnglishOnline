@@ -194,7 +194,7 @@ export function* deleteBillTask() {
     toast.error('Chưa xóa được Bill, vui lòng thử lại!');
   }
 
-  yield put(actions.setIsDeletingBill(true));
+  yield put(actions.setIsDeletingBill(false));
 }
 
 export function* calculatePurchasePriceTask(
@@ -312,15 +312,15 @@ function* mergeBillFormWithStore(billFormValues: any) {
 }
 
 function* getCustomer(name: string, phone: string, address: string) {
-  if (isEmpty(name) || isEmpty(phone)) {
+  if (!name || !phone || isEmpty(name) || isEmpty(phone)) {
     return undefined;
   }
 
   let customer = yield call(customerFetcher.queryOneAsync, {
-    query: `Phone = "${phone}"`,
+    query: `Phone = "${trim(phone)}"`,
   });
   if (!customer) {
-    const formattedName = trimStart(trim(name), '-');
+    const formattedName = trimStart(name, '- ');
     customer = yield call(customerFetcher.addAsync, {
       name: trim(formattedName),
       phone,

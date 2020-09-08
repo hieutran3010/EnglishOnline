@@ -36,7 +36,7 @@ const isValidPhone = (id?: string) => async (_rule, value): Promise<void> => {
     return Promise.resolve();
   }
 
-  let query = `Phone.ToLower() == "${toLower(value)}" `;
+  let query = `Phone = "${value}" `;
 
   if (id && !isEmpty(id)) {
     query = `${query} and Id != "${id}"`;
