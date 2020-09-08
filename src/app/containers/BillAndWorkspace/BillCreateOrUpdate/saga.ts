@@ -312,12 +312,12 @@ function* mergeBillFormWithStore(billFormValues: any) {
 }
 
 function* getCustomer(name: string, phone: string, address: string) {
-  if (isEmpty(name) || isEmpty(phone)) {
+  if (!name || !phone || isEmpty(name) || isEmpty(phone)) {
     return undefined;
   }
 
   let customer = yield call(customerFetcher.queryOneAsync, {
-    query: `Phone = "${phone}"`,
+    query: `Phone = "${trim(phone)}"`,
   });
   if (!customer) {
     const formattedName = trimStart(name, '- ');
