@@ -194,7 +194,7 @@ export function* deleteBillTask() {
     toast.error('Chưa xóa được Bill, vui lòng thử lại!');
   }
 
-  yield put(actions.setIsDeletingBill(true));
+  yield put(actions.setIsDeletingBill(false));
 }
 
 export function* calculatePurchasePriceTask(
