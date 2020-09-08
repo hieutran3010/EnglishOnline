@@ -320,7 +320,7 @@ function* getCustomer(name: string, phone: string, address: string) {
     query: `Phone = "${phone}"`,
   });
   if (!customer) {
-    const formattedName = trimStart(trim(name), '-');
+    const formattedName = trimStart(name, '- ');
     customer = yield call(customerFetcher.addAsync, {
       name: trim(formattedName),
       phone,
