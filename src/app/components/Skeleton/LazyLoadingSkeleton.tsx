@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { memo } from 'react';
 import { Space, Spin, Typography } from 'antd';
 const { Text } = Typography;
 
@@ -16,4 +16,4 @@ const LazyLoadingSkeleton = props => {
   );
 };
 
-export default LazyLoadingSkeleton;
+export default memo(LazyLoadingSkeleton);
