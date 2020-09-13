@@ -43,7 +43,8 @@
   { "name": "Central African Republic", "code": "CF" },
   { "name": "Chad", "code": "TD" },
   { "name": "Chile", "code": "CL" },
-  { "name": "China", "code": "CN" },
+  { "name": "China 1", "code": "CN" },
+  { "name": "China 2", "code": "CN" },
   { "name": "Christmas Island", "code": "CX" },
   { "name": "Cocos (Keeling) Islands", "code": "CC" },
   { "name": "Colombia", "code": "CO" },
@@ -241,5 +242,6 @@
   { "name": "Western Sahara", "code": "EH" },
   { "name": "Yemen", "code": "YE" },
   { "name": "Zambia", "code": "ZM" },
-  { "name": "Zimbabwe", "code": "ZW" }
+  { "name": "Zimbabwe", "code": "ZW" },
+  { "name": "Rest of the worlds", "code": "ROW" }
 ]

@@ -29,6 +29,8 @@ interface AppLayout {
   onCollapsed: () => void;
   renderTopLeftComponent?: () => React.Component;
   renderTopRightComponent?: () => React.Component;
+  onSelectedMenuChanged?: (index: number) => void;
+  selectedMenuKeys?: string[];
 }
 const AppLayout = ({
   menus,
@@ -39,6 +41,8 @@ const AppLayout = ({
   renderTopLeftComponent,
   renderTopRightComponent,
   onCollapsed,
+  onSelectedMenuChanged,
+  selectedMenuKeys,
   ...restProps
 }: AppLayout | any) => {
   const _isCollapsed = useMemo(() => {
@@ -66,7 +70,12 @@ const AppLayout = ({
 
       <Layout style={{ marginTop: 64 }}>
         {screenMode !== ScreenMode.MOBILE && (
-          <LeftNavigation isCollapsed={_isCollapsed} menus={menus} />
+          <LeftNavigation
+            isCollapsed={_isCollapsed}
+            menus={menus}
+            onSelectedMenuChanged={onSelectedMenuChanged}
+            selectedMenuKeys={selectedMenuKeys}
+          />
         )}
         <Content
           className="site-layout-background"

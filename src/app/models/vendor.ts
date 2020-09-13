@@ -12,3 +12,30 @@ export default class Vendor extends ModelBase {
   zones?: Zone[];
   vendorQuotations?: VendorQuotation[];
 }
+
+export class ServiceAssignmentResult {
+  newZones: Zone[] = [];
+  deletedZoneIds: string[] = [];
+}
+
+export class QuotationReport {
+  vendorName!: string;
+  quotation: QuotationReportDetail[] = [];
+}
+
+export class QuotationReportDetail {
+  zone!: string;
+  service!: string;
+  purchasePriceInUsd!: number;
+  purchasePriceInVnd!: number;
+  purchasePriceAfterVatInUsd!: number;
+  purchasePriceAfterVatInVnd!: number;
+}
+
+export class QuotationReportParams {
+  destinationCountry!: string;
+  weightInKg!: number;
+  vat?: number;
+  usdExchangeRate!: number;
+  isApplySaleRate!: boolean;
+}

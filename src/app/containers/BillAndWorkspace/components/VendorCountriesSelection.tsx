@@ -3,6 +3,7 @@ import { Select } from 'antd';
 import map from 'lodash/fp/map';
 import { SelectProps } from 'antd/lib/select';
 import uniqueId from 'lodash/fp/uniqueId';
+import { uniq } from 'lodash';
 
 const { Option } = Select;
 
@@ -18,11 +19,12 @@ const VendorCountriesSelection = React.forwardRef(
     );
 
     const countryOptions = useMemo(() => {
+      const uniqueCountries = uniq(countries);
       return map((country: string) => (
         <Option key={uniqueId('c')} value={country}>
           {country}
         </Option>
-      ))(countries);
+      ))(uniqueCountries);
     }, [countries]);
 
     return (

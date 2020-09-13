@@ -8,6 +8,7 @@ import type User from 'app/models/user';
 
 import { ContainerState, SubmitBillAction } from './types';
 import { PurchasePriceCountingResult } from 'app/models/purchasePriceCounting';
+import Zone from 'app/models/zone';
 
 // The initial state of the BillCreateOrUpdate container
 export const initialState: ContainerState = {
@@ -33,6 +34,9 @@ export const initialState: ContainerState = {
   isFinalBill: false,
   isAssigningLicense: false,
   billParams: new BillParams(),
+  isFetchingServices: false,
+  services: [],
+  relatedZones: [],
 };
 
 const extractBillInfo = (state: ContainerState, billInfo: any) => {
@@ -206,6 +210,20 @@ const billCreateOrUpdateSlice = createSlice({
     setPurchasePriceManually(state, action: PayloadAction<PurchasePriceInfo>) {
       const newPurchasePriceInfo = new PurchasePriceInfo(action.payload);
       state.purchasePriceInfo = newPurchasePriceInfo;
+    },
+    fetchServices(state, action: PayloadAction<string>) {
+      state.isFetchingServices = true;
+    },
+    fetchServicesCompleted(state, action: PayloadAction<string[]>) {
+      state.services = action.payload;
+      state.isFetchingServices = false;
+    },
+    fetchRelatedZones(
+      state,
+      action: PayloadAction<{ vendorId?: string; destinationCountry?: string }>,
+    ) {},
+    fetchRelatedZonesCompleted(state, action: PayloadAction<Zone[]>) {
+      state.relatedZones = action.payload;
     },
 
     resetState(state) {

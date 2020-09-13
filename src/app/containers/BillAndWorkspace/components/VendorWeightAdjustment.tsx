@@ -91,6 +91,7 @@ const VendorWeightAdjustment = ({
       countingParams.usdExchangeRate = bill.usdExchangeRate || 0;
       countingParams.vat = bill.vat;
       countingParams.vendorId = bill.vendorId;
+      countingParams.serviceName = bill.internationalParcelVendor;
       countingParams.weightInKg = weight;
       countingParams.billQuotations = billQuotations || [];
       countingParams.isGetLatestQuotation =
@@ -108,6 +109,7 @@ const VendorWeightAdjustment = ({
     },
     [
       bill.destinationCountry,
+      bill.internationalParcelVendor,
       bill.usdExchangeRate,
       bill.vat,
       bill.vendorFuelChargePercent,

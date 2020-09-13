@@ -39,12 +39,17 @@ import AppParam, { APP_PARAM_KEY, BillParams } from 'app/models/appParam';
 import User from 'app/models/user';
 import { SubmitBillAction } from './types';
 import { trimStart } from 'lodash';
+import { ParcelServiceVendorFetcher } from 'app/fetchers/parcelServiceFetcher';
 
 const vendorFetcher = new VendorFetcher();
 const billFetcher = new BillFetcher();
 const userFetcher = new UserFetcher();
 const customerFetcher = new CustomerFetcher();
 const appParamFetcher = new AppParamsFetcher();
+const serviceAndVendorAssociationFetcher = new ParcelServiceVendorFetcher([
+  'parcelService {name}',
+]);
+const zoneFetcher = new ZoneFetcher();
 
 export function* fetchVendorTask() {
   let vendors: Vendor[] = [];
@@ -217,7 +222,10 @@ export function* calculatePurchasePriceTask(
       params,
     )) as PurchasePriceCountingResult;
     yield put(
-      actions.calculatePurchasePriceCompleted({ result, isGetLatestQuotation }),
+      actions.calculatePurchasePriceCompleted({
+        result,
+        isGetLatestQuotation,
+      }),
     );
   } catch (error) {
     Sentry.captureException(error);
@@ -297,6 +305,45 @@ export function* fetchBillParamsTask() {
   yield put(actions.fetchBillParamsCompleted(billParams));
 }
 
+export function* fetchServicesTask(action: PayloadAction<string>) {
+  const vendorId = action.payload;
+  let services: string[] = [];
+  try {
+    const result = yield call(
+      serviceAndVendorAssociationFetcher.queryManyAsync,
+      {
+        query: `VendorId = "${vendorId}"`,
+        include: `ParcelService`,
+      },
+    );
+
+    services = map((sv: any) => sv.parcelService.name)(result);
+  } catch (error) {
+    Sentry.captureException(error);
+  }
+
+  yield put(actions.fetchServicesCompleted(services));
+}
+
+export function* fetchRelatedZonesTask(
+  action: PayloadAction<{ vendorId: string; destinationCountry: string }>,
+) {
+  const { vendorId, destinationCountry } = action.payload;
+
+  let zones: Zone[] = [];
+  try {
+    zones = yield call(
+      zoneFetcher.getZoneByVendorAndCountry,
+      vendorId,
+      destinationCountry,
+    );
+  } catch (error) {
+    Sentry.captureException(error);
+  }
+
+  yield put(actions.fetchRelatedZonesCompleted(zones));
+}
+
 function* mergeBillFormWithStore(billFormValues: any) {
   const bill = new Bill(billFormValues);
   bill.oldWeightInKg = yield select(selectOldWeightInKg);
@@ -348,4 +395,6 @@ export function* billCreateOrUpdateSaga() {
   yield takeLatest(actions.finalBill.type, finalBillTask);
   yield takeLatest(actions.assignLicense.type, assignLicenseTask);
   yield takeLatest(actions.fetchBillParams.type, fetchBillParamsTask);
+  yield takeLatest(actions.fetchServices.type, fetchServicesTask);
+  yield takeLatest(actions.fetchRelatedZones.type, fetchRelatedZonesTask);
 }

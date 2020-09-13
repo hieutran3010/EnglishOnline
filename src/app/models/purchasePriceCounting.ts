@@ -35,6 +35,7 @@ export class PurchasePriceCountingParams {
   usdExchangeRate!: number;
   billQuotations: BillQuotation[] = [];
   isGetLatestQuotation: boolean = false;
+  serviceName?: string;
 
   constructor(bill?: Bill) {
     if (bill) {
@@ -46,6 +47,7 @@ export class PurchasePriceCountingParams {
       this.vendorId = bill.vendorId;
       this.weightInKg = bill.weightInKg || 0;
       this.billQuotations = bill.billQuotations || [];
+      this.serviceName = bill.internationalParcelVendor;
     }
   }
 }

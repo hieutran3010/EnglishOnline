@@ -16,6 +16,7 @@ import VendorCountriesSelection from './VendorCountriesSelection';
 import VendorWeightAdjustment from '../components/VendorWeightAdjustment';
 import { PurchasePriceCountingResult } from 'app/models/purchasePriceCounting';
 import { BillQuotation } from 'app/models/bill';
+import Zone from 'app/models/zone';
 
 const { Title, Text } = Typography;
 
@@ -28,6 +29,7 @@ interface Props {
   vendorCountries: string[];
   isFetchingVendorCountries: boolean;
   onVendorSelectionChanged: (vendorId: string | undefined) => void;
+  onSelectedCountryChanged: (country?: string) => void;
   userRole: Role;
   onVendorWeightChanged?: (
     oldWeight: number,
@@ -44,6 +46,8 @@ interface Props {
   purchasePriceInUsd: number;
   billQuotations: BillQuotation[];
   isUseLatestQuotation: boolean;
+  services?: string[];
+  relatedZones?: Zone[];
 }
 const PackageInfo = ({
   billValidator,
@@ -61,6 +65,9 @@ const PackageInfo = ({
   purchasePriceInUsd,
   billQuotations,
   isUseLatestQuotation,
+  services,
+  relatedZones,
+  onSelectedCountryChanged,
 }: Props) => {
   return (
     <>
@@ -80,17 +87,25 @@ const PackageInfo = ({
       </Form.Item>
 
       <Form.Item
-        name="description"
-        label="Loại hàng"
-        rules={billValidator.description}
+        name="destinationCountry"
+        label="Nước đến"
+        rules={billValidator.destinationCountry}
       >
-        <AutoComplete
-          fetchDataSource={billDescriptionDataSource}
-          searchPropNames={['name']}
-          displayPath="name"
-          minSearchLength={2}
-          valuePath="name"
-          placeholder="Tìm kiếm"
+        <VendorCountriesSelection
+          countries={vendorCountries}
+          loading={isFetchingVendorCountries}
+          onChange={onSelectedCountryChanged}
+        />
+      </Form.Item>
+
+      <Form.Item
+        name="internationalParcelVendor"
+        label="Dịch vụ"
+        rules={billValidator.internationalParcelVendor}
+      >
+        <IntParcelVendorSelect
+          services={services}
+          relatedzones={relatedZones}
         />
       </Form.Item>
 
@@ -122,21 +137,17 @@ const PackageInfo = ({
       </Form.Item>
 
       <Form.Item
-        name="internationalParcelVendor"
-        label="Dịch vụ"
-        rules={billValidator.internationalParcelVendor}
+        name="description"
+        label="Loại hàng"
+        rules={billValidator.description}
       >
-        <IntParcelVendorSelect />
-      </Form.Item>
-
-      <Form.Item
-        name="destinationCountry"
-        label="Nước đến"
-        rules={billValidator.destinationCountry}
-      >
-        <VendorCountriesSelection
-          countries={vendorCountries}
-          loading={isFetchingVendorCountries}
+        <AutoComplete
+          fetchDataSource={billDescriptionDataSource}
+          searchPropNames={['name']}
+          displayPath="name"
+          minSearchLength={2}
+          valuePath="name"
+          placeholder="Tìm kiếm"
         />
       </Form.Item>
 
