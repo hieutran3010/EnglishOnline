@@ -209,6 +209,9 @@ export const BillCreateOrUpdate = memo(
       shouldCountPurchasePriceWithLatestQuotation,
       setShouldCountPurchasePriceWithLatestQuotation,
     ] = useState<boolean>(false);
+    const [forceUsingLatestQuotation, setForceUsingLatestQuotation] = useState(
+      false,
+    );
 
     const billId = useSelector(selectBillId);
     const purchasePriceInfo = useSelector(selectPurchasePriceInfo);
@@ -255,13 +258,15 @@ export const BillCreateOrUpdate = memo(
       return function reset() {
         setIsDirty(false);
         setShouldRecalculatePurchasePrice(false);
+        setForceUsingLatestQuotation(false);
 
         dispatch(actions.resetState());
+        billForm.resetFields();
       };
-    }, [dispatch]);
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
     useEffect(() => {
-      billForm.resetFields();
       setIsDirty(false);
 
       if (role !== Role.SALE) {
@@ -271,6 +276,13 @@ export const BillCreateOrUpdate = memo(
 
         if (!isEmpty(inputBill.id) && !isEmpty(inputBill.vendorId)) {
           dispatch(actions.fetchVendorCountries(inputBill.vendorId));
+          dispatch(actions.fetchServices(inputBill.vendorId));
+          dispatch(
+            actions.fetchRelatedZones({
+              vendorId: inputBill.vendorId,
+              destinationCountry: inputBill.destinationCountry,
+            }),
+          );
         }
       }
 
@@ -394,6 +406,7 @@ export const BillCreateOrUpdate = memo(
         const vendor = find((v: Vendor) => v.id === vendorId)(vendors);
         if (vendor) {
           const { id } = vendor;
+
           const destinationCountry = billForm.getFieldValue(
             'destinationCountry',
           );
@@ -410,10 +423,15 @@ export const BillCreateOrUpdate = memo(
             vendorOtherFee: vendor.otherFeeInUsd,
             vendorFuelChargePercent: vendor.fuelChargePercent,
           });
+
+          if (inputBill && inputBill.id) {
+            const { vendorId } = purchasePriceInfo;
+            setForceUsingLatestQuotation(vendorId !== id);
+          }
         }
       },
       // eslint-disable-next-line react-hooks/exhaustive-deps
-      [dispatch, updateBillFormData, vendors],
+      [inputBill, purchasePriceInfo, updateBillFormData, vendors],
     );
 
     const onSelectedCountryChanged = useCallback(
@@ -556,6 +574,13 @@ export const BillCreateOrUpdate = memo(
       [billForm, dispatch, shouldRecalculatePurchasePrice, updateBillFormData],
     );
 
+    const onCalculatePurchasePriceCompleted = useCallback(() => {
+      setShouldRecalculatePurchasePrice(false);
+      setIsDirty(true);
+      setShouldCountPurchasePriceWithLatestQuotation(false);
+      setForceUsingLatestQuotation(false);
+    }, []);
+
     const onCalculatePurchasePrice = useCallback(() => {
       const billData = getBillData();
 
@@ -579,21 +604,23 @@ export const BillCreateOrUpdate = memo(
       }
 
       const isGetLatestQuotation =
+        forceUsingLatestQuotation ||
         isNil(purchasePriceInfo.billQuotations) ||
         isEmpty(purchasePriceInfo.billQuotations) ||
         shouldCountPurchasePriceWithLatestQuotation;
+
       dispatch(
         actions.calculatePurchasePrice({
           billForm: billData,
           isGetLatestQuotation,
+          callback: onCalculatePurchasePriceCompleted,
         }),
       );
-      setShouldRecalculatePurchasePrice(false);
-      setIsDirty(true);
-      setShouldCountPurchasePriceWithLatestQuotation(false);
     }, [
       dispatch,
       getBillData,
+      forceUsingLatestQuotation,
+      onCalculatePurchasePriceCompleted,
       purchasePriceInfo.billQuotations,
       shouldCountPurchasePriceWithLatestQuotation,
     ]);
@@ -748,6 +775,14 @@ export const BillCreateOrUpdate = memo(
       [],
     );
 
+    const onServiceChanged = useCallback(
+      value => {
+        const { service } = purchasePriceInfo;
+        setForceUsingLatestQuotation(value !== service);
+      },
+      [purchasePriceInfo],
+    );
+
     const billValidator = useMemo(() => getBillValidator(hasVat, billId), [
       hasVat,
       billId,
@@ -822,6 +857,7 @@ export const BillCreateOrUpdate = memo(
             isUseLatestQuotation={shouldCountPurchasePriceWithLatestQuotation}
             services={services}
             relatedZones={relatedZones}
+            onServiceChanged={onServiceChanged}
           />
 
           <FeeAndPrice
@@ -867,10 +903,14 @@ export const BillCreateOrUpdate = memo(
                 <Form.Item noStyle>
                   <Space>
                     <Checkbox
-                      checked={shouldCountPurchasePriceWithLatestQuotation}
+                      checked={
+                        shouldCountPurchasePriceWithLatestQuotation ||
+                        forceUsingLatestQuotation
+                      }
                       onChange={
                         onShouldCountPurchasePriceWithLatestQuotationChanged
                       }
+                      disabled={forceUsingLatestQuotation}
                     >
                       Tính theo báo giá mới nhất
                     </Checkbox>

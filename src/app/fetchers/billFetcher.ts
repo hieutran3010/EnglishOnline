@@ -122,6 +122,8 @@ export default class BillFetcher extends GraphQLFetcherBase<Bill> {
               zoneName
               billQuotations {startWeight endWeight priceInUsd}
               lastUpdatedQuotation
+              service
+              vendorId
             }
           }
         }`,

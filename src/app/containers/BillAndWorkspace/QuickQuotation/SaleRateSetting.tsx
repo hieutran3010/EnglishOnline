@@ -157,7 +157,7 @@ const SaleRateSetting = () => {
           message={`Bạn đã cài đặt định mức cuối, để thêm định mức mới, vui lòng bấm Sửa và nhập "Đến số Kg" cho định mức cuối.`}
         />
       )}
-      {editingSaleRate && (
+      {editingSaleRate && !hasEndRange && (
         <Alert
           type="info"
           showIcon

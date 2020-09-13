@@ -45,7 +45,9 @@ const IntParcelVendorSelect = React.forwardRef(
         !isEmpty(services)
       ) {
         // only has service zones
-        filteredServices = services;
+        filteredServices = filter((s: string) =>
+          some((z: Zone) => z.name.includes(s))(relatedzones),
+        )(services);
       }
 
       return map((s: string) => {

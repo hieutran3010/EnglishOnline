@@ -21,6 +21,8 @@ import { useInjectReducer, useInjectSaga } from 'utils/redux-injectors';
 import { useDispatch, useSelector } from 'react-redux';
 import { selectIsWorkingOnServiceList, selectServices } from './selectors';
 import ServiceView from './ServiceView';
+import { authStorage } from 'app/services/auth';
+import { Role } from 'app/models/user';
 
 export const ServiceList = memo(() => {
   useInjectReducer({ key: sliceKey, reducer });
@@ -28,6 +30,8 @@ export const ServiceList = memo(() => {
 
   const history = useHistory();
   const dispatch = useDispatch();
+
+  const role = authStorage.getRole();
 
   const isWorkingOnServiceList = useSelector(selectIsWorkingOnServiceList);
   const services = useSelector(selectServices);
@@ -88,7 +92,7 @@ export const ServiceList = memo(() => {
                 Xem
               </Button>
               <Link to={`/serviceUpdating/${record.id}`}>Sửa</Link>
-              {!record.isSystem && (
+              {!record.isSystem && role === Role.ADMIN && (
                 <Button
                   size="small"
                   type="text"
@@ -103,7 +107,7 @@ export const ServiceList = memo(() => {
         },
       },
     ];
-  }, [onDelete, onView]);
+  }, [onDelete, onView, role]);
 
   return (
     <>

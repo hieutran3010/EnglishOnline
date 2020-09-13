@@ -47,6 +47,8 @@ export class PurchasePriceInfo {
   billQuotations: BillQuotation[] = [];
   oldQuotationPriceInUsd?: number;
   lastUpdatedQuotation?: Date;
+  service!: string;
+  vendorId!: string;
 
   /**
    *
@@ -77,6 +79,8 @@ export class PurchasePriceInfo {
       this.oldWeightInKg = input.oldWeightInKg;
       this.oldQuotationPriceInUsd = input.oldQuotationPriceInUsd;
       this.lastUpdatedQuotation = input.lastUpdatedQuotation;
+      this.service = input.service;
+      this.vendorId = input.vendorId;
     }
   }
 
@@ -97,6 +101,8 @@ export class PurchasePriceInfo {
       this.zoneName = result.zoneName;
       this.billQuotations = result.billQuotations || [];
       this.lastUpdatedQuotation = result.lastUpdatedQuotation;
+      this.service = result.service;
+      this.vendorId = result.vendorId;
     }
   }
 
@@ -288,6 +294,8 @@ export default class Bill extends ModelBase {
     info.oldWeightInKg = this.oldWeightInKg;
     info.oldQuotationPriceInUsd = this.oldQuotationPriceInUsd;
     info.lastUpdatedQuotation = this.lastUpdatedQuotation;
+    info.service = this.internationalParcelVendor;
+    info.vendorId = this.vendorId;
     return info;
   }
 

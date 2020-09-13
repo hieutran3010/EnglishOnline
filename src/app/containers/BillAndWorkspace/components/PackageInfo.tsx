@@ -48,6 +48,7 @@ interface Props {
   isUseLatestQuotation: boolean;
   services?: string[];
   relatedZones?: Zone[];
+  onServiceChanged: (value) => void;
 }
 const PackageInfo = ({
   billValidator,
@@ -68,6 +69,7 @@ const PackageInfo = ({
   services,
   relatedZones,
   onSelectedCountryChanged,
+  onServiceChanged,
 }: Props) => {
   return (
     <>
@@ -106,6 +108,7 @@ const PackageInfo = ({
         <IntParcelVendorSelect
           services={services}
           relatedzones={relatedZones}
+          onChange={onServiceChanged}
         />
       </Form.Item>
 

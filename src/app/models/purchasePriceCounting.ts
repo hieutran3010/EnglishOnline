@@ -9,6 +9,7 @@ export const purchasePriceCountingFields = [
   'vendorOtherFee',
   'vendorFuelChargePercent',
   'billQuotations',
+  'internationalParcelVendor',
 ];
 
 export class PurchasePriceCountingResult {
@@ -23,6 +24,8 @@ export class PurchasePriceCountingResult {
   purchasePriceAfterVatInVnd!: number;
   billQuotations: BillQuotation[] = [];
   lastUpdatedQuotation?: Date;
+  service!: string;
+  vendorId!: string;
 }
 
 export class PurchasePriceCountingParams {
