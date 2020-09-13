@@ -203,15 +203,18 @@ export function* deleteBillTask() {
 }
 
 export function* calculatePurchasePriceTask(
-  action: PayloadAction<{ billForm: any; isGetLatestQuotation: boolean }>,
+  action: PayloadAction<{
+    billForm: any;
+    isGetLatestQuotation: boolean;
+    callback?: any;
+  }>,
 ) {
   yield put(actions.setIsCalculatingPurchasePrice(true));
 
   try {
-    const billForm = action.payload.billForm;
+    const { billForm, isGetLatestQuotation, callback } = action.payload;
 
     const purchasePrice = yield select(selectPurchasePriceInfo);
-    let isGetLatestQuotation = action.payload.isGetLatestQuotation;
 
     const params = new PurchasePriceCountingParams(billForm);
     params.isGetLatestQuotation = isGetLatestQuotation;
@@ -227,6 +230,7 @@ export function* calculatePurchasePriceTask(
         isGetLatestQuotation,
       }),
     );
+    callback && callback();
   } catch (error) {
     Sentry.captureException(error);
     toast.error('Chưa tính được giá mua, vui lòng thử lại!');

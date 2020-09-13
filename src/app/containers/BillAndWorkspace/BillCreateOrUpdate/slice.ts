@@ -116,7 +116,11 @@ const billCreateOrUpdateSlice = createSlice({
     },
     calculatePurchasePrice(
       state,
-      action: PayloadAction<{ billForm: any; isGetLatestQuotation: boolean }>,
+      action: PayloadAction<{
+        billForm: any;
+        isGetLatestQuotation: boolean;
+        callback?: any;
+      }>,
     ) {},
     calculatePurchasePriceCompleted(
       state,
