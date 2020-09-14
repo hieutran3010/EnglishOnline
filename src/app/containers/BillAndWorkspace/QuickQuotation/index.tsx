@@ -27,7 +27,11 @@ export const QuickQuotation = memo(() => {
 
   if (role === Role.ADMIN) {
     return (
-      <Tabs defaultActiveKey="1" size="small">
+      <Tabs
+        defaultActiveKey="1"
+        size="small"
+        style={{ height: '100%', overflowY: 'auto' }}
+      >
         <TabPane tab="Báo Giá" key="1">
           <SaleQuotation />
         </TabPane>
@@ -41,7 +45,11 @@ export const QuickQuotation = memo(() => {
   }
 
   if (role === Role.SALE) {
-    return <SaleQuotation />;
+    return (
+      <div style={{ height: '100%', overflowY: 'auto' }}>
+        <SaleQuotation />
+      </div>
+    );
   }
 
   return <></>;
