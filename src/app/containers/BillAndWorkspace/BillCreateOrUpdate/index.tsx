@@ -534,13 +534,12 @@ export const BillCreateOrUpdate = memo(
         }
 
         if (changedFields.includes('vendorPaymentAmount')) {
-          const purchasePrice = toNumber(
-            billForm.getFieldValue('purchasePriceAfterVatInVnd'),
-          );
           const vendorPaymentAmount = toNumber(
             changedValues['vendorPaymentAmount'],
           );
-          const vendorDebt = purchasePrice - vendorPaymentAmount;
+          const vendorDebt =
+            (purchasePriceInfo.purchasePriceAfterVatInVnd || 0) -
+            vendorPaymentAmount;
           updateBillFormData({
             vendorPaymentDebt: vendorDebt,
           });
@@ -562,7 +561,12 @@ export const BillCreateOrUpdate = memo(
           dispatch(actions.setReceiverId(undefined));
         }
       },
-      [billForm, dispatch, shouldRecalculatePurchasePrice, updateBillFormData],
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+      [
+        purchasePriceInfo.purchasePriceAfterVatInVnd,
+        shouldRecalculatePurchasePrice,
+        updateBillFormData,
+      ],
     );
 
     const onCalculatePurchasePriceCompleted = useCallback(

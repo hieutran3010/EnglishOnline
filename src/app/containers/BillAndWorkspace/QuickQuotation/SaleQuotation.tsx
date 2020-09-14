@@ -103,7 +103,7 @@ const SaleQuotation = () => {
         render: (record: QuotationReportDetail) => {
           const { zone, service } = record;
           return (
-            <Space>
+            <Space size="small">
               <Text>{service ? service : 'Dịch vụ theo NCC'}</Text>
               <Text>{`(${zone})`}</Text>
             </Space>
@@ -119,7 +119,7 @@ const SaleQuotation = () => {
             purchasePriceAfterVatInVnd,
           } = record;
           return (
-            <Space>
+            <Space size="small">
               <Text strong>{toCurrency(purchasePriceAfterVatInUsd, true)}</Text>
               <Text>=</Text>
               <Text strong>{toCurrency(purchasePriceAfterVatInVnd)}</Text>
@@ -137,7 +137,7 @@ const SaleQuotation = () => {
           const { purchasePriceAfterVatInVnd } = record;
           const profit = salePrice - purchasePriceAfterVatInVnd;
           return (
-            <Space>
+            <Space size="small">
               <Text strong style={{ color: profit > 0 ? 'green' : 'red' }}>
                 {toCurrency(profit)}
               </Text>
