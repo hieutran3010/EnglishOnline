@@ -268,6 +268,7 @@ export const BillCreateOrUpdate = memo(
 
     useEffect(() => {
       setIsDirty(false);
+      billForm.resetFields();
 
       if (role !== Role.SALE) {
         dispatch(actions.fetchVendor());

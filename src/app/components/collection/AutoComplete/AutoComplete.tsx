@@ -2,7 +2,6 @@ import React, { useState, useCallback, useMemo } from 'react';
 import { AutoComplete } from 'antd';
 import { AutoCompleteProps } from 'antd/lib/auto-complete';
 import isEmpty from 'lodash/fp/isEmpty';
-import uniqueId from 'lodash/fp/uniqueId';
 import find from 'lodash/fp/find';
 import get from 'lodash/fp/get';
 import set from 'lodash/fp/set';
@@ -55,7 +54,6 @@ interface Props {
   itemRender?: (item: any) => React.Component;
   pageSize?: number;
   excludeValue?: any;
-  excludePath?: string;
   onNormalizeSearchKey?: (searchKey: string) => string;
 }
 const DefaultAutoComplete = React.forwardRef(
@@ -70,7 +68,6 @@ const DefaultAutoComplete = React.forwardRef(
       itemRender,
       pageSize,
       excludeValue,
-      excludePath,
       onNormalizeSearchKey,
       ...restProps
     }: Props & AutoCompleteProps,
@@ -92,7 +89,7 @@ const DefaultAutoComplete = React.forwardRef(
           setItems(data);
           if (size(data) === 1) {
             const uniqueData = head(data);
-            const val = get(valuePath)(uniqueData) || uniqueData;
+            const val = get(displayPath)(uniqueData) || uniqueData;
             if (val === searchKey) {
               onSelected && onSelected(head(data));
             }
@@ -101,7 +98,7 @@ const DefaultAutoComplete = React.forwardRef(
           setItems([]);
         }
       },
-      [fetchDataSource, onSelected, pageSize, searchPropNames, valuePath],
+      [fetchDataSource, onSelected, pageSize, searchPropNames, displayPath],
     );
 
     const onSearchChange = useCallback(
@@ -148,27 +145,22 @@ const DefaultAutoComplete = React.forwardRef(
 
     const source = useMemo(() => {
       let filteredItems = items;
-      if (
-        excludePath &&
-        !isEmpty(excludePath) &&
-        excludeValue &&
-        !isEmpty(excludeValue)
-      ) {
+      if (excludeValue && !isEmpty(excludeValue)) {
         filteredItems = filter(
-          (item: any) => get(excludePath)(item) !== excludeValue,
+          (item: any) => get(valuePath)(item) !== excludeValue,
         )(items);
       }
 
       return map((item: any) => (
         <Option
-          key={get(valuePath)(item) || uniqueId('ac_')}
+          key={get(valuePath)(item) || item}
           value={get(valuePath)(item) || item}
           text={get(displayPath)(item) || item}
         >
           {(itemRender && itemRender(item)) || get(displayPath)(item) || item}
         </Option>
       ))(filteredItems);
-    }, [displayPath, excludeValue, itemRender, items, valuePath, excludePath]);
+    }, [displayPath, excludeValue, itemRender, items, valuePath]);
 
     return (
       <AutoComplete

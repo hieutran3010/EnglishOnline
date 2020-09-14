@@ -96,7 +96,7 @@ export const BillAdvanceSearch = memo(() => {
 
       if (!isEmpty(senderName)) {
         submittedFilters.push({
-          field: 'SenderName',
+          field: 'SenderName@SenderNameNonUnicode',
           operator: GRAPHQL_QUERY_OPERATOR.CONTAINS,
           value: senderName,
         });
@@ -104,7 +104,7 @@ export const BillAdvanceSearch = memo(() => {
 
       if (!isEmpty(receiverName)) {
         submittedFilters.push({
-          field: 'ReceiverName',
+          field: 'ReceiverName@ReceiverNameNonUnicode',
           operator: GRAPHQL_QUERY_OPERATOR.CONTAINS,
           value: receiverName,
         });

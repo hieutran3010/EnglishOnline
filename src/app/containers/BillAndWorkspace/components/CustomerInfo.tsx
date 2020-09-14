@@ -74,13 +74,12 @@ const CustomerInfo = ({
         >
           <AutoComplete
             fetchDataSource={customerDataSource}
-            searchPropNames={['name']}
+            searchPropNames={['name', 'nameNonUnicode']}
             displayPath="name"
             minSearchLength={2}
-            valuePath="name"
+            valuePath="id"
             placeholder="Nhập Tên khách gởi để tìm"
             excludeValue={receiverId}
-            excludePath="id"
             onSelected={onSenderSelectionChanged}
             onNormalizeSearchKey={onNormalizeNameSearchKey}
           />
@@ -96,10 +95,9 @@ const CustomerInfo = ({
             searchPropNames={['phone']}
             displayPath="phone"
             minSearchLength={2}
-            valuePath="phone"
+            valuePath="id"
             placeholder="Nhập số điện thoại khách gởi để tìm"
             excludeValue={receiverId}
-            excludePath="id"
             onSelected={onSenderSelectionChanged}
             onNormalizeSearchKey={onNormalizePhoneSearchKey}
           />
@@ -137,14 +135,13 @@ const CustomerInfo = ({
         >
           <AutoComplete
             fetchDataSource={customerDataSource}
-            searchPropNames={['name']}
+            searchPropNames={['name', 'nameNonUnicode']}
             displayPath="name"
             minSearchLength={2}
-            valuePath="name"
+            valuePath="id"
             placeholder="Nhập Tên để tìm"
             excludeValue={senderId}
             onSelected={onReceiverSelectionChanged}
-            excludePath="id"
             onNormalizeSearchKey={onNormalizeNameSearchKey}
           />
         </Form.Item>
@@ -159,11 +156,10 @@ const CustomerInfo = ({
             searchPropNames={['phone']}
             displayPath="phone"
             minSearchLength={2}
-            valuePath="phone"
+            valuePath="id"
             placeholder="Nhập Số điện thoại để tìm"
             excludeValue={senderId}
             onSelected={onReceiverSelectionChanged}
-            excludePath="id"
             onNormalizeSearchKey={onNormalizePhoneSearchKey}
           />
         </Form.Item>
