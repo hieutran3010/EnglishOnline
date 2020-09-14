@@ -542,7 +542,7 @@ export const BillCreateOrUpdate = memo(
           );
           const vendorDebt = purchasePrice - vendorPaymentAmount;
           updateBillFormData({
-            vendorPaymentDebt: vendorDebt > 0 ? vendorDebt : 0,
+            vendorPaymentDebt: vendorDebt,
           });
         }
 
