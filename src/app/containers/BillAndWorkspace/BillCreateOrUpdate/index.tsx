@@ -359,15 +359,6 @@ export const BillCreateOrUpdate = memo(
       // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [relatedZones]);
 
-    useEffect(() => {
-      if (purchasePriceInfo) {
-        billForm.setFieldsValue({
-          vendorPaymentDebt: purchasePriceInfo.purchasePriceAfterVatInVnd,
-        });
-      }
-      // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [purchasePriceInfo.purchasePriceAfterVatInVnd]);
-
     const getBillData = useCallback(() => {
       const bill = billForm.getFieldsValue();
       bill.salePrice = toNumber(bill.salePrice);
@@ -574,12 +565,24 @@ export const BillCreateOrUpdate = memo(
       [billForm, dispatch, shouldRecalculatePurchasePrice, updateBillFormData],
     );
 
-    const onCalculatePurchasePriceCompleted = useCallback(() => {
-      setShouldRecalculatePurchasePrice(false);
-      setIsDirty(true);
-      setShouldCountPurchasePriceWithLatestQuotation(false);
-      setForceUsingLatestQuotation(false);
-    }, []);
+    const onCalculatePurchasePriceCompleted = useCallback(
+      (newPrice: PurchasePriceCountingResult) => {
+        setShouldRecalculatePurchasePrice(false);
+        setIsDirty(true);
+        setShouldCountPurchasePriceWithLatestQuotation(false);
+        setForceUsingLatestQuotation(false);
+
+        if (newPrice) {
+          billForm.setFieldsValue({
+            vendorPaymentDebt:
+              newPrice.purchasePriceAfterVatInVnd -
+              (billForm.getFieldValue('vendorPaymentAmount') || 0),
+          });
+        }
+      },
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+      [],
+    );
 
     const onCalculatePurchasePrice = useCallback(() => {
       const billData = getBillData();
@@ -910,7 +913,6 @@ export const BillCreateOrUpdate = memo(
                       onChange={
                         onShouldCountPurchasePriceWithLatestQuotationChanged
                       }
-                      disabled={forceUsingLatestQuotation}
                     >
                       Tính theo báo giá mới nhất
                     </Checkbox>

@@ -230,7 +230,7 @@ export function* calculatePurchasePriceTask(
         isGetLatestQuotation,
       }),
     );
-    callback && callback();
+    callback && callback(result);
   } catch (error) {
     Sentry.captureException(error);
     toast.error('Chưa tính được giá mua, vui lòng thử lại!');
