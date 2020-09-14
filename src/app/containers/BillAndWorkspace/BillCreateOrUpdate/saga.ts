@@ -38,7 +38,7 @@ import AppParamsFetcher from 'app/fetchers/appParamsFetcher';
 import AppParam, { APP_PARAM_KEY, BillParams } from 'app/models/appParam';
 import User from 'app/models/user';
 import { SubmitBillAction } from './types';
-import { trimStart } from 'lodash';
+import { isNil, trimStart } from 'lodash';
 import { ParcelServiceVendorFetcher } from 'app/fetchers/parcelServiceFetcher';
 
 const vendorFetcher = new VendorFetcher();
@@ -335,14 +335,22 @@ export function* fetchRelatedZonesTask(
   const { vendorId, destinationCountry } = action.payload;
 
   let zones: Zone[] = [];
-  try {
-    zones = yield call(
-      zoneFetcher.getZoneByVendorAndCountry,
-      vendorId,
-      destinationCountry,
-    );
-  } catch (error) {
-    Sentry.captureException(error);
+
+  if (
+    !isEmpty(vendorId) &&
+    !isEmpty(destinationCountry) &&
+    !isNil(vendorId) &&
+    !isNil(destinationCountry)
+  ) {
+    try {
+      zones = yield call(
+        zoneFetcher.getZoneByVendorAndCountry,
+        vendorId,
+        destinationCountry,
+      );
+    } catch (error) {
+      Sentry.captureException(error);
+    }
   }
 
   yield put(actions.fetchRelatedZonesCompleted(zones));
