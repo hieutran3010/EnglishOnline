@@ -137,7 +137,11 @@ const SenderGroupingTable = ({
           <BillList
             billDataSource={billDataSource}
             isReset={isClear}
-            excludeFields={['isArchived', 'billDeliveryHistories']}
+            excludeFields={[
+              'isArchived',
+              'billDeliveryHistories',
+              'senderName',
+            ]}
             extendCols={getAdminCols()}
             heightOffset={0.7}
           />

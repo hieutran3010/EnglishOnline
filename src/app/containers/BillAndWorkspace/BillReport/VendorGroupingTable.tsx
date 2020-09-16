@@ -124,7 +124,11 @@ const VendorGroupingTable = ({
           <BillList
             billDataSource={billDataSource}
             isReset={isClear}
-            excludeFields={['isArchived', 'billDeliveryHistories']}
+            excludeFields={[
+              'isArchived',
+              'billDeliveryHistories',
+              'vendorName',
+            ]}
             extendCols={getAdminCols()}
             heightOffset={0.7}
           />

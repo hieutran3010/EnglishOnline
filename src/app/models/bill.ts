@@ -13,6 +13,7 @@ export enum BILL_STATUS {
 export enum PAYMENT_TYPE {
   CASH = 'CASH',
   BANK_TRANSFER = 'BANK_TRANSFER',
+  CASH_AND_BANK_TRANSFER = 'CASH_AND_BANK_TRANSFER',
 }
 
 export enum PARCEL_VENDOR {
@@ -180,6 +181,7 @@ export default class Bill extends ModelBase {
   vendorFuelChargeFeeInVnd?: number;
   customerPaymentType?: PAYMENT_TYPE;
   customerPaymentAmount?: number;
+  otherCustomerPaymentAmount?: number;
   customerPaymentDebt?: number;
   vendorPaymentType?: PAYMENT_TYPE;
   vendorPaymentAmount?: number;
@@ -242,6 +244,7 @@ export default class Bill extends ModelBase {
       this.customerPaymentType = input.customerPaymentType;
       this.vendorPaymentType = input.vendorPaymentType;
       this.customerPaymentAmount = input.customerPaymentAmount;
+      this.otherCustomerPaymentAmount = input.otherCustomerPaymentAmount;
       this.customerPaymentDebt = input.customerPaymentDebt;
       this.vendorPaymentAmount = input.vendorPaymentAmount;
       this.vendorPaymentDebt = input.vendorPaymentDebt;

@@ -1,5 +1,5 @@
-import React, { memo } from 'react';
-import { Typography, Form } from 'antd';
+import React, { memo, useCallback, useEffect, useState } from 'react';
+import { Typography, Form, Input } from 'antd';
 import {
   StyledCustomerContainer,
   StyledSenderContainer,
@@ -8,6 +8,7 @@ import {
 } from '../Workspace/styles/StyledIndex';
 import PaymentSelect from './PaymentSelect';
 import { CurrencyInput } from 'app/components/Input';
+import { PAYMENT_TYPE } from 'app/models/bill';
 
 const { Title } = Typography;
 
@@ -19,11 +20,26 @@ const paymentLayout = {
 interface Props {
   onCustomerPaymentAmountFocused: () => void;
   onVendorPaymentAmountFocused: () => void;
+  selectedPaymentType?: PAYMENT_TYPE;
 }
 const Payment = ({
   onCustomerPaymentAmountFocused,
   onVendorPaymentAmountFocused,
+  selectedPaymentType,
 }: Props) => {
+  const [
+    selectedCustomerPaymentType,
+    setSelectedCustomerPaymentType,
+  ] = useState<PAYMENT_TYPE | undefined>();
+
+  useEffect(() => {
+    setSelectedCustomerPaymentType(selectedPaymentType);
+  }, [selectedPaymentType]);
+
+  const onCustomerPaymentTypeChanged = useCallback(value => {
+    setSelectedCustomerPaymentType(value);
+  }, []);
+
   return (
     <StyledCustomerContainer>
       <StyledSenderContainer>
@@ -37,15 +53,38 @@ const Payment = ({
           label="Hình thức"
           {...paymentLayout}
         >
-          <PaymentSelect />
+          <PaymentSelect isBothType onChange={onCustomerPaymentTypeChanged} />
         </Form.Item>
-        <Form.Item
-          label="Đã thanh toán (VNĐ)"
-          name="customerPaymentAmount"
-          {...paymentLayout}
-        >
-          <CurrencyInput onFocus={onCustomerPaymentAmountFocused} />
-        </Form.Item>
+        {selectedCustomerPaymentType !==
+          PAYMENT_TYPE.CASH_AND_BANK_TRANSFER && (
+          <Form.Item
+            label="Đã thanh toán (VNĐ)"
+            name="customerPaymentAmount"
+            {...paymentLayout}
+          >
+            <CurrencyInput onFocus={onCustomerPaymentAmountFocused} />
+          </Form.Item>
+        )}
+        {selectedCustomerPaymentType ===
+          PAYMENT_TYPE.CASH_AND_BANK_TRANSFER && (
+          <Form.Item label="Đã thanh toán (TM-CK)" {...paymentLayout}>
+            <Input.Group compact>
+              <Form.Item name="customerPaymentAmount" noStyle>
+                <CurrencyInput
+                  onFocus={onCustomerPaymentAmountFocused}
+                  placeholder="Tiền mặt"
+                  style={{ width: '50%' }}
+                />
+              </Form.Item>
+              <Form.Item name="otherCustomerPaymentAmount" noStyle>
+                <CurrencyInput
+                  placeholder="Chuyển khoản"
+                  style={{ width: '50%' }}
+                />
+              </Form.Item>
+            </Input.Group>
+          </Form.Item>
+        )}
         <Form.Item
           label="Còn nợ (VNĐ)"
           name="customerPaymentDebt"
