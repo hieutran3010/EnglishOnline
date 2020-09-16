@@ -60,6 +60,7 @@ const otherFields: string[] = [
   'vendorPaymentAmount',
   'customerPaymentType',
   'customerPaymentAmount',
+  'otherCustomerPaymentAmount',
   'vendorPaymentDebt',
   'customerPaymentDebt',
   'oldWeightInKg',

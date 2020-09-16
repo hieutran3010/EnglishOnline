@@ -529,8 +529,35 @@ export const BillCreateOrUpdate = memo(
           const customerPaymentAmount = toNumber(
             changedValues['customerPaymentAmount'],
           );
+          const customerPaymentType = billForm.getFieldValue(
+            'customerPaymentType',
+          ) as PAYMENT_TYPE;
+          if (customerPaymentType !== PAYMENT_TYPE.CASH_AND_BANK_TRANSFER) {
+            updateBillFormData({
+              customerPaymentDebt: salePrice - customerPaymentAmount,
+            });
+          } else {
+            const otherPaymentAmount =
+              billForm.getFieldValue('otherCustomerPaymentAmount') || 0;
+            updateBillFormData({
+              customerPaymentDebt:
+                salePrice - (customerPaymentAmount + otherPaymentAmount),
+            });
+          }
+        }
+
+        if (changedFields.includes('otherCustomerPaymentAmount')) {
+          const salePrice = toNumber(billForm.getFieldValue('salePrice'));
+          const customerPaymentAmount = toNumber(
+            billForm.getFieldValue('customerPaymentAmount'),
+          );
+          const otherPaymentAmount = toNumber(
+            changedValues['otherCustomerPaymentAmount'],
+          );
+
           updateBillFormData({
-            customerPaymentDebt: salePrice - customerPaymentAmount,
+            customerPaymentDebt:
+              salePrice - (customerPaymentAmount + otherPaymentAmount),
           });
         }
 
@@ -888,6 +915,9 @@ export const BillCreateOrUpdate = memo(
             <Payment
               onCustomerPaymentAmountFocused={onCustomerPaymentAmountFocused}
               onVendorPaymentAmountFocused={onVendorPaymentAmountFocused}
+              selectedPaymentType={billForm.getFieldValue(
+                'customerPaymentType',
+              )}
             />,
           )}
 
@@ -973,7 +1003,8 @@ export const BillCreateOrUpdate = memo(
                       <>
                         <Button
                           size="middle"
-                          type="ghost"
+                          type="primary"
+                          ghost
                           htmlType="button"
                           disabled={
                             isSubmitting ||
@@ -988,7 +1019,8 @@ export const BillCreateOrUpdate = memo(
                         </Button>
                         <Button
                           size="middle"
-                          type="ghost"
+                          type="primary"
+                          ghost
                           htmlType="button"
                           onClick={onFinalBill}
                           loading={isFinalBill}
