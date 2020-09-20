@@ -32,12 +32,10 @@ import Modal from 'antd/lib/modal/Modal';
 
 const { Title, Text } = Typography;
 
-const getPaymentDisplay = (paymentType: PAYMENT_TYPE | undefined) => {
-  if (paymentType === PAYMENT_TYPE.CASH) {
-    return 'Tiền mặt';
-  }
-
-  return 'Chuyển khoản';
+const paymentTypeDisplay = {
+  [PAYMENT_TYPE.CASH]: 'Tiền mặt',
+  [PAYMENT_TYPE.BANK_TRANSFER]: 'Chuyển khoản',
+  [PAYMENT_TYPE.CASH_AND_BANK_TRANSFER]: 'Tiền mặt & Chuyển khoản',
 };
 
 interface Props {
@@ -298,10 +296,17 @@ const BillView = ({
             </Title>
             <Descriptions size="small" bordered layout="vertical">
               <Descriptions.Item label="Hình thức">
-                {getPaymentDisplay(bill.customerPaymentType)}
+                {paymentTypeDisplay[bill.customerPaymentType as string]}
               </Descriptions.Item>
               <Descriptions.Item label="Đã thanh toán">
-                {toCurrency(bill.customerPaymentAmount || 0)}
+                {bill.customerPaymentType ===
+                PAYMENT_TYPE.CASH_AND_BANK_TRANSFER
+                  ? `TM: ${toCurrency(
+                      bill.customerPaymentAmount || 0,
+                    )} - CK: ${toCurrency(
+                      bill.otherCustomerPaymentAmount || 0,
+                    )}`
+                  : toCurrency(bill.customerPaymentAmount || 0)}
               </Descriptions.Item>
               <Descriptions.Item label="Còn nợ">
                 {toCurrency(bill.customerPaymentDebt || 0)}
@@ -318,7 +323,7 @@ const BillView = ({
                 </Title>
                 <Descriptions size="small" bordered layout="vertical">
                   <Descriptions.Item label="Hình thức">
-                    {getPaymentDisplay(bill.vendorPaymentType)}
+                    {paymentTypeDisplay[bill.vendorPaymentType as string]}
                   </Descriptions.Item>
                   <Descriptions.Item label="Đã thanh toán">
                     {toCurrency(bill.vendorPaymentAmount || 0)}
@@ -358,7 +363,8 @@ const BillView = ({
             </Descriptions.Item>
             <Descriptions.Item label="Lợi nhuận thực tạm tính (Khách hàng thanh toán - Thanh toán NCC)">
               {toCurrency(
-                (bill.customerPaymentAmount || 0) -
+                (bill.customerPaymentAmount || 0) +
+                  (bill.otherCustomerPaymentAmount || 0) -
                   (bill.vendorPaymentAmount || 0),
               )}
             </Descriptions.Item>
