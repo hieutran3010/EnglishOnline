@@ -61,6 +61,8 @@ export default class VendorFetcher extends GraphQLFetcherBase<Vendor> {
         vendor {
           getQuotationReport(queryParams: $queryParams) {
             vendorName
+            otherFeeInUsd
+            fuelChargePercent
             quotation {
               zone
               service
@@ -68,6 +70,8 @@ export default class VendorFetcher extends GraphQLFetcherBase<Vendor> {
               purchasePriceInVnd
               purchasePriceAfterVatInUsd
               purchasePriceAfterVatInVnd
+              quotationPriceInUsd
+              vendorNetPriceInUsd
             }
           }
         }

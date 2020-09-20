@@ -5,9 +5,11 @@ import {
   Button,
   Card,
   Checkbox,
+  Descriptions,
   Form,
   InputNumber,
   List,
+  Popover,
   Space,
   Table,
   Typography,
@@ -119,11 +121,30 @@ const SaleQuotation = () => {
             purchasePriceAfterVatInVnd,
           } = record;
           return (
-            <Space size="small">
-              <Text strong>{toCurrency(purchasePriceAfterVatInUsd, true)}</Text>
-              <Text>=</Text>
-              <Text strong>{toCurrency(purchasePriceAfterVatInVnd)}</Text>
-            </Space>
+            <Popover
+              content={
+                <Descriptions size="small" bordered column={2}>
+                  <Descriptions.Item label="Báo Giá">
+                    <Space>
+                      <Text>
+                        {toCurrency(record.quotationPriceInUsd || 0, true)}
+                      </Text>
+                    </Space>
+                  </Descriptions.Item>
+                  <Descriptions.Item label="Giá Net">
+                    {toCurrency(record.vendorNetPriceInUsd || 0, true)}
+                  </Descriptions.Item>
+                </Descriptions>
+              }
+            >
+              <Space size="small">
+                <Text strong>
+                  {toCurrency(purchasePriceAfterVatInUsd, true)}
+                </Text>
+                <Text>=</Text>
+                <Text strong>{toCurrency(purchasePriceAfterVatInVnd)}</Text>
+              </Space>
+            </Popover>
           );
         },
       },
@@ -268,13 +289,27 @@ const SaleQuotation = () => {
         renderItem={(item: QuotationReport) => (
           <List.Item>
             <Card size="small" title={item.vendorName}>
-              <Table
+              <Space
                 size="small"
-                dataSource={item.quotation}
-                pagination={false}
-                columns={quotationColumns}
-                rowKey={r => r.zone}
-              />
+                direction="vertical"
+                style={{ width: '100%' }}
+              >
+                <Descriptions size="small" column={2} bordered>
+                  <Descriptions.Item label="Phí nhiên liệu">
+                    {item.fuelChargePercent || 0}%
+                  </Descriptions.Item>
+                  <Descriptions.Item label="Phí khác">
+                    {toCurrency(item.otherFeeInUsd || 0, true)}
+                  </Descriptions.Item>
+                </Descriptions>
+                <Table
+                  size="small"
+                  dataSource={item.quotation}
+                  pagination={false}
+                  columns={quotationColumns}
+                  rowKey={r => r.zone}
+                />
+              </Space>
             </Card>
           </List.Item>
         )}

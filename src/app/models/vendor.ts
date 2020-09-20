@@ -20,6 +20,8 @@ export class ServiceAssignmentResult {
 
 export class QuotationReport {
   vendorName!: string;
+  otherFeeInUsd?: number;
+  fuelChargePercent?: number;
   quotation: QuotationReportDetail[] = [];
 }
 
@@ -30,6 +32,8 @@ export class QuotationReportDetail {
   purchasePriceInVnd!: number;
   purchasePriceAfterVatInUsd!: number;
   purchasePriceAfterVatInVnd!: number;
+  quotationPriceInUsd?: number;
+  vendorNetPriceInUsd?: number;
 }
 
 export class QuotationReportParams {

@@ -1,4 +1,4 @@
-import React, { memo } from 'react';
+import React, { memo, useCallback } from 'react';
 import { Typography, Form, InputNumber, Input, Tooltip } from 'antd';
 import isEmpty from 'lodash/fp/isEmpty';
 import isUndefined from 'lodash/fp/isUndefined';
@@ -17,6 +17,7 @@ import VendorWeightAdjustment from '../components/VendorWeightAdjustment';
 import { PurchasePriceCountingResult } from 'app/models/purchasePriceCounting';
 import { BillQuotation } from 'app/models/bill';
 import Zone from 'app/models/zone';
+import trim from 'lodash/fp/trim';
 
 const { Title, Text } = Typography;
 
@@ -71,6 +72,10 @@ const PackageInfo = ({
   onSelectedCountryChanged,
   onServiceChanged,
 }: Props) => {
+  const onTrimmingNormalize = useCallback((value, _prevValue, _prevValues) => {
+    return trim(value);
+  }, []);
+
   return (
     <>
       <Title level={4} type="secondary">
@@ -158,6 +163,7 @@ const PackageInfo = ({
         name="airlineBillId"
         label="Bill hãng bay"
         rules={billValidator.airlineBillId}
+        normalize={onTrimmingNormalize}
       >
         <Input />
       </Form.Item>
@@ -166,6 +172,7 @@ const PackageInfo = ({
         name="childBillId"
         label="Bill con"
         rules={billValidator.childBillId}
+        normalize={onTrimmingNormalize}
       >
         <Input />
       </Form.Item>
