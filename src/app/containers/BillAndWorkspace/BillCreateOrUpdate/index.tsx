@@ -29,6 +29,8 @@ import isUndefined from 'lodash/fp/isUndefined';
 import isNil from 'lodash/fp/isNil';
 import size from 'lodash/fp/size';
 import head from 'lodash/fp/head';
+import trim from 'lodash/fp/trim';
+
 import { SagaInjectionModes } from 'redux-injectors';
 import { useInjectReducer, useInjectSaga } from 'utils/redux-injectors';
 
@@ -364,6 +366,7 @@ export const BillCreateOrUpdate = memo(
       const bill = billForm.getFieldsValue();
       bill.salePrice = toNumber(bill.salePrice);
       bill.date = bill.date.hour(23).minute(0).format('YYYY-MM-DD HH:mm');
+      bill.description = trim(bill.description);
 
       return bill as any;
     }, [billForm]);
