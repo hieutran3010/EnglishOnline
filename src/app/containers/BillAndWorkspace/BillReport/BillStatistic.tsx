@@ -5,6 +5,7 @@ import { toCurrency } from 'utils/numberFormat';
 import { authStorage } from 'app/services/auth';
 import { Role } from 'app/models/user';
 import { StatisticProps } from 'antd/lib/statistic/Statistic';
+import { TotalCustomerPayment } from './types';
 
 export interface BillStatisticProps {
   isFetchingTotalSalePrice: boolean;
@@ -22,6 +23,8 @@ export interface BillStatisticProps {
   totalRawProfit: number;
   totalBillCount: number;
   isFetchingTotalBillCount: boolean;
+  isFetchingTotalCustomerPayment: boolean;
+  totalCustomerPayment: TotalCustomerPayment;
 }
 
 interface StatisticBlock {
@@ -83,6 +86,16 @@ const BillStatistic = (props: BillStatisticProps) => {
             title="Tổng doanh thu"
             value={props.totalRevenue}
             isFetching={props.isFetchingTotalRevenue}
+          />
+          <StatisticBlock
+            title="Tổng tiền khách đã trả"
+            value={props.totalCustomerPayment.total}
+            isFetching={props.isFetchingTotalCustomerPayment}
+            suffix={`TM: ${toCurrency(
+              props.totalCustomerPayment.totalCash,
+            )} - CK: ${toCurrency(
+              props.totalCustomerPayment.totalBankTransfer,
+            )}`}
           />
           <StatisticBlock
             title="Tổng nợ của Khách"

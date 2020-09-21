@@ -139,3 +139,13 @@ export const selectDateRange = createSelector(
   [selectDomain],
   billReportState => billReportState.dateRange,
 );
+
+export const selectTotalCustomerPayment = createSelector(
+  [selectDomain],
+  billReportState => billReportState.totalCustomerPayment,
+);
+
+export const selectIsFetchingTotalCustomerPayment = createSelector(
+  [selectDomain],
+  billReportState => billReportState.isFetchingTotalCustomerPayment,
+);

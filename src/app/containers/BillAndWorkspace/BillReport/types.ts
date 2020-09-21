@@ -38,6 +38,15 @@ export interface BillReportState {
   totalFinalBill: number;
 
   dateRange: any[];
+
+  totalCustomerPayment: TotalCustomerPayment;
+  isFetchingTotalCustomerPayment: boolean;
 }
+
+export type TotalCustomerPayment = {
+  total: number;
+  totalCash: number;
+  totalBankTransfer: number;
+};
 
 export type ContainerState = BillReportState;

@@ -40,6 +40,7 @@ import User from 'app/models/user';
 import { SubmitBillAction } from './types';
 import { isNil, trimStart } from 'lodash';
 import { ParcelServiceVendorFetcher } from 'app/fetchers/parcelServiceFetcher';
+import { formatPhoneNumber } from 'utils/numberFormat';
 
 const vendorFetcher = new VendorFetcher();
 const billFetcher = new BillFetcher();
@@ -89,12 +90,9 @@ export function* submitBillTask(action: PayloadAction<Bill | any>) {
   let billFormValues = action.payload;
   try {
     // check auto save customer
-    const {
-      isSaveSender,
-      isSaveReceiver,
-      senderId,
-      receiverId,
-    } = billFormValues;
+    const { isSaveSender, isSaveReceiver } = billFormValues;
+    const senderId = yield select(selectSenderId);
+    const receiverId = yield select(selectReceiverId);
 
     if (isSaveSender === true && !senderId) {
       const { senderName, senderPhone, senderAddress } = billFormValues;
@@ -375,16 +373,27 @@ function* getCustomer(name: string, phone: string, address: string) {
     return undefined;
   }
 
+  const formattedPhone = formatPhoneNumber(phone);
   let customer = yield call(customerFetcher.queryOneAsync, {
-    query: `Phone = "${trim(phone)}"`,
+    query: `Phone = "${formattedPhone}"`,
   });
+
   if (!customer) {
     const formattedName = trimStart(name, '- ');
-    customer = yield call(customerFetcher.addAsync, {
-      name: trim(formattedName),
-      phone,
-      address: trim(address),
-    });
+    try {
+      customer = yield call(customerFetcher.addAsync, {
+        name: trim(formattedName),
+        phone: formattedPhone,
+        address: trim(address),
+      });
+    } catch (error) {
+      Sentry.captureException(
+        `[getCustomer] Cannot auto insert new customer. Error: ${JSON.stringify(
+          error,
+        )}`,
+      );
+      customer = undefined;
+    }
   }
 
   return customer;

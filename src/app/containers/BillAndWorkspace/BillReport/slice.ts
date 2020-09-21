@@ -2,7 +2,7 @@ import isEmpty from 'lodash/fp/isEmpty';
 import moment from 'moment';
 import { PayloadAction } from '@reduxjs/toolkit';
 import { createSlice } from 'utils/@reduxjs/toolkit';
-import { ContainerState } from './types';
+import { ContainerState, TotalCustomerPayment } from './types';
 import { CustomerStatistic, VendorStatistic } from 'app/models/bill';
 import ExportSession from 'app/models/exportSession';
 
@@ -34,6 +34,8 @@ export const initialState: ContainerState = {
   checkingExportSession: false,
 
   dateRange: [moment(), moment()],
+  isFetchingTotalCustomerPayment: false,
+  totalCustomerPayment: { total: 0, totalBankTransfer: 0, totalCash: 0 },
 };
 
 const billReportSlice = createSlice({
@@ -46,6 +48,17 @@ const billReportSlice = createSlice({
     fetchTotalSalePriceCompleted(state, action: PayloadAction<number>) {
       state.isFetchingTotalSalePrice = false;
       state.totalSalePriceOfSale = action.payload;
+    },
+
+    fetchTotalCustomerPayment(state, action: PayloadAction<string>) {
+      state.isFetchingTotalCustomerPayment = true;
+    },
+    fetchTotalCustomerPaymentCompleted(
+      state,
+      action: PayloadAction<TotalCustomerPayment>,
+    ) {
+      state.totalCustomerPayment = action.payload;
+      state.isFetchingTotalCustomerPayment = false;
     },
 
     fetchTotalRevenue(state, action: PayloadAction<string>) {
@@ -172,6 +185,8 @@ const billReportSlice = createSlice({
       state.totalFinalBill = 0;
       state.billsGroupedByCustomer = [];
       state.billsGroupedByVendor = [];
+      state.totalCustomerPayment = initialState.totalCustomerPayment;
+      state.isFetchingTotalCustomerPayment = false;
     },
   },
 });
