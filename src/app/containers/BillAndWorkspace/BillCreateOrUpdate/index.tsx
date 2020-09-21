@@ -415,8 +415,8 @@ export const BillCreateOrUpdate = memo(
           );
 
           updateBillFormData({
-            vendorOtherFee: vendor.otherFeeInUsd,
-            vendorFuelChargePercent: vendor.fuelChargePercent,
+            vendorOtherFee: vendor.otherFeeInUsd || 0,
+            vendorFuelChargePercent: vendor.fuelChargePercent || 0,
           });
 
           if (inputBill && inputBill.id) {

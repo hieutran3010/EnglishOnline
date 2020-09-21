@@ -90,12 +90,9 @@ export function* submitBillTask(action: PayloadAction<Bill | any>) {
   let billFormValues = action.payload;
   try {
     // check auto save customer
-    const {
-      isSaveSender,
-      isSaveReceiver,
-      senderId,
-      receiverId,
-    } = billFormValues;
+    const { isSaveSender, isSaveReceiver } = billFormValues;
+    const senderId = yield select(selectSenderId);
+    const receiverId = yield select(selectReceiverId);
 
     if (isSaveSender === true && !senderId) {
       const { senderName, senderPhone, senderAddress } = billFormValues;
@@ -372,11 +369,6 @@ function* mergeBillFormWithStore(billFormValues: any) {
 }
 
 function* getCustomer(name: string, phone: string, address: string) {
-  const selectedSenderId = yield select(selectSenderId);
-  if (!isEmpty(selectedSenderId) && !isNil(selectedSenderId)) {
-    return { id: selectedSenderId };
-  }
-
   if (!name || !phone || isEmpty(name) || isEmpty(phone)) {
     return undefined;
   }
