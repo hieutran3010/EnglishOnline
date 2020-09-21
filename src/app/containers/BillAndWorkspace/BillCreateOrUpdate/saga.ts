@@ -383,7 +383,7 @@ function* getCustomer(name: string, phone: string, address: string) {
 
   const formattedPhone = formatPhoneNumber(phone);
   let customer = yield call(customerFetcher.queryOneAsync, {
-    query: `Phone = "${formatPhoneNumber}"`,
+    query: `Phone = "${formattedPhone}"`,
   });
 
   if (!customer) {
@@ -391,7 +391,7 @@ function* getCustomer(name: string, phone: string, address: string) {
     try {
       customer = yield call(customerFetcher.addAsync, {
         name: trim(formattedName),
-        formattedPhone,
+        phone: formattedPhone,
         address: trim(address),
       });
     } catch (error) {
