@@ -33,7 +33,7 @@ export const QuickQuotation = memo(() => {
         style={{ height: '100%', overflowY: 'auto' }}
       >
         <TabPane tab="Báo Giá" key="1">
-          <SaleQuotation />
+          <SaleQuotation role={Role.ADMIN} />
         </TabPane>
         <TabPane tab="Thiết lập % tăng" key="2">
           <ContentContainer>
@@ -47,7 +47,7 @@ export const QuickQuotation = memo(() => {
   if (role === Role.SALE) {
     return (
       <div style={{ height: '100%', overflowY: 'auto' }}>
-        <SaleQuotation />
+        <SaleQuotation role={Role.SALE} />
       </div>
     );
   }

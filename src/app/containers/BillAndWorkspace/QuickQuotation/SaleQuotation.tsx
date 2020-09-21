@@ -22,7 +22,7 @@ import { ContentContainer } from 'app/components/Layout';
 import { CountrySelect } from 'app/components/Select';
 import { Role } from 'app/models/user';
 import { QuotationReport, QuotationReportDetail } from 'app/models/vendor';
-import { authorizeHelper, authStorage } from 'app/services/auth';
+import { authorizeHelper } from 'app/services/auth';
 import { toCurrency } from 'utils/numberFormat';
 
 import {
@@ -34,11 +34,13 @@ import { actions } from './slice';
 
 const { Text } = Typography;
 
-const SaleQuotation = () => {
+interface Props {
+  role: Role;
+}
+const SaleQuotation = ({ role }: Props) => {
   const dispatch = useDispatch();
 
   const [quotationForm] = Form.useForm();
-  const role = authStorage.getRole();
 
   const isFetchingQuotation = useSelector(selectIsFetchingQuotation);
   const quotationReports = useSelector(selectQuotationReports);
@@ -120,31 +122,41 @@ const SaleQuotation = () => {
             purchasePriceAfterVatInUsd,
             purchasePriceAfterVatInVnd,
           } = record;
+          if (role === Role.ADMIN) {
+            return (
+              <Popover
+                content={
+                  <Descriptions size="small" bordered column={2}>
+                    <Descriptions.Item label="Báo Giá">
+                      <Space>
+                        <Text>
+                          {toCurrency(record.quotationPriceInUsd || 0, true)}
+                        </Text>
+                      </Space>
+                    </Descriptions.Item>
+                    <Descriptions.Item label="Giá Net">
+                      {toCurrency(record.vendorNetPriceInUsd || 0, true)}
+                    </Descriptions.Item>
+                  </Descriptions>
+                }
+              >
+                <Space size="small">
+                  <Text strong>
+                    {toCurrency(purchasePriceAfterVatInUsd, true)}
+                  </Text>
+                  <Text>=</Text>
+                  <Text strong>{toCurrency(purchasePriceAfterVatInVnd)}</Text>
+                </Space>
+              </Popover>
+            );
+          }
+
           return (
-            <Popover
-              content={
-                <Descriptions size="small" bordered column={2}>
-                  <Descriptions.Item label="Báo Giá">
-                    <Space>
-                      <Text>
-                        {toCurrency(record.quotationPriceInUsd || 0, true)}
-                      </Text>
-                    </Space>
-                  </Descriptions.Item>
-                  <Descriptions.Item label="Giá Net">
-                    {toCurrency(record.vendorNetPriceInUsd || 0, true)}
-                  </Descriptions.Item>
-                </Descriptions>
-              }
-            >
-              <Space size="small">
-                <Text strong>
-                  {toCurrency(purchasePriceAfterVatInUsd, true)}
-                </Text>
-                <Text>=</Text>
-                <Text strong>{toCurrency(purchasePriceAfterVatInVnd)}</Text>
-              </Space>
-            </Popover>
+            <Space size="small">
+              <Text strong>{toCurrency(purchasePriceAfterVatInUsd, true)}</Text>
+              <Text>=</Text>
+              <Text strong>{toCurrency(purchasePriceAfterVatInVnd)}</Text>
+            </Space>
           );
         },
       },
