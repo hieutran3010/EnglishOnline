@@ -1,4 +1,4 @@
-import { call, put, takeLatest, select } from 'redux-saga/effects';
+import { call, put, takeLatest, select, all } from 'redux-saga/effects';
 import { actions } from './slice';
 import { PayloadAction } from '@reduxjs/toolkit';
 import BillFetcher from 'app/fetchers/billFetcher';
@@ -7,6 +7,7 @@ import {
   VendorStatistic,
   CustomerStatistic,
   BILL_STATUS,
+  PAYMENT_TYPE,
 } from 'app/models/bill';
 import ExportSessionFetcher from 'app/fetchers/exportSessionFetcher';
 import ExportFetcher from 'app/fetchers/exportFetcher';
@@ -28,6 +29,50 @@ export function* fetchTotalRevenueTask(action: PayloadAction<string>) {
   const query = action.payload;
   const result = yield call(getRevenue, query);
   yield put(actions.fetchTotalRevenueCompleted(result.value));
+}
+
+export function* fetchTotalCustomerPayment(action: PayloadAction<string>) {
+  const query = action.payload;
+
+  const [
+    total,
+    totalCash,
+    totalBankTransfer,
+    totalOtherBankTransfer,
+  ] = yield all([
+    call(
+      billFetcher.sumAsync,
+      'CustomerPaymentAmount,OtherCustomerPaymentAmount',
+      '(CustomerPaymentAmount ?? 0) + (OtherCustomerPaymentAmount ?? 0)',
+      query,
+    ),
+    call(
+      billFetcher.sumAsync,
+      'CustomerPaymentAmount',
+      'CustomerPaymentAmount',
+      `${query} and (CustomerPaymentType = "${PAYMENT_TYPE.CASH}" or CustomerPaymentType = "${PAYMENT_TYPE.CASH_AND_BANK_TRANSFER}")`,
+    ),
+    call(
+      billFetcher.sumAsync,
+      'CustomerPaymentAmount',
+      'CustomerPaymentAmount',
+      `${query} and CustomerPaymentType = "${PAYMENT_TYPE.BANK_TRANSFER}"`,
+    ),
+    call(
+      billFetcher.sumAsync,
+      'OtherCustomerPaymentAmount',
+      'OtherCustomerPaymentAmount',
+      `${query} and CustomerPaymentType = "${PAYMENT_TYPE.CASH_AND_BANK_TRANSFER}"`,
+    ),
+  ]);
+
+  yield put(
+    actions.fetchTotalCustomerPaymentCompleted({
+      total: total.value,
+      totalCash: totalCash.value,
+      totalBankTransfer: totalBankTransfer.value + totalOtherBankTransfer.value,
+    }),
+  );
 }
 
 export function* fetchCustomerDebtTask(action: PayloadAction<string>) {
@@ -63,13 +108,13 @@ export function* fetchRawProfitTask(action: PayloadAction<string>) {
   const rawProfit = yield call(
     billFetcher.sumAsync,
     'SalePrice,PurchasePriceAfterVatInVnd',
-    'SalePrice - PurchasePriceAfterVatInVnd',
+    '(SalePrice ?? 0) - (PurchasePriceAfterVatInVnd ?? 0)',
     query,
   );
   const rawProfitBeforeTax = yield call(
     billFetcher.sumAsync,
     'SalePrice,PurchasePriceInVnd',
-    'SalePrice - PurchasePriceInVnd',
+    '(SalePrice ?? 0) - (PurchasePriceInVnd ?? 0)',
     query,
   );
   yield put(
@@ -186,6 +231,10 @@ export function* billReportSaga() {
   yield takeLatest(
     actions.fetchBillsGroupedByCustomer.type,
     fetchBillsGroupedByCustomerTask,
+  );
+  yield takeLatest(
+    actions.fetchTotalCustomerPayment.type,
+    fetchTotalCustomerPayment,
   );
   yield takeLatest(actions.requestBillExport.type, requestBillExportTask);
   yield takeLatest(actions.checkExportSession.type, checkExportSessionTask);

@@ -62,6 +62,8 @@ import {
   selectTotalFinalBill,
   selectIsFetchingTotalFinalBill,
   selectDateRange,
+  selectIsFetchingTotalCustomerPayment,
+  selectTotalCustomerPayment,
 } from './selectors';
 import BillList from '../components/BillList';
 import BillStatistic, { BillStatisticProps } from './BillStatistic';
@@ -160,6 +162,11 @@ export const BillReport = memo((props: Props) => {
     selectIsFetchingCustomerGroupingList,
   );
   const billsCustomerGrouping = useSelector(selectBillsGroupedByCustomer);
+
+  const isFetchingTotalCustomerPayment = useSelector(
+    selectIsFetchingTotalCustomerPayment,
+  );
+  const totalCustomerPayment = useSelector(selectTotalCustomerPayment);
 
   const checkingExportSession = useSelector(selectCheckingExportSession);
   const billExportStatus = useSelector(selectBillExportStatus);
@@ -278,6 +285,7 @@ export const BillReport = memo((props: Props) => {
           dispatch(actions.fetchProfit(query));
           dispatch(actions.fetchRawProfit(query));
           dispatch(actions.fetchTotalFinalBill(query));
+          dispatch(actions.fetchTotalCustomerPayment(query));
           break;
         }
         case Role.ACCOUNTANT: {
@@ -345,6 +353,8 @@ export const BillReport = memo((props: Props) => {
     isFetchingTotalRawProfit,
     totalRawProfit,
     totalRawProfitBeforeTax,
+    isFetchingTotalCustomerPayment,
+    totalCustomerPayment,
   };
 
   const filterValidator = useMemo(() => {
