@@ -40,6 +40,7 @@ import User from 'app/models/user';
 import { SubmitBillAction } from './types';
 import { isNil, trimStart } from 'lodash';
 import { ParcelServiceVendorFetcher } from 'app/fetchers/parcelServiceFetcher';
+import { formatPhoneNumber } from 'utils/numberFormat';
 
 const vendorFetcher = new VendorFetcher();
 const billFetcher = new BillFetcher();
@@ -371,20 +372,36 @@ function* mergeBillFormWithStore(billFormValues: any) {
 }
 
 function* getCustomer(name: string, phone: string, address: string) {
+  const selectedSenderId = yield select(selectSenderId);
+  if (!isEmpty(selectedSenderId) && !isNil(selectedSenderId)) {
+    return { id: selectedSenderId };
+  }
+
   if (!name || !phone || isEmpty(name) || isEmpty(phone)) {
     return undefined;
   }
 
+  const formattedPhone = formatPhoneNumber(phone);
   let customer = yield call(customerFetcher.queryOneAsync, {
-    query: `Phone = "${trim(phone)}"`,
+    query: `Phone = "${formatPhoneNumber}"`,
   });
+
   if (!customer) {
     const formattedName = trimStart(name, '- ');
-    customer = yield call(customerFetcher.addAsync, {
-      name: trim(formattedName),
-      phone,
-      address: trim(address),
-    });
+    try {
+      customer = yield call(customerFetcher.addAsync, {
+        name: trim(formattedName),
+        formattedPhone,
+        address: trim(address),
+      });
+    } catch (error) {
+      Sentry.captureException(
+        `[getCustomer] Cannot auto insert new customer. Error: ${JSON.stringify(
+          error,
+        )}`,
+      );
+      customer = undefined;
+    }
   }
 
   return customer;
