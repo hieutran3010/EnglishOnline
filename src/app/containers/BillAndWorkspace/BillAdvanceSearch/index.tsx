@@ -5,11 +5,12 @@
  */
 
 import React, { memo, useMemo, useCallback, useEffect } from 'react';
-import { Button, Form, DatePicker, Input } from 'antd';
+import { Button, Form, DatePicker, Input, Space } from 'antd';
 import isEmpty from 'lodash/fp/isEmpty';
 import { useSelector } from 'react-redux';
+import { isMobileOnly, isMobile } from 'react-device-detect';
 
-import { RootContainer } from 'app/components/Layout';
+import { ContentContainer } from 'app/components/Layout';
 import getDataSource, { FETCHER_KEY } from 'app/collection-datasource';
 import { authStorage } from 'app/services/auth';
 import { Role } from 'app/models/user';
@@ -39,7 +40,7 @@ export const BillAdvanceSearch = memo(() => {
 
   const billDataSource = useMemo(() => {
     const billDataSource = getDataSource(FETCHER_KEY.BILL);
-    billDataSource.orderByFields = 'date descending';
+    billDataSource.orderByFields = 'date desc, createdOn desc';
 
     return billDataSource;
   }, []);
@@ -121,43 +122,39 @@ export const BillAdvanceSearch = memo(() => {
 
   return (
     <>
-      <RootContainer title="Tìm kiếm Bill">
+      <ContentContainer
+        title="Tìm kiếm Bill"
+        bodyStyle={isMobile ? { height: '100%', overflow: 'auto' } : undefined}
+      >
         <Form
-          style={{ marginLeft: 20, marginRight: 20, marginBottom: 20 }}
           form={form}
           onFinish={onSubmitFilter}
-          layout="inline"
+          layout={isMobileOnly ? 'vertical' : 'inline'}
+          size={isMobileOnly ? 'small' : 'middle'}
+          labelCol={{ span: 12 }}
+          wrapperCol={{ span: 12 }}
         >
-          <Form.Item
-            label="Từ ngày - Đến ngày"
-            name="dateRange"
-            labelCol={{ span: 8 }}
-          >
+          <Form.Item label="Từ ngày - Đến ngày" name="dateRange">
             <RangePicker format="DD-MM-YYYY" />
           </Form.Item>
-          <Form.Item
-            label="Tên khách gởi"
-            name="senderName"
-            labelCol={{ span: 12 }}
-          >
+          <Form.Item label="Tên khách gởi" name="senderName">
             <Input />
           </Form.Item>
-          <Form.Item
-            label="Tên người nhận"
-            name="receiverName"
-            labelCol={{ span: 12 }}
-          >
+          <Form.Item label="Tên người nhận" name="receiverName">
             <Input />
           </Form.Item>
           <Form.Item>
-            <Button type="primary" htmlType="submit">
-              Tìm!
-            </Button>
-            <Button style={{ margin: '0 8px' }} onClick={onClearFilter}>
-              Reset
-            </Button>
+            <Space size="small">
+              <Button type="primary" htmlType="submit">
+                Tìm!
+              </Button>
+              <Button type="primary" ghost onClick={onClearFilter}>
+                Reset
+              </Button>
+            </Space>
           </Form.Item>
         </Form>
+
         <BillList
           billDataSource={billDataSource}
           dontLoadInitialData={true}
@@ -165,7 +162,7 @@ export const BillAdvanceSearch = memo(() => {
           disableFilterFields={['senderName', 'receiverName']}
           excludeFields={['billDeliveryHistories']}
         />
-      </RootContainer>
+      </ContentContainer>
     </>
   );
 });

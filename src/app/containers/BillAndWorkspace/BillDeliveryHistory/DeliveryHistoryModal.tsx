@@ -10,6 +10,7 @@ import {
   TimePicker,
 } from 'antd';
 import { BillDeliveryHistory } from 'app/models/bill';
+import BillTrackingId from '../components/BillTrackingId';
 
 const { Text } = Typography;
 
@@ -82,9 +83,10 @@ const DeliveryHistoryModal = ({
       title={
         <Space>
           <Text>Tình trạng hàng - Bill</Text>
-          <Text strong>
-            {airLineBillId || childBillId || '<Chưa có mã bill>'}
-          </Text>
+          <BillTrackingId
+            childBillId={childBillId}
+            airlineBillId={airLineBillId}
+          />
         </Space>
       }
     >

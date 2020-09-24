@@ -9,7 +9,11 @@ import { PayloadAction } from '@reduxjs/toolkit';
 import { createSlice } from 'utils/@reduxjs/toolkit';
 import Bill, { BillDeliveryHistory } from 'app/models/bill';
 
-import { ContainerState, FetchHistoriesCompletedAction } from './types';
+import {
+  BillDeliveryHistoriesUpdatedEventArgs,
+  ContainerState,
+  FetchHistoriesCompletedAction,
+} from './types';
 
 // The initial state of the BillDeliveryHistory container
 export const initialState: ContainerState = {
@@ -35,7 +39,7 @@ const billDeliveryHistorySlice = createSlice({
       state,
       action: PayloadAction<FetchHistoriesCompletedAction>,
     ) {
-      const { histories, airlineBillId, childBillId } = action.payload;
+      const { histories, airlineBillId, childBillId, billId } = action.payload;
       const newHistories = map(history => new BillDeliveryHistory(history))(
         histories,
       );
@@ -49,6 +53,9 @@ const billDeliveryHistorySlice = createSlice({
       state.isFetchingHistories = false;
       state.airlineBillId = airlineBillId;
       state.childBillId = childBillId;
+      if (billId) {
+        state.billId = billId;
+      }
     },
 
     addNew(state, action: PayloadAction<any>) {
@@ -89,8 +96,11 @@ const billDeliveryHistorySlice = createSlice({
     setIsSaving(state, action: PayloadAction<boolean>) {
       state.isSaving = action.payload;
     },
-    save(state, action: PayloadAction<string>) {},
-    saveCompleted(state) {
+    save(state) {},
+    saveCompleted(
+      state,
+      action: PayloadAction<BillDeliveryHistoriesUpdatedEventArgs>,
+    ) {
       state.cachedHistories = state.histories;
       state.isDirty = false;
     },

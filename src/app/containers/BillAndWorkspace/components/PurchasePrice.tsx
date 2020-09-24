@@ -146,7 +146,12 @@ const PurchasePrice = ({
       title="Công thức cấu thành giá mua"
       placement="top"
       content={
-        <Descriptions bordered size="small" column={3}>
+        <Descriptions
+          bordered
+          size="small"
+          column={{ xxl: 3, xl: 3, lg: 3, md: 1, sm: 1, xs: 1 }}
+          style={{ maxHeight: 300, overflow: 'auto' }}
+        >
           <Descriptions.Item label="1/ Trọng Lượng">
             <Space>
               <Text>{priceInfo.weightInKg}kg</Text>

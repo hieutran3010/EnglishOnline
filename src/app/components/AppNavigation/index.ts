@@ -1,6 +1,5 @@
 import LeftNavigation from './LeftNavigation';
 import TopNavigation from './TopNavigation';
-import MobileMenu from './MobileMenu';
 import { ScreenMode } from './types';
 
 const getScreenMode = (): ScreenMode => {
@@ -15,4 +14,4 @@ const getScreenMode = (): ScreenMode => {
   return ScreenMode.FULL;
 };
 
-export { LeftNavigation, TopNavigation, MobileMenu, ScreenMode, getScreenMode };
+export { LeftNavigation, TopNavigation, ScreenMode, getScreenMode };

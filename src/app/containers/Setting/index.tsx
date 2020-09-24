@@ -15,7 +15,7 @@ import {
   selectIsUpdatingBillParams,
 } from './selectors';
 import { settingSaga } from './saga';
-import { RootContainer, ContentContainer } from 'app/components/Layout';
+import { ContentContainer } from 'app/components/Layout';
 import { Form, InputNumber, Button } from 'antd';
 import { CurrencyInput } from 'app/components/Input';
 
@@ -53,44 +53,36 @@ export const Setting = memo(() => {
   }, []);
 
   return (
-    <>
-      <RootContainer title="Thông số Bill">
-        <ContentContainer loading={isFetchingBillParams}>
-          <Form
-            form={billParamsForm}
-            labelCol={{ span: 6 }}
-            wrapperCol={{ span: 10 }}
-            onFinish={onSubmitBillParams}
+    <ContentContainer title="Thông số Bill" loading={isFetchingBillParams}>
+      <Form
+        form={billParamsForm}
+        labelCol={{ span: 6 }}
+        wrapperCol={{ span: 10 }}
+        onFinish={onSubmitBillParams}
+      >
+        <Form.Item label="VAT(%)" name="vat" rules={billParamsValidator.vat}>
+          <InputNumber
+            ref={(ref: any) => ref?.select()}
+            disabled={isUpdatingBillParams}
+          />
+        </Form.Item>
+        <Form.Item
+          label="Tỷ giá USD(VNĐ)"
+          name="usdExchangeRate"
+          rules={billParamsValidator.usdExchangeRate}
+        >
+          <CurrencyInput disabled={isUpdatingBillParams} />
+        </Form.Item>
+        <Form.Item label=" " colon={false}>
+          <Button
+            htmlType="submit"
+            type="primary"
+            loading={isUpdatingBillParams}
           >
-            <Form.Item
-              label="VAT(%)"
-              name="vat"
-              rules={billParamsValidator.vat}
-            >
-              <InputNumber
-                ref={(ref: any) => ref?.select()}
-                disabled={isUpdatingBillParams}
-              />
-            </Form.Item>
-            <Form.Item
-              label="Tỷ giá USD(VNĐ)"
-              name="usdExchangeRate"
-              rules={billParamsValidator.usdExchangeRate}
-            >
-              <CurrencyInput disabled={isUpdatingBillParams} />
-            </Form.Item>
-            <Form.Item label=" " colon={false}>
-              <Button
-                htmlType="submit"
-                type="primary"
-                loading={isUpdatingBillParams}
-              >
-                LƯU
-              </Button>
-            </Form.Item>
-          </Form>
-        </ContentContainer>
-      </RootContainer>
-    </>
+            LƯU
+          </Button>
+        </Form.Item>
+      </Form>
+    </ContentContainer>
   );
 });

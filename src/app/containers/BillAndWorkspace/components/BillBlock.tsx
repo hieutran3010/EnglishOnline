@@ -1,7 +1,7 @@
-import React, { memo, useCallback, useState } from 'react';
+import React, { memo, ReactNode, useCallback, useMemo, useState } from 'react';
 import moment from 'moment';
 import type Bill from 'app/models/bill';
-import { Card, Typography, Tooltip, Space, Tag, Alert } from 'antd';
+import { Typography, Space, Alert, Divider } from 'antd';
 import {
   EyeOutlined,
   EyeTwoTone,
@@ -9,9 +9,15 @@ import {
   HistoryOutlined,
 } from '@ant-design/icons';
 import BillStatusTag from './BillStatusTag';
-import { Role } from 'app/models/user';
 import { isEmpty } from 'lodash';
 import LastBillDeliveryHistory from './LastBillDeliveryHistory';
+import {
+  StyledBillBlock,
+  StyledLeftBillBlock,
+  StyledRightBillBlock,
+} from './styles/StyledBillBlock';
+import BillTrackingId from './BillTrackingId';
+import { getContrast } from 'utils/colorUtils';
 
 const { Text } = Typography;
 
@@ -22,105 +28,124 @@ export enum BILL_BLOCK_ACTION_TYPE {
 
 interface Props {
   bill: Bill | any;
-  onSelect: (bill: Bill) => void;
-  onSelectForDeliveryHistory?: (bill: Bill) => void;
+  onView?: (bill: Bill) => void;
+  onViewOrEditDeliveryHistory?: (bill: Bill) => void;
   selectedBillId?: string;
-  userRole: Role;
+  dateBackgroundColor?: string;
+  isBusy?: boolean;
+  bordered?: boolean;
+  extra?: ReactNode[];
 }
 const BillBlock = ({
   bill,
-  onSelect,
-  onSelectForDeliveryHistory,
+  onView,
+  onViewOrEditDeliveryHistory,
   selectedBillId,
-  userRole,
+  dateBackgroundColor,
+  isBusy,
+  bordered,
+  extra,
 }: Props) => {
   const [actionType, setActionType] = useState<
     BILL_BLOCK_ACTION_TYPE | undefined
   >();
 
-  const _onSelected = useCallback(() => {
-    onSelect(bill);
+  const _onView = useCallback(() => {
+    onView && onView(bill);
     setActionType(BILL_BLOCK_ACTION_TYPE.EDIT_OR_VIEW);
-  }, [bill, onSelect]);
+  }, [bill, onView]);
 
   const _onGoToHistory = useCallback(() => {
-    if (onSelectForDeliveryHistory) {
-      onSelectForDeliveryHistory(bill);
+    if (onViewOrEditDeliveryHistory) {
+      onViewOrEditDeliveryHistory(bill);
     }
 
     setActionType(BILL_BLOCK_ACTION_TYPE.HISTORY);
-  }, [bill, onSelectForDeliveryHistory]);
+  }, [bill, onViewOrEditDeliveryHistory]);
+
+  const momentBillDate = moment(bill.date);
+
+  const leftProps = useMemo(() => {
+    return {
+      backgroundColor: dateBackgroundColor,
+      color: getContrast(dateBackgroundColor),
+    };
+  }, [dateBackgroundColor]);
+
+  const containerProps = { bordered };
 
   return (
-    <Card
-      size="small"
-      actions={[
-        <BillStatusTag status={bill.status} />,
-        <>
-          {bill.id === selectedBillId &&
-          actionType === BILL_BLOCK_ACTION_TYPE.EDIT_OR_VIEW ? (
-            <EyeTwoTone twoToneColor="#52c41a" />
-          ) : (
-            <EyeOutlined key="edit" onClick={_onSelected} />
-          )}
-        </>,
-        <Tooltip title="Xem/Cập nhật tình trạng hàng">
-          {bill.id === selectedBillId &&
-          actionType === BILL_BLOCK_ACTION_TYPE.HISTORY ? (
-            <HistoryOutlined style={{ color: '#52c41a' }} />
-          ) : (
-            <HistoryOutlined key="history" onClick={_onGoToHistory} />
-          )}
-        </Tooltip>,
-      ]}
-      style={{
-        marginBottom: 10,
-        boxShadow:
-          '0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)',
-      }}
-    >
-      <div
-        style={{
-          display: 'flex',
-          flexDirection: 'column',
-          justifyContent: 'flex-start',
-        }}
-      >
-        <Tooltip title="Bill hãng bay">
-          <Space>
-            <Text strong>
-              {bill.airlineBillId || '<Chưa có Bill hãng bay>'}
-            </Text>
-            <Tag color="cyan">{moment(bill.date).format('DD/MM')}</Tag>
-          </Space>
-        </Tooltip>
-        <Tooltip title="Bill con">
-          <Text>{bill.childBillId || '<Chưa có Bill con>'}</Text>
-        </Tooltip>
-        <Tooltip title="Tên khách gởi >> Tên người nhận">
-          <Space>
-            <Text>{bill.senderName || '<Không có>'}</Text>
-            <DoubleRightOutlined
-              style={{ marginBottom: 5, color: '#00a651' }}
-            />
-            <Text>{bill.receiverName || '<Không có>'}</Text>
-          </Space>
-        </Tooltip>
+    <StyledBillBlock {...containerProps}>
+      <StyledLeftBillBlock {...leftProps}>
+        <Text>{momentBillDate.date()}</Text>
+        <Divider style={{ margin: 0 }} />
+        <Text>{momentBillDate.month() + 1}</Text>
+      </StyledLeftBillBlock>
+      <StyledRightBillBlock>
+        <BillTrackingId
+          airlineBillId={bill.airlineBillId}
+          childBillId={bill.childBillId}
+        />
+
+        <Space size="small" style={{ fontSize: '0.8rem' }}>
+          <Text>{bill.senderName || '<Không có>'}</Text>
+          <DoubleRightOutlined style={{ marginBottom: 5, color: '#00a651' }} />
+          <Text>{bill.receiverName || '<Không có>'}</Text>
+        </Space>
         {!isEmpty(bill.billDeliveryHistories) && (
-          <Tooltip title="Tình trạng hàng">
-            <Alert
-              type="success"
-              style={{ marginTop: 5, padding: '1px 7px' }}
-              message={
-                <LastBillDeliveryHistory
-                  histories={bill.billDeliveryHistories}
-                />
-              }
-            />
-          </Tooltip>
+          <Alert
+            type="success"
+            style={{ padding: '1px 7px', fontSize: '0.8rem', width: '100%' }}
+            message={
+              <LastBillDeliveryHistory histories={bill.billDeliveryHistories} />
+            }
+          />
         )}
-      </div>
-    </Card>
+        <Space
+          style={{
+            width: '100%',
+            justifyContent: 'space-between',
+          }}
+        >
+          <BillStatusTag status={bill.status} />
+
+          {onView && (
+            <div style={{ fontSize: '1.2rem' }}>
+              {bill.id === selectedBillId &&
+              actionType === BILL_BLOCK_ACTION_TYPE.EDIT_OR_VIEW ? (
+                <EyeTwoTone
+                  key="view"
+                  twoToneColor="#52c41a"
+                  disabled={isBusy}
+                />
+              ) : (
+                <EyeOutlined key="view" disabled={isBusy} onClick={_onView} />
+              )}
+            </div>
+          )}
+
+          {onViewOrEditDeliveryHistory && (
+            <div style={{ fontSize: '1rem', marginRight: '1rem' }}>
+              {bill.id === selectedBillId &&
+              actionType === BILL_BLOCK_ACTION_TYPE.HISTORY ? (
+                <HistoryOutlined
+                  key="history"
+                  style={{ color: '#52c41a' }}
+                  disabled={isBusy}
+                />
+              ) : (
+                <HistoryOutlined
+                  key="history"
+                  onClick={_onGoToHistory}
+                  disabled={isBusy}
+                />
+              )}
+            </div>
+          )}
+          {extra}
+        </Space>
+      </StyledRightBillBlock>
+    </StyledBillBlock>
   );
 };
 

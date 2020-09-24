@@ -1,5 +1,5 @@
 import React, { memo, useCallback } from 'react';
-import { Typography, Form, Input, Checkbox } from 'antd';
+import { Typography, Form, Input, Checkbox, Row, Col } from 'antd';
 import { isEmpty, trimStart } from 'lodash';
 
 import { AutoComplete } from 'app/components/collection/AutoComplete';
@@ -8,12 +8,7 @@ import { BillValidator } from 'app/models/validators/billValidator';
 import getDataSource, { FETCHER_KEY } from 'app/collection-datasource';
 import type Customer from 'app/models/customer';
 
-import {
-  StyledCustomerContainer,
-  StyledSenderContainer,
-  StyledCustomerSelectionContainer,
-  StyledReceiverContainer,
-} from '../Workspace/styles/StyledIndex';
+import { StyledCustomerSelectionContainer } from '../Workspace/styles/StyledIndex';
 import { formatPhoneNumber } from 'utils/numberFormat';
 
 const { Title } = Typography;
@@ -59,8 +54,13 @@ const CustomerInfo = ({
   }, []);
 
   return (
-    <StyledCustomerContainer>
-      <StyledSenderContainer>
+    <Row gutter={{ xs: 8, sm: 16, md: 24, lg: 32 }}>
+      <Col
+        xs={{ span: 24 }}
+        sm={{ span: 24 }}
+        md={{ span: 12 }}
+        lg={{ span: 12 }}
+      >
         <StyledCustomerSelectionContainer>
           <Title level={4} type="secondary">
             Khách gởi
@@ -111,17 +111,18 @@ const CustomerInfo = ({
           <Input />
         </Form.Item>
         {(!senderId || isEmpty(senderId)) && (
-          <Form.Item
-            name="isSaveSender"
-            label=" "
-            colon={false}
-            valuePropName="checked"
-          >
+          <Form.Item name="isSaveSender" valuePropName="checked">
             <Checkbox>Lưu khách gởi này</Checkbox>
           </Form.Item>
         )}
-      </StyledSenderContainer>
-      <StyledReceiverContainer>
+      </Col>
+
+      <Col
+        xs={{ span: 24 }}
+        sm={{ span: 24 }}
+        md={{ span: 12 }}
+        lg={{ span: 12 }}
+      >
         <StyledCustomerSelectionContainer>
           <Title level={4} type="secondary">
             Khách nhận
@@ -172,17 +173,12 @@ const CustomerInfo = ({
           <Input />
         </Form.Item>
         {(!receiverId || isEmpty(receiverId)) && (
-          <Form.Item
-            name="isSaveReceiver"
-            label=" "
-            colon={false}
-            valuePropName="checked"
-          >
+          <Form.Item name="isSaveReceiver" valuePropName="checked" noStyle>
             <Checkbox>Lưu khách nhận này</Checkbox>
           </Form.Item>
         )}
-      </StyledReceiverContainer>
-    </StyledCustomerContainer>
+      </Col>
+    </Row>
   );
 };
 

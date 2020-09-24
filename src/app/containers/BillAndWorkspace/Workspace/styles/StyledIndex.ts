@@ -1,8 +1,9 @@
 import styled from 'styled-components/macro';
-import { getMarginLeft } from 'app/components/Layout/AppLayout';
 
 export const StyledMainToolbar = styled.div`
-  position: absolute;
+  position: -webkit-sticky; /* Safari */
+  position: sticky;
+  top: 0;
   z-index: 1;
   background-color: white;
   padding: 10px;
@@ -14,62 +15,42 @@ export const StyledMainToolbar = styled.div`
   align-items: center;
   justify-content: center;
   right: 0;
-  left: 320px;
+  left: 0;
+  margin-bottom: 10px;
 `;
 
 export const StyledContainer = styled.div`
   display: flex;
-  position: fixed;
-  right: 20px;
-  left: ${(props: any) =>
-    `${getMarginLeft(props.screenMode, props.collapsedMenu)}px`};
-  bottom: 0;
-  top: 74px;
-`;
-
-export const StyledLeftContainer = styled.div`
-  width: 300px;
-  margin-right: 20px;
-
-  display: flex;
-  flex-direction: column;
-  margin-top: 7px;
-  margin-bottom: 10px;
-
-  .ant-tabs {
-    height: 100%;
-  }
-
-  .ant-tabs-content {
-    height: 100%;
-  }
+  height: 100%;
 `;
 
 export const StyledRightContainer = styled.div`
-  flex: 1;
-  overflow: auto;
+  flex: 1 1 100%;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  overflow-x: hidden;
+`;
+
+export const StyledBillsFilterContainer = styled.div`
+  background-color: white;
+  padding: 10px;
+  border-radius: 5px;
+  box-shadow: rgba(0, 0, 0, 0.1) 0px 1px 3px 0px,
+    rgba(0, 0, 0, 0.06) 0px 1px 2px 0px;
   margin-bottom: 10px;
-`;
-
-export const StyledDateAndAssigneeContainer = styled.div`
-  display: flex;
+  display: inline-flex;
+  align-items: center;
   justify-content: space-between;
+`;
 
-  .ant-row:first {
-    width: 160px;
+export const StyledMyBillsStatisticContainer = styled(
+  StyledBillsFilterContainer,
+)`
+  width: 100%;
+  span {
+    font-size: 0.8rem;
   }
-`;
-
-export const StyledCustomerContainer = styled.div`
-  display: flex;
-`;
-
-export const StyledSenderContainer = styled.div`
-  flex: 0.5;
-`;
-
-export const StyledReceiverContainer = styled.div`
-  flex: 0.5;
 `;
 
 export const StyledEmpContainer = styled.div`
@@ -96,19 +77,10 @@ export const StyledCustomerSelectionContainer = styled.div`
 `;
 
 export const StyledFeeContainer = styled.div`
-  display: flex;
-  flex-wrap: wrap;
   background-color: rgb(217, 217, 217, 0.3) !important;
-  padding: 20px;
+  padding: 15px;
   margin-bottom: 20px;
   border-radius: 5px;
-`;
-
-export const StyledFeeItemContainer = styled.div`
-  flex: 0.25;
-  .ant-form-item {
-    margin-bottom: 0;
-  }
 `;
 
 export const StyledGroupHeader = styled.span`

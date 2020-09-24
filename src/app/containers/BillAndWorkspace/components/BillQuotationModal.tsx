@@ -100,7 +100,7 @@ const BillQuotationModal = ({
         size={size ?? 'small'}
         onClick={onShowQuotationModal}
       >
-        Xem báo giá đang sử dụng cho bill này
+        Xem báo giá bill này
       </Button>
       <Modal
         title={

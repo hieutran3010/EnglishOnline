@@ -9,22 +9,16 @@ import { useSelector, useDispatch } from 'react-redux';
 
 import { useInjectReducer, useInjectSaga } from 'utils/redux-injectors';
 import { reducer, sliceKey, actions } from './slice';
-import {
-  selectIsFetchingBill,
-  selectBill,
-  selectIsShowBillReview,
-} from './selectors';
+import { selectIsFetchingBill } from './selectors';
 import { billUpdatingSaga } from './saga';
 import { RootContainer, ContentContainer } from 'app/components/Layout';
 import { BillCreateOrUpdate } from '../BillCreateOrUpdate';
+import { selectBill } from '../BillCreateOrUpdate/selectors';
 import { useParams } from 'react-router-dom';
 import { SagaInjectionModes } from 'redux-injectors';
-import BillView from '../components/BillView';
-import { BILL_STATUS } from 'app/models/bill';
+import BillTrackingId from '../components/BillTrackingId';
 
-interface Props {}
-
-export const BillUpdating = memo((props: Props) => {
+export const BillUpdating = memo(() => {
   useInjectReducer({ key: sliceKey, reducer: reducer });
   useInjectSaga({
     key: sliceKey,
@@ -32,43 +26,29 @@ export const BillUpdating = memo((props: Props) => {
     mode: SagaInjectionModes.RESTART_ON_REMOUNT,
   });
 
-  const { billId } = useParams();
+  const { billId } = useParams() as any;
   const dispatch = useDispatch();
 
   const isFetchingBill = useSelector(selectIsFetchingBill);
   const bill = useSelector(selectBill);
-  const isShowBillReview = useSelector(selectIsShowBillReview);
 
   useEffect(() => {
     dispatch(actions.fetchBill(billId));
-  }, [billId, dispatch]);
-
-  useEffect(() => {
-    return function cleanUp() {
-      dispatch(actions.resetState());
-    };
-  }, [dispatch]);
-
-  const subTitle =
-    isShowBillReview || bill.status === BILL_STATUS.DONE
-      ? 'Thông tin'
-      : 'Cập nhật';
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [billId]);
 
   return (
     <RootContainer
-      title={`${subTitle} bill ${
-        bill.airlineBillId ||
-        bill.childBillId ||
-        '<chưa có bill hãng bay/bill con>'
-      }`}
+      title={
+        <BillTrackingId
+          airlineBillId={bill.airlineBillId}
+          childBillId={bill.childBillId}
+        />
+      }
       canBack
     >
       <ContentContainer loading={isFetchingBill}>
-        {isShowBillReview || bill.status === BILL_STATUS.DONE ? (
-          <BillView bill={bill} />
-        ) : (
-          <BillCreateOrUpdate inputBill={bill} canDelete={false} />
-        )}
+        <BillCreateOrUpdate canDelete={false} />
       </ContentContainer>
     </RootContainer>
   );

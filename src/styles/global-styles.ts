@@ -59,6 +59,14 @@ export const GlobalStyle = createGlobalStyle`
     margin-bottom: 5px;
   }
 
+  .ant-radio-button-wrapper svg {
+    margin-bottom: 5px;
+  }
+
+  .ant-menu-submenu svg {
+    margin-bottom: 7px;
+  }
+
   .ant-statistic-content-prefix svg {
     margin-bottom: 6px;
   }
@@ -69,5 +77,19 @@ export const GlobalStyle = createGlobalStyle`
 
   .ant-table-tbody > tr .ant-table-wrapper:only-child .ant-table td {
     background-color: white;
+  }
+
+  .content-container {
+    .ant-card-actions {
+      position: sticky;
+      position: -webkit-sticky;
+      bottom: 0;
+    }
+    .ant-card-head {
+      position: sticky;
+      top: 0;
+      background-color: white;
+      z-index: 1;
+    }
   }
 `;

@@ -18,9 +18,9 @@ export function* archiveBillTask(action: PayloadAction<BillViewActionType>) {
   const succeededCallback = action.payload.succeededCallback;
 
   try {
-    yield call(billPatchExecutor.archiveBill, billId);
+    const updatedBill = yield call(billPatchExecutor.archiveBill, billId);
     yield call(toast.success, 'Đã hủy bill!');
-    succeededCallback && succeededCallback();
+    succeededCallback && succeededCallback(updatedBill);
   } catch (error) {
     Sentry.captureException(error);
     toast.error('Chưa hủy được bill');
@@ -38,9 +38,12 @@ export function* restoreArchivedBillTask(
   const succeededCallback = action.payload.succeededCallback;
 
   try {
-    yield call(billPatchExecutor.restoreArchivedBill, billId);
+    const updatedBill = yield call(
+      billPatchExecutor.restoreArchivedBill,
+      billId,
+    );
     yield call(toast.success, 'Đã khôi phục bill từ trạng thái hủy');
-    succeededCallback && succeededCallback();
+    succeededCallback && succeededCallback(updatedBill);
   } catch (error) {
     Sentry.captureException(error);
     toast.error('Chưa khôi phục được bill');
@@ -58,9 +61,12 @@ export function* checkPrintedVatBillTask(
   const succeededCallback = action.payload.succeededCallback;
 
   try {
-    yield call(billPatchExecutor.checkPrintedVatBill, billId);
+    const updatedBill = yield call(
+      billPatchExecutor.checkPrintedVatBill,
+      billId,
+    );
     yield call(toast.success, 'Đã đánh dấu xuất VAT!');
-    succeededCallback && succeededCallback();
+    succeededCallback && succeededCallback(updatedBill);
   } catch (error) {
     Sentry.captureException(error);
     toast.error('Có lỗi xảy ra khi đánh dấu xuất VAT!');
@@ -78,9 +84,12 @@ export function* returnFinalBillToAccountantTask(
   const succeededCallback = action.payload.succeededCallback;
 
   try {
-    yield call(billPatchExecutor.returnFinalBillToAccountant, billId);
+    const updatedBill = yield call(
+      billPatchExecutor.returnFinalBillToAccountant,
+      billId,
+    );
     yield call(toast.success, 'Đã trả lại bill cho kế toán');
-    succeededCallback && succeededCallback();
+    succeededCallback && succeededCallback(updatedBill);
   } catch (error) {
     Sentry.captureException(error);
     toast.error('Có lỗi xảy ra khi trả lại bill cho kế toán');
@@ -98,7 +107,7 @@ export function* deleteBillTask(action: PayloadAction<BillViewActionType>) {
   try {
     yield call(billFetcher.deleteAsync, billId);
     yield call(toast.success, 'Đã xóa bill');
-    succeededCallback && succeededCallback();
+    succeededCallback && succeededCallback(billId);
   } catch (error) {
     Sentry.captureException(error);
     toast.error('Có lỗi xảy ra khi xóa bill');

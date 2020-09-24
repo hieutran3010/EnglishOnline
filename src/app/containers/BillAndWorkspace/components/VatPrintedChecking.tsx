@@ -1,7 +1,5 @@
 import React, { memo, useEffect } from 'react';
-import { Typography, Divider } from 'antd';
-
-const { Text } = Typography;
+import { Tag, Button } from 'antd';
 
 interface Props {
   numberOfBills: number;
@@ -26,17 +24,17 @@ const VatPrintedChecking = ({
     };
   }, [onCheckNumberOfVatBill]);
 
-  return (
-    <>
-      {numberOfBills > 0 && (
-        <>
-          <Divider type="vertical" />
-          <Text type="warning">
-            Có {numberOfBills} bill cần đánh dấu xuất VAT
-          </Text>
-        </>
-      )}
-    </>
+  return numberOfBills > 0 ? (
+    <Button size="small" style={{ margin: 0, padding: 0, border: 0 }}>
+      <Tag
+        color="rgb(205, 32, 31)"
+        style={{ borderRadius: 10, marginRight: 5 }}
+      >
+        {numberOfBills} VAT bills
+      </Tag>
+    </Button>
+  ) : (
+    <></>
   );
 };
 

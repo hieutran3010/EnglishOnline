@@ -8,7 +8,7 @@ import React, { useMemo, useCallback, useEffect } from 'react';
 import { Button, Space, Divider } from 'antd';
 import { useHistory } from 'react-router-dom';
 
-import { RootContainer } from 'app/components/Layout';
+import { ContentContainer } from 'app/components/Layout';
 import type Customer from 'app/models/customer';
 import getDataSource, { FETCHER_KEY } from 'app/collection-datasource';
 import {
@@ -136,9 +136,9 @@ export function CustomerList() {
 
   return (
     <>
-      <RootContainer
+      <ContentContainer
         title="Danh sách Khách hàng"
-        rightComponents={[
+        extra={[
           <Button key="1" type="primary" onClick={onCreateNewCustomer}>
             Thêm mới
           </Button>,
@@ -150,7 +150,7 @@ export function CustomerList() {
           pageSize={20}
           heightOffset={0.3}
         />
-      </RootContainer>
+      </ContentContainer>
     </>
   );
 }

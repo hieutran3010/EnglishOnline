@@ -119,9 +119,8 @@ export class AuthService {
   };
 
   recovery(email) {
-    // TODO: change here
     const actionCodeSettings = {
-      url: process.env.PUBLIC_URL,
+      url: process.env.REACT_APP_PUBLIC_URL || '',
     };
 
     return firebase

@@ -9,7 +9,7 @@ import { Button, Space, Divider, Dropdown, Menu } from 'antd';
 import { DownOutlined } from '@ant-design/icons';
 import { useHistory, Link } from 'react-router-dom';
 
-import { RootContainer } from 'app/components/Layout';
+import { ContentContainer } from 'app/components/Layout';
 import {
   DataGrid,
   ColumnDefinition,
@@ -136,16 +136,14 @@ export const VendorList = memo(() => {
       : [];
 
   return (
-    <>
-      <RootContainer title="Danh sách nhà cung cấp" rightComponents={actions}>
-        <DataGrid
-          dataSource={vendorDataSource}
-          columns={columns}
-          pageSize={20}
-          locale={{ emptyText: 'Không tìm thấy nhà cung cấp nào :(' }}
-          heightOffset={0.3}
-        />
-      </RootContainer>
-    </>
+    <ContentContainer title="Danh sách nhà cung cấp" extra={actions}>
+      <DataGrid
+        dataSource={vendorDataSource}
+        columns={columns}
+        pageSize={20}
+        locale={{ emptyText: 'Không tìm thấy nhà cung cấp nào :(' }}
+        heightOffset={0.3}
+      />
+    </ContentContainer>
   );
 });

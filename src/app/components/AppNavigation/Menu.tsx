@@ -1,21 +1,16 @@
 import React, { memo, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import map from 'lodash/fp/map';
-import toNumber from 'lodash/fp/toNumber';
 import { Menu as AntMenu } from 'antd';
-import { MenuItem } from './index.d';
+import { IMenu, IMenuItem } from './types';
+import isEmpty from 'lodash/fp/isEmpty';
 
-interface Menu {
-  items: MenuItem[];
-  onSelectedMenuChanged?: (index: number) => void;
-  selectedMenuKeys?: string[];
-}
-const Menu = ({ items, onSelectedMenuChanged, selectedMenuKeys }: Menu) => {
+const { SubMenu } = AntMenu;
+
+const Menu = ({ items, onSelectedMenuChanged, selectedMenuKeys }: IMenu) => {
   const onSelect = useCallback(
     ({ key }) => {
-      const index = toNumber(key);
-
-      onSelectedMenuChanged && onSelectedMenuChanged(index);
+      onSelectedMenuChanged && onSelectedMenuChanged(key);
     },
     [onSelectedMenuChanged],
   );
@@ -27,11 +22,27 @@ const Menu = ({ items, onSelectedMenuChanged, selectedMenuKeys }: Menu) => {
       onSelect={onSelect}
       selectedKeys={selectedMenuKeys}
     >
-      {map((menu: MenuItem) => (
-        <AntMenu.Item key={menu.index} icon={menu.icon}>
-          <Link to={menu.path}>{menu.displayName}</Link>
-        </AntMenu.Item>
-      ))(items)}
+      {map((menu: IMenuItem) => {
+        if (isEmpty(menu.childMenu)) {
+          return (
+            <AntMenu.Item key={menu.key} icon={menu.icon}>
+              <Link to={menu.path || ''}>{menu.displayName}</Link>
+            </AntMenu.Item>
+          );
+        }
+
+        return (
+          <SubMenu key={menu.key} icon={menu.icon} title={menu.displayName}>
+            {map((child: IMenuItem) => {
+              return (
+                <AntMenu.Item key={child.key} icon={child.icon}>
+                  <Link to={child.path || ''}>{child.displayName}</Link>
+                </AntMenu.Item>
+              );
+            })(menu.childMenu)}
+          </SubMenu>
+        );
+      })(items)}
     </AntMenu>
   );
 };

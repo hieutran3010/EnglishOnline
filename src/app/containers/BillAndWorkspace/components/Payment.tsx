@@ -1,11 +1,6 @@
 import React, { memo, useCallback, useEffect, useState } from 'react';
-import { Typography, Form, Input } from 'antd';
-import {
-  StyledCustomerContainer,
-  StyledSenderContainer,
-  StyledCustomerSelectionContainer,
-  StyledReceiverContainer,
-} from '../Workspace/styles/StyledIndex';
+import { Typography, Form, Input, Row, Col } from 'antd';
+import { StyledCustomerSelectionContainer } from '../Workspace/styles/StyledIndex';
 import PaymentSelect from './PaymentSelect';
 import { CurrencyInput } from 'app/components/Input';
 import { PAYMENT_TYPE } from 'app/models/bill';
@@ -41,8 +36,13 @@ const Payment = ({
   }, []);
 
   return (
-    <StyledCustomerContainer>
-      <StyledSenderContainer>
+    <Row gutter={{ xs: 8, sm: 16, md: 24, lg: 32 }}>
+      <Col
+        xs={{ span: 24 }}
+        sm={{ span: 24 }}
+        md={{ span: 12 }}
+        lg={{ span: 12 }}
+      >
         <StyledCustomerSelectionContainer>
           <Title level={4} type="secondary">
             Khách Hàng Thanh Toán
@@ -92,8 +92,13 @@ const Payment = ({
         >
           <CurrencyInput />
         </Form.Item>
-      </StyledSenderContainer>
-      <StyledReceiverContainer>
+      </Col>
+      <Col
+        xs={{ span: 24 }}
+        sm={{ span: 24 }}
+        md={{ span: 12 }}
+        lg={{ span: 12 }}
+      >
         <StyledCustomerSelectionContainer>
           <Title level={4} type="secondary">
             Thanh Toán NCC
@@ -120,8 +125,8 @@ const Payment = ({
         >
           <CurrencyInput />
         </Form.Item>
-      </StyledReceiverContainer>
-    </StyledCustomerContainer>
+      </Col>
+    </Row>
   );
 };
 

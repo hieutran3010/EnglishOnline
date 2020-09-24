@@ -39,6 +39,7 @@ const normalFields: string[] = [
   'destinationCountry',
   'isPrintedVatBill',
   'createdOn',
+  'billDeliveryHistories {date time status}',
 ];
 
 const saleExtendFields: string[] = ['vat', 'usdExchangeRate', 'salePrice'];

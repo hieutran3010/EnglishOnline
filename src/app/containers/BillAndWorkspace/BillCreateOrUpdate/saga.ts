@@ -84,10 +84,17 @@ export function* fetchVendorCountriesTask(action: PayloadAction<string>) {
   yield put(actions.fetchVendorCountriesCompleted(countries));
 }
 
-export function* submitBillTask(action: PayloadAction<Bill | any>) {
+export function* submitBillTask(
+  action: PayloadAction<{ bill: Bill | any; caller?: string }>,
+) {
   yield put(actions.setIsSubmitting(true));
 
-  let billFormValues = action.payload;
+  let billFormValues = action.payload.bill;
+  const { caller } = action.payload;
+
+  const billId = yield select(selectBillId);
+  const isUpdate = !isEmpty(billId);
+
   try {
     // check auto save customer
     const { isSaveSender, isSaveReceiver } = billFormValues;
@@ -101,6 +108,8 @@ export function* submitBillTask(action: PayloadAction<Bill | any>) {
         senderName,
         senderPhone,
         senderAddress,
+        isUpdate,
+        caller,
       );
       const senderId = sender ? sender.id : undefined;
       billFormValues.senderId = senderId;
@@ -114,24 +123,24 @@ export function* submitBillTask(action: PayloadAction<Bill | any>) {
         receiverName,
         receiverPhone,
         receiverAddress,
+        isUpdate,
+        caller,
       );
       const receiverId = receiver ? receiver.id : undefined;
       billFormValues.receiverId = receiverId;
       yield put(actions.setReceiverId(receiverId));
     }
 
-    const billId = yield select(selectBillId);
-    const isUpdate = !isEmpty(billId);
-
     let bill = yield call(mergeBillFormWithStore, billFormValues);
     if (isUpdate === true) {
       bill = yield call(billFetcher.updateAsync, billId, bill);
+      toast.success('Đã cập nhập thông tin bill');
     } else {
       bill = yield call(billFetcher.addAsync, bill);
+      toast.success('Đã lưu một bill mới');
     }
 
-    yield put(actions.submitBillCompleted(bill));
-    toast.success('Đã lưu Bill');
+    yield put(actions.submitBillCompleted({ bill, isNew: !isUpdate }));
     yield put(actions.setIsSubmitting(false));
     return bill;
   } catch (error) {
@@ -160,7 +169,7 @@ export function* assignToAccountantTask(
   const { billFormValues, isDirty } = action.payload;
   if (isDirty) {
     const bill = yield call(submitBillTask, {
-      payload: billFormValues,
+      payload: { bill: billFormValues, caller: 'assignToAccountantTask' },
       type: '',
     });
     if (isUndefined(bill)) {
@@ -190,7 +199,7 @@ export function* deleteBillTask() {
 
   try {
     yield call(billFetcher.deleteAsync, billId);
-    yield put(actions.deleteBillCompleted());
+    yield put(actions.deleteBillCompleted(billId));
     toast.success('Đã xóa Bill!');
   } catch (error) {
     Sentry.captureException(error);
@@ -241,7 +250,7 @@ export function* finalBillTask(action: PayloadAction<SubmitBillAction>) {
   const { billFormValues, isDirty } = action.payload;
   if (isDirty) {
     const bill = yield call(submitBillTask, {
-      payload: billFormValues,
+      payload: { bill: billFormValues, caller: 'finalBillTask' },
       type: '',
     });
     if (isUndefined(bill)) {
@@ -368,14 +377,21 @@ function* mergeBillFormWithStore(billFormValues: any) {
   return omit(['vendorName'])(result);
 }
 
-function* getCustomer(name: string, phone: string, address: string) {
+function* getCustomer(
+  name: string,
+  phone: string,
+  address: string,
+  isUpdate?: boolean,
+  caller?: string,
+) {
   if (!name || !phone || isEmpty(name) || isEmpty(phone)) {
     return undefined;
   }
 
   const formattedPhone = formatPhoneNumber(phone);
+  const query = `Phone = "${formattedPhone}"`;
   let customer = yield call(customerFetcher.queryOneAsync, {
-    query: `Phone = "${formattedPhone}"`,
+    query,
   });
 
   if (!customer) {
@@ -388,9 +404,9 @@ function* getCustomer(name: string, phone: string, address: string) {
       });
     } catch (error) {
       Sentry.captureException(
-        `[getCustomer] Cannot auto insert new customer. Error: ${JSON.stringify(
-          error,
-        )}`,
+        `[getCustomer] Cannot auto insert new customer - Update Mode = ${isUpdate} - Query = [${query}] - Received customer data: [${JSON.stringify(
+          customer,
+        )}] - caller = [${caller}]. Error: ${JSON.stringify(error)}`,
       );
       customer = undefined;
     }

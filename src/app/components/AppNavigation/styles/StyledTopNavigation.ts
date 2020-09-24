@@ -5,4 +5,5 @@ export const StyledLogoWrapper = styled.div`
   align-items: center;
   justify-content: center;
   height: 60px;
+  padding-left: 20px;
 `;

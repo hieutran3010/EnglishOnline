@@ -9,7 +9,6 @@ import { useSelector, useDispatch } from 'react-redux';
 import { Input, Button, Checkbox, Form, Space } from 'antd';
 import { useHistory, useParams } from 'react-router-dom';
 import isEmpty from 'lodash/fp/isEmpty';
-import capitalize from 'lodash/fp/capitalize';
 import { Store } from 'antd/lib/form/interface';
 
 import { useInjectReducer, useInjectSaga } from 'utils/redux-injectors';
@@ -53,8 +52,9 @@ export const VendorCreation = memo(() => {
 
   const onSave = useCallback(
     vendor => {
-      vendor.officeAddress = capitalize(vendor.officeAddress);
+      vendor.officeAddress = trim(vendor.officeAddress);
       vendor.name = trim(vendor.name);
+
       if (isEditMode === true) {
         dispatch(actions.updateVendor(vendor));
       } else {
@@ -110,10 +110,7 @@ export const VendorCreation = memo(() => {
           </Form.Item>
 
           <Form.Item label="Địa chỉ văn phòng" name="officeAddress">
-            <Input
-              disabled={isSubmitting}
-              style={{ textTransform: 'capitalize' }}
-            />
+            <Input disabled={isSubmitting} />
           </Form.Item>
 
           <Form.Item

@@ -5,9 +5,9 @@ import { PayloadAction } from '@reduxjs/toolkit';
 import BillFetcher, { BillPatchExecutor } from 'app/fetchers/billFetcher';
 
 import { actions } from './slice';
-import { selectHistories, selectViewableBill } from './selectors';
+import { selectHistories, selectViewableBill, selectBillId } from './selectors';
 import { toast } from 'react-toastify';
-import Bill from 'app/models/bill';
+import Bill, { BillDeliveryHistory } from 'app/models/bill';
 
 const billFetcher = new BillFetcher();
 const billBatchExecutor = new BillPatchExecutor();
@@ -32,15 +32,15 @@ export function* fetchBillDeliveryHistoriesTask(action: PayloadAction<string>) {
   );
 }
 
-export function* saveTask(action: PayloadAction<string>) {
-  const billId = action.payload;
+export function* saveTask() {
+  const billId = yield select(selectBillId);
   yield put(actions.setIsSaving(true));
 
-  const data = yield select(selectHistories);
+  const data = (yield select(selectHistories)) as BillDeliveryHistory[];
   try {
     yield call(billBatchExecutor.updateDeliveryHistory, billId, data);
 
-    yield put(actions.saveCompleted());
+    yield put(actions.saveCompleted({ billId, histories: data }));
     toast.success('Đã lưu!');
   } catch (error) {
     Sentry.captureException(error);

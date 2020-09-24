@@ -46,7 +46,7 @@ export const QuickQuotation = memo(() => {
 
   if (role === Role.SALE) {
     return (
-      <div style={{ height: '100%', overflowY: 'auto' }}>
+      <div style={{ height: '100%', overflowY: 'auto', overflowX: 'hidden' }}>
         <SaleQuotation role={Role.SALE} />
       </div>
     );

@@ -45,3 +45,8 @@ export const selectIsFetchingBillToView = createSelector(
   [selectDomain],
   billDeliveryHistoryState => billDeliveryHistoryState.isFetchingBillToView,
 );
+
+export const selectBillId = createSelector(
+  [selectDomain],
+  billDeliveryHistoryState => billDeliveryHistoryState.billId,
+);
