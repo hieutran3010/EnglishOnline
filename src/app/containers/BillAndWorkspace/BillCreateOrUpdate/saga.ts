@@ -222,12 +222,12 @@ export function* calculatePurchasePriceTask(
       billFetcher.countPurchasePrice,
       params,
     )) as PurchasePriceCountingResult;
-    yield put(
-      actions.calculatePurchasePriceCompleted({
-        result,
-        isGetLatestQuotation,
-      }),
-    );
+
+    const bill = new Bill(billForm);
+    const purchasePriceInfo = bill.getPurchasePriceInfo();
+    purchasePriceInfo.updateFromCountingResult(result, isGetLatestQuotation);
+
+    yield put(actions.calculatePurchasePriceCompleted(purchasePriceInfo));
     callback && callback(result);
   } catch (error) {
     Sentry.captureException(error);

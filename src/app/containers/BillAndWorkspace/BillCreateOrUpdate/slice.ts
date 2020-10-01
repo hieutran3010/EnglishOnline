@@ -7,7 +7,10 @@ import type Vendor from 'app/models/vendor';
 import type User from 'app/models/user';
 
 import { ContainerState, SubmitBillAction } from './types';
-import { PurchasePriceCountingResult } from 'app/models/purchasePriceCounting';
+import {
+  PurchasePriceCountingParams,
+  PurchasePriceCountingResult,
+} from 'app/models/purchasePriceCounting';
 import Zone from 'app/models/zone';
 
 // The initial state of the BillCreateOrUpdate container
@@ -124,19 +127,9 @@ const billCreateOrUpdateSlice = createSlice({
     ) {},
     calculatePurchasePriceCompleted(
       state,
-      action: PayloadAction<{
-        result: PurchasePriceCountingResult;
-        isGetLatestQuotation: boolean;
-      }>,
+      action: PayloadAction<PurchasePriceInfo>,
     ) {
-      const newPurchasePriceInfo = new PurchasePriceInfo(
-        state.purchasePriceInfo,
-      );
-      newPurchasePriceInfo.updateFromCountingResult(
-        action.payload.result,
-        action.payload.isGetLatestQuotation,
-      );
-      state.purchasePriceInfo = newPurchasePriceInfo;
+      state.purchasePriceInfo = action.payload;
     },
 
     updateNewWeight(
