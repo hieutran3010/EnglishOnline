@@ -19,6 +19,8 @@ const toFullString = (value: number) => {
   if (str.length === 1) {
     return padStart(str, 2, '0');
   }
+
+  return str;
 };
 
 const formatPhoneNumber = (phoneNumber: string): string => {
