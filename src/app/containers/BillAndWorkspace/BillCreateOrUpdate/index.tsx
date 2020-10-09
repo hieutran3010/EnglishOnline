@@ -4,15 +4,20 @@
  *
  */
 
-import React, { memo, useEffect, useCallback, useState, useMemo } from 'react';
+import React, {
+  memo,
+  useEffect,
+  useCallback,
+  useState,
+  useMemo,
+  CSSProperties,
+} from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import {
   Form,
   DatePicker,
-  Button,
   Divider,
   Space,
-  Alert,
   Typography,
   Modal,
   Checkbox,
@@ -50,13 +55,8 @@ import Bill, {
 } from 'app/models/bill';
 import Zone from 'app/models/zone';
 
-import { getMarginLeft } from 'app/components/Layout/AppLayout';
-import { ScreenMode } from 'app/components/AppNavigation';
 import { showConfirm } from 'app/components/Modal/utils';
-import {
-  selectScreenMode,
-  selectCollapsedMenu,
-} from 'app/containers/HomePage/selectors';
+
 import { ZONE_VENDOR_ASSOCIATION_SEPARATOR } from 'app/containers/VendorAndService/constants';
 
 import { reducer, sliceKey } from './slice';
@@ -85,17 +85,37 @@ import {
   selectReceiverId,
   selectServices,
   selectRelatedZones,
+  selectBill,
 } from './selectors';
 import BillQuotationModal from '../components/BillQuotationModal';
-import { StyledDateAndAssigneeContainer } from '../components/styles';
 import FeeAndPrice from '../components/FeeAndPrice';
 import PackageInfo from '../components/PackageInfo';
 import CustomerInfo from '../components/CustomerInfo';
 import ResponsibilityEmp from '../components/ResponsibilityEmp';
 import BillStatusTag from '../components/BillStatusTag';
 import Payment from '../components/Payment';
+import { StyledActionsBar } from './styles/StyledIndex';
+import Actions from './Actions';
+import { useBillView } from '../BillViewPage/hook';
+import { BillViewPage } from '../BillViewPage';
+import { isString } from 'lodash/fp';
 
 const { Text } = Typography;
+
+const actionBarStyle: React.CSSProperties | undefined = {
+  padding: 10,
+  paddingTop: 10,
+  paddingBottom: 10,
+  borderRadius: 5,
+  boxShadow:
+    '0px 1px 3px 0px rgba(0, 0, 0, 0.1), 0px 1px 2px 0px rgba(0, 0, 0, 0.06) ',
+  display: 'flex',
+  background: 'white',
+  marginLeft: -10,
+  marginRight: -10,
+  alignItems: 'center',
+  justifyContent: 'center',
+};
 
 const finalBillWarningModalConfig = {
   title:
@@ -150,48 +170,18 @@ const countPurchasePriceWarningConfig = {
   ),
 };
 
-const getStyle = (
-  screenMode: ScreenMode,
-  collapsedMenu: boolean,
-  hasSubActionsBar: boolean,
-  isFixedCommandBar?: boolean,
-): React.CSSProperties | undefined => {
-  if (isFixedCommandBar === true) {
-    return {
-      position: 'fixed',
-      left: getMarginLeft(screenMode, collapsedMenu) + 320,
-      right: 20,
-      top: hasSubActionsBar ? '88%' : '93%',
-      bottom: 10,
-    };
-  }
-  return undefined;
-};
-
-const actionBarStyle: React.CSSProperties | undefined = {
-  padding: 24,
-  paddingTop: 14,
-  paddingBottom: 14,
-  borderRadius: 5,
-  boxShadow:
-    '0px 1px 3px 0px rgba(0, 0, 0, 0.1), 0px 1px 2px 0px rgba(0, 0, 0, 0.06) ',
-  display: 'flex',
-  background: 'white',
-};
-
 const layout = {
   labelCol: { span: 4 },
   wrapperCol: { span: 18 },
 };
 
 interface Props {
-  inputBill: Bill;
   onSubmitting?: (isSubmitting: boolean) => void;
   canDelete: boolean;
-  isFixedCommandBar?: boolean;
+  billViewStyle?: CSSProperties;
 }
 export const BillCreateOrUpdate = memo(
-  ({ inputBill, onSubmitting, canDelete, isFixedCommandBar }: Props) => {
+  ({ onSubmitting, canDelete, billViewStyle }: Props) => {
     const role = authStorage.getRole();
 
     useInjectReducer({ key: sliceKey, reducer });
@@ -200,6 +190,8 @@ export const BillCreateOrUpdate = memo(
       saga: billCreateOrUpdateSaga,
       mode: SagaInjectionModes.RESTART_ON_REMOUNT,
     });
+
+    useBillView();
 
     const [hasVat, setHasVat] = useState(false);
     const [
@@ -240,11 +232,10 @@ export const BillCreateOrUpdate = memo(
     const isFinalBill = useSelector(selectIsFinalBill);
     const isAssigningLicense = useSelector(selectIsAssigningLicense);
 
-    const screenMode = useSelector(selectScreenMode);
-    const collapsedMenu = useSelector(selectCollapsedMenu);
-
     const services = useSelector(selectServices);
     const relatedZones = useSelector(selectRelatedZones);
+
+    const inputBill = useSelector(selectBill);
 
     const isBusy =
       isSubmitting ||
@@ -289,8 +280,6 @@ export const BillCreateOrUpdate = memo(
         }
       }
 
-      dispatch(actions.setBill(inputBill));
-
       billForm.setFieldsValue(inputBill);
 
       const formData: any = {};
@@ -312,6 +301,9 @@ export const BillCreateOrUpdate = memo(
             if (!isEmpty(inputBill.id)) {
               toast.info(
                 'Phần mềm đã tự động chỉ định bạn là kế toán của bill này, bấm Lưu để lưu lại!',
+                {
+                  toastId: 'autoAssignAccountantInfo',
+                },
               );
             }
           }
@@ -472,7 +464,7 @@ export const BillCreateOrUpdate = memo(
 
     const onSubmitBill = useCallback(() => {
       const bill = getBillData();
-      dispatch(actions.submitBill(bill));
+      dispatch(actions.submitBill({ bill, caller: 'onSubmitBill' }));
       if (onSubmitting) onSubmitting(isBusy);
       setIsDirty(false);
     }, [getBillData, dispatch, onSubmitting, isBusy]);
@@ -821,6 +813,22 @@ export const BillCreateOrUpdate = memo(
       [purchasePriceInfo],
     );
 
+    const onBillViewActionExecuteCompleted = useCallback(
+      (eventArgs?: Bill | string) => {
+        if (!eventArgs) {
+          return;
+        }
+
+        if (isString(eventArgs)) {
+          dispatch(actions.deleteBillCompleted(eventArgs as string));
+        } else {
+          dispatch(actions.submitBillCompleted({ bill: eventArgs as Bill }));
+        }
+      },
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+      [],
+    );
+
     const billValidator = useMemo(() => getBillValidator(hasVat, billId), [
       hasVat,
       billId,
@@ -829,6 +837,38 @@ export const BillCreateOrUpdate = memo(
     const hasSubActionsBar =
       !isEmpty(purchasePriceInfo.billQuotations) &&
       !isNil(purchasePriceInfo.billQuotations);
+
+    const canEdit = useMemo(() => {
+      if (billStatus === BILL_STATUS.DONE) {
+        return false;
+      }
+
+      switch (role) {
+        case Role.LICENSE: {
+          return billStatus === BILL_STATUS.LICENSE || isEmpty(billId);
+        }
+        case Role.ACCOUNTANT: {
+          return billStatus === BILL_STATUS.ACCOUNTANT || isEmpty(billId);
+        }
+        case Role.ADMIN: {
+          return true;
+        }
+        case Role.SALE: {
+          return false;
+        }
+      }
+    }, [billId, billStatus, role]);
+
+    if (!canEdit) {
+      return (
+        <div style={billViewStyle}>
+          <BillViewPage
+            bill={inputBill}
+            onBillUpdatedOrDeleted={onBillViewActionExecuteCompleted}
+          />
+        </div>
+      );
+    }
 
     return (
       <>
@@ -842,7 +882,7 @@ export const BillCreateOrUpdate = memo(
           onValuesChange={onBillFormValuesChanged}
           onFinishFailed={onFinishFormFailed}
         >
-          <StyledDateAndAssigneeContainer>
+          <Space style={{ width: '100%', justifyContent: 'space-between' }}>
             <Form.Item
               name="date"
               label=""
@@ -854,7 +894,7 @@ export const BillCreateOrUpdate = memo(
             <div>
               <BillStatusTag status={billStatus} />
             </div>
-          </StyledDateAndAssigneeContainer>
+          </Space>
 
           <Divider
             type="horizontal"
@@ -898,40 +938,34 @@ export const BillCreateOrUpdate = memo(
             onServiceChanged={onServiceChanged}
           />
 
-          <FeeAndPrice
-            billValidator={billValidator}
-            onVatCheckingChanged={onVatCheckingChanged}
-            hasVat={hasVat}
-            purchasePriceInfo={purchasePriceInfo}
-            shouldRecalculatePurchasePrice={shouldRecalculatePurchasePrice}
-            onCalculatePurchasePrice={onCalculatePurchasePrice}
-            isCalculating={isCalculatingPurchasePrice}
-            disabledCalculation={
-              isSubmitting || isAssigningAccountant || isDeletingBill
-            }
-            userRole={role}
-            onPurchasePriceManuallyChanged={onPurchasePriceManuallyChanged}
-          />
-
           {authorizeHelper.canRenderWithRole(
             [Role.ADMIN, Role.ACCOUNTANT],
-            <Payment
-              onCustomerPaymentAmountFocused={onCustomerPaymentAmountFocused}
-              onVendorPaymentAmountFocused={onVendorPaymentAmountFocused}
-              selectedPaymentType={billForm.getFieldValue(
-                'customerPaymentType',
-              )}
-            />,
+            <>
+              <FeeAndPrice
+                billValidator={billValidator}
+                onVatCheckingChanged={onVatCheckingChanged}
+                hasVat={hasVat}
+                purchasePriceInfo={purchasePriceInfo}
+                shouldRecalculatePurchasePrice={shouldRecalculatePurchasePrice}
+                onCalculatePurchasePrice={onCalculatePurchasePrice}
+                isCalculating={isCalculatingPurchasePrice}
+                disabledCalculation={
+                  isSubmitting || isAssigningAccountant || isDeletingBill
+                }
+                userRole={role}
+                onPurchasePriceManuallyChanged={onPurchasePriceManuallyChanged}
+              />
+              <Payment
+                onCustomerPaymentAmountFocused={onCustomerPaymentAmountFocused}
+                onVendorPaymentAmountFocused={onVendorPaymentAmountFocused}
+                selectedPaymentType={billForm.getFieldValue(
+                  'customerPaymentType',
+                )}
+              />
+            </>,
           )}
 
-          <div
-            style={getStyle(
-              screenMode,
-              collapsedMenu,
-              hasSubActionsBar,
-              isFixedCommandBar,
-            )}
-          >
+          <StyledActionsBar>
             {hasSubActionsBar && (
               <div
                 style={{
@@ -952,7 +986,7 @@ export const BillCreateOrUpdate = memo(
                         onShouldCountPurchasePriceWithLatestQuotationChanged
                       }
                     >
-                      Tính theo báo giá mới nhất
+                      Dùng báo giá mới nhất
                     </Checkbox>
                     <BillQuotationModal
                       purchasePriceInfo={purchasePriceInfo}
@@ -962,116 +996,24 @@ export const BillCreateOrUpdate = memo(
                 </Form.Item>
               </div>
             )}
-            <div style={actionBarStyle}>
-              <Form.Item noStyle>
-                <Space>
-                  <Button
-                    size="middle"
-                    type="primary"
-                    htmlType="submit"
-                    loading={isSubmitting}
-                    disabled={
-                      isAssigningAccountant ||
-                      isCalculatingPurchasePrice ||
-                      isDeletingBill ||
-                      isFinalBill ||
-                      isAssigningLicense
-                    }
-                  >
-                    Lưu
-                  </Button>
-
-                  {billId && billStatus === BILL_STATUS.LICENSE && (
-                    <Button
-                      size="middle"
-                      type="ghost"
-                      htmlType="button"
-                      disabled={
-                        isSubmitting ||
-                        isCalculatingPurchasePrice ||
-                        isDeletingBill ||
-                        isFinalBill
-                      }
-                      loading={isAssigningAccountant}
-                      onClick={onAssignToAccountant}
-                    >
-                      Chuyển cho Kế Toán
-                    </Button>
-                  )}
-
-                  {!isEmpty(billId) &&
-                    billStatus === BILL_STATUS.ACCOUNTANT &&
-                    authorizeHelper.canRenderWithRole(
-                      [Role.ACCOUNTANT, Role.ADMIN],
-                      <>
-                        <Button
-                          size="middle"
-                          type="primary"
-                          ghost
-                          htmlType="button"
-                          disabled={
-                            isSubmitting ||
-                            isCalculatingPurchasePrice ||
-                            isDeletingBill ||
-                            isFinalBill
-                          }
-                          loading={isAssigningLicense}
-                          onClick={onAssignToLicense}
-                        >
-                          Chuyển cho Chứng Từ
-                        </Button>
-                        <Button
-                          size="middle"
-                          type="primary"
-                          ghost
-                          htmlType="button"
-                          onClick={onFinalBill}
-                          loading={isFinalBill}
-                          disabled={
-                            isSubmitting ||
-                            isCalculatingPurchasePrice ||
-                            isAssigningAccountant ||
-                            isDeletingBill ||
-                            isAssigningLicense
-                          }
-                        >
-                          Chốt Bill
-                        </Button>
-                      </>,
-                    )}
-
-                  {canDelete &&
-                    !isEmpty(billId) &&
-                    billStatus !== BILL_STATUS.DONE && (
-                      <Button
-                        size="middle"
-                        type="primary"
-                        htmlType="button"
-                        loading={isDeletingBill}
-                        disabled={
-                          isSubmitting ||
-                          isCalculatingPurchasePrice ||
-                          isAssigningAccountant ||
-                          isFinalBill ||
-                          isAssigningLicense
-                        }
-                        danger
-                        onClick={onDeleteBill}
-                      >
-                        Xóa Bill
-                      </Button>
-                    )}
-                  {isDirty && (
-                    <Alert
-                      banner
-                      showIcon
-                      message="Có thay đổi dữ liệu, nhớ bấm Lưu hoặc các nút bên cạnh để tránh mất dữ liệu!"
-                    />
-                  )}
-                </Space>
-              </Form.Item>
-            </div>
-          </div>
+            <Actions
+              style={actionBarStyle}
+              billId={billId}
+              billStatus={billStatus}
+              canDelete={canDelete}
+              isAssigningAccountant={isAssigningAccountant}
+              isAssigningLicense={isAssigningLicense}
+              isCalculatingPurchasePrice={isCalculatingPurchasePrice}
+              isDeletingBill={isDeletingBill}
+              isDirty={isDirty}
+              isFinalBill={isFinalBill}
+              isSubmitting={isSubmitting}
+              onAssignToAccountant={onAssignToAccountant}
+              onAssignToLicense={onAssignToLicense}
+              onDeleteBill={onDeleteBill}
+              onFinalBill={onFinalBill}
+            />
+          </StyledActionsBar>
         </Form>
       </>
     );

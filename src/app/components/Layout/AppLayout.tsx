@@ -1,11 +1,13 @@
-import React, { memo, useMemo } from 'react';
+import React, { memo, useCallback, useMemo, useState } from 'react';
 import { Layout } from 'antd';
 import {
   LeftNavigation,
   TopNavigation,
   ScreenMode,
 } from 'app/components/AppNavigation';
-import { MenuItem } from 'app/components/AppNavigation/index.d';
+import { IMenuItem } from 'app/components/AppNavigation/types';
+import DrawerMenu from '../AppNavigation/DrawerMenu';
+import Logo from '../Logo';
 const { Content } = Layout;
 
 export const getMarginLeft = (screenMode: ScreenMode, collapsed: boolean) => {
@@ -14,22 +16,21 @@ export const getMarginLeft = (screenMode: ScreenMode, collapsed: boolean) => {
   }
 
   if (screenMode === ScreenMode.FULL) {
-    return collapsed ? 100 : 220;
+    return collapsed ? 100 : 211;
   }
 
   return 100;
 };
 
 interface AppLayout {
-  menus: MenuItem[];
+  menus: IMenuItem[];
   logo: any;
   logoSmall: any;
   screenMode: ScreenMode;
   isCollapsed: boolean;
   onCollapsed: () => void;
-  renderTopLeftComponent?: () => React.Component;
   renderTopRightComponent?: () => React.Component;
-  onSelectedMenuChanged?: (index: number) => void;
+  onSelectedMenuChanged?: (key: string) => void;
   selectedMenuKeys?: string[];
 }
 const AppLayout = ({
@@ -38,7 +39,6 @@ const AppLayout = ({
   logoSmall,
   screenMode,
   isCollapsed,
-  renderTopLeftComponent,
   renderTopRightComponent,
   onCollapsed,
   onSelectedMenuChanged,
@@ -53,45 +53,69 @@ const AppLayout = ({
     return isCollapsed;
   }, [isCollapsed, screenMode]);
 
+  const [visibleDrawer, setVisibleDrawer] = useState(false);
+
+  const _onDrawerSelectedMenuChanged = useCallback(
+    (key: string) => {
+      setVisibleDrawer(false);
+
+      onSelectedMenuChanged(key);
+    },
+    [onSelectedMenuChanged],
+  );
+
+  const onShowDrawer = useCallback(() => {
+    setVisibleDrawer(true);
+  }, []);
+
+  const onCloseDrawer = useCallback(() => {
+    setVisibleDrawer(false);
+  }, []);
+
   const { children } = restProps;
 
   return (
-    <Layout style={{ minHeight: '100vh' }}>
+    <Layout style={{ height: '100%' }}>
       <TopNavigation
         isCollapsed={_isCollapsed}
         onCollapse={onCollapsed}
         menus={menus}
         logo={logo}
         logoSmall={logoSmall}
-        renderLeftComponent={renderTopLeftComponent}
         renderRightComponent={renderTopRightComponent}
         screenMode={screenMode}
+        onShowDrawer={onShowDrawer}
       />
 
-      <Layout style={{ marginTop: 64 }}>
-        {screenMode !== ScreenMode.MOBILE && (
+      <Layout>
+        {screenMode !== ScreenMode.MOBILE ? (
           <LeftNavigation
             isCollapsed={_isCollapsed}
             menus={menus}
             onSelectedMenuChanged={onSelectedMenuChanged}
             selectedMenuKeys={selectedMenuKeys}
           />
+        ) : (
+          <DrawerMenu
+            items={menus}
+            onSelectedMenuChanged={_onDrawerSelectedMenuChanged}
+            selectedMenuKeys={selectedMenuKeys}
+            visible={visibleDrawer}
+            onClose={onCloseDrawer}
+            header={<Logo logoSrc={logo} height={35} />}
+          />
         )}
+
         <Content
-          className="site-layout-background"
           style={{
-            marginLeft: getMarginLeft(screenMode, _isCollapsed),
-            marginTop: 74,
-            marginBottom: 20,
             marginRight: 20,
-            bottom: 0,
-            top: 0,
-            position: 'fixed',
-            right: 0,
-            left: 0,
+            marginTop: 20,
+            marginBottom: 20,
+            marginLeft: getMarginLeft(screenMode, _isCollapsed),
+            display: 'flex',
           }}
         >
-          {children}
+          <div style={{ flex: 'auto', width: '100%' }}>{children}</div>
         </Content>
       </Layout>
     </Layout>

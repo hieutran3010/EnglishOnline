@@ -1,5 +1,5 @@
 import React, { memo, useCallback } from 'react';
-import { Typography, Form, InputNumber, Input, Tooltip } from 'antd';
+import { Typography, Form, InputNumber, Input, Tooltip, Row, Col } from 'antd';
 import isEmpty from 'lodash/fp/isEmpty';
 import isUndefined from 'lodash/fp/isUndefined';
 import isNil from 'lodash/fp/isNil';
@@ -81,101 +81,109 @@ const PackageInfo = ({
       <Title level={4} type="secondary">
         Thông tin hàng
       </Title>
-      <Form.Item
-        name="vendorId"
-        label="Nhà cung cấp"
-        rules={billValidator.vendorId}
-      >
-        <VendorSelection
-          vendors={vendors}
-          loading={isFetchingVendors}
-          onChange={onVendorSelectionChanged}
-        />
-      </Form.Item>
-
-      <Form.Item
-        name="destinationCountry"
-        label="Nước đến"
-        rules={billValidator.destinationCountry}
-      >
-        <VendorCountriesSelection
-          countries={vendorCountries}
-          loading={isFetchingVendorCountries}
-          onChange={onSelectedCountryChanged}
-        />
-      </Form.Item>
-
-      <Form.Item
-        name="internationalParcelVendor"
-        label="Dịch vụ"
-        rules={billValidator.internationalParcelVendor}
-      >
-        <IntParcelVendorSelect
-          services={services}
-          relatedzones={relatedZones}
-          onChange={onServiceChanged}
-        />
-      </Form.Item>
-
-      <Form.Item label="Trọng lượng (kg)" required>
-        <Input.Group compact>
-          <Form.Item name="weightInKg" rules={billValidator.weightInKg} noStyle>
-            <InputNumber precision={2} min={0} />
+      <Row gutter={{ xs: 8, sm: 16, md: 24, lg: 32 }}>
+        <Col span={24}>
+          <Form.Item
+            name="vendorId"
+            label="Nhà cung cấp"
+            rules={billValidator.vendorId}
+          >
+            <VendorSelection
+              vendors={vendors}
+              loading={isFetchingVendors}
+              onChange={onVendorSelectionChanged}
+            />
           </Form.Item>
-          {!isUndefined(oldWeightInKg) && !isNil(oldWeightInKg) && (
-            <Tooltip title="Ký bán cho khách">
-              <Text delete style={{ marginLeft: 10, marginRight: 10 }}>
-                {oldWeightInKg}
-              </Text>
-            </Tooltip>
-          )}
-          {!isEmpty(billId) &&
-            [Role.ADMIN, Role.ACCOUNTANT].includes(userRole) && (
-              <VendorWeightAdjustment
-                bill={billForm}
-                onSaveNewWeight={onVendorWeightChanged}
-                onRestoreSaleWeight={onRestoreSaleWeight}
-                oldWeightInKg={oldWeightInKg}
-                purchasePriceInUsd={purchasePriceInUsd}
-                billQuotations={billQuotations}
-                isUseLatestQuotation={isUseLatestQuotation}
-              />
-            )}
-        </Input.Group>
-      </Form.Item>
 
-      <Form.Item
-        name="description"
-        label="Loại hàng"
-        rules={billValidator.description}
-      >
-        <AutoComplete
-          fetchDataSource={billDescriptionDataSource}
-          searchPropNames={['name']}
-          displayPath="name"
-          minSearchLength={2}
-          valuePath="name"
-          placeholder="Tìm kiếm"
-        />
-      </Form.Item>
+          <Form.Item
+            name="destinationCountry"
+            label="Nước đến"
+            rules={billValidator.destinationCountry}
+          >
+            <VendorCountriesSelection
+              countries={vendorCountries}
+              loading={isFetchingVendorCountries}
+              onChange={onSelectedCountryChanged}
+            />
+          </Form.Item>
 
-      <Form.Item
-        name="airlineBillId"
-        label="Bill hãng bay"
-        rules={billValidator.airlineBillId}
-        normalize={onTrimmingNormalize}
-      >
-        <Input />
-      </Form.Item>
+          <Form.Item
+            name="internationalParcelVendor"
+            label="Dịch vụ"
+            rules={billValidator.internationalParcelVendor}
+          >
+            <IntParcelVendorSelect
+              services={services}
+              relatedzones={relatedZones}
+              onChange={onServiceChanged}
+            />
+          </Form.Item>
 
-      <Form.Item
-        name="childBillId"
-        label="Bill con"
-        rules={billValidator.childBillId}
-        normalize={onTrimmingNormalize}
-      >
-        <Input />
-      </Form.Item>
+          <Form.Item label="Trọng lượng (kg)" required>
+            <Input.Group compact>
+              <Form.Item
+                name="weightInKg"
+                rules={billValidator.weightInKg}
+                noStyle
+              >
+                <InputNumber precision={2} min={0} />
+              </Form.Item>
+              {!isUndefined(oldWeightInKg) && !isNil(oldWeightInKg) && (
+                <Tooltip title="Ký bán cho khách">
+                  <Text delete style={{ marginLeft: 10, marginRight: 10 }}>
+                    {oldWeightInKg}
+                  </Text>
+                </Tooltip>
+              )}
+              {!isEmpty(billId) &&
+                [Role.ADMIN, Role.ACCOUNTANT].includes(userRole) && (
+                  <VendorWeightAdjustment
+                    bill={billForm}
+                    onSaveNewWeight={onVendorWeightChanged}
+                    onRestoreSaleWeight={onRestoreSaleWeight}
+                    oldWeightInKg={oldWeightInKg}
+                    purchasePriceInUsd={purchasePriceInUsd}
+                    billQuotations={billQuotations}
+                    isUseLatestQuotation={isUseLatestQuotation}
+                  />
+                )}
+            </Input.Group>
+          </Form.Item>
+
+          <Form.Item
+            name="description"
+            label="Loại hàng"
+            rules={billValidator.description}
+          >
+            <AutoComplete
+              fetchDataSource={billDescriptionDataSource}
+              searchPropNames={['name']}
+              displayPath="name"
+              minSearchLength={2}
+              valuePath="name"
+              placeholder="Tìm kiếm"
+            />
+          </Form.Item>
+
+          <Form.Item
+            name="airlineBillId"
+            label="Bill hãng bay"
+            rules={billValidator.airlineBillId}
+            normalize={onTrimmingNormalize}
+          >
+            <Input />
+          </Form.Item>
+
+          <Form.Item
+            name="childBillId"
+            label="Bill con"
+            rules={billValidator.childBillId}
+            normalize={onTrimmingNormalize}
+          >
+            <Input />
+          </Form.Item>
+        </Col>
+      </Row>
     </>
   );
 };

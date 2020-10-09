@@ -4,7 +4,7 @@ import { StyledContainer } from './styles/StyledRootContainer';
 import { PageHeaderProps } from 'antd/lib/page-header';
 
 interface Props {
-  title: string;
+  title: string | ReactElement;
   subTitle?: string;
   children: any;
   rightComponents?: ReactElement[];

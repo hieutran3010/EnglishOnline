@@ -181,7 +181,7 @@ const SaleQuotation = ({ role }: Props) => {
     }
 
     return result;
-  }, [salePrice]);
+  }, [role, salePrice]);
 
   return (
     <Space direction="vertical" style={{ width: '100%' }}>

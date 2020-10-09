@@ -1,3 +1,4 @@
+import { isMobileOnly } from 'react-device-detect';
 import React, { memo, useMemo, useCallback, useState, ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import isEmpty from 'lodash/fp/isEmpty';
@@ -34,6 +35,8 @@ import BillFetcher from 'app/fetchers/billFetcher';
 import { checkCanEditHistory } from '../utils';
 import LastBillDeliveryHistory from './LastBillDeliveryHistory';
 import { BillViewPage } from '../BillViewPage';
+import { DatasourceInfiniteLoadingList } from 'app/components/collection/List';
+import BillBlock from './BillBlock';
 
 const { TabPane } = Tabs;
 const { Text } = Typography;
@@ -73,6 +76,7 @@ interface Props {
   heightOffset?: number;
   width?: number;
   disableFilterFields?: string[];
+  supportBuiltInSearch?: boolean;
 }
 const BillList = ({
   billDataSource,
@@ -83,6 +87,7 @@ const BillList = ({
   heightOffset,
   width,
   disableFilterFields,
+  supportBuiltInSearch,
 }: Props) => {
   const user = authStorage.getUser();
 
@@ -374,20 +379,53 @@ const BillList = ({
     onViewBill,
   ]);
 
+  const renderBillBlock = useCallback(
+    (item: Bill & any) => {
+      return (
+        <BillBlock
+          key={item.id}
+          bill={item}
+          bordered
+          onView={onViewBill(item)}
+        />
+      );
+    },
+    [onViewBill],
+  );
+
   return (
     <>
       {!isReset && (
         <>
-          <DataGrid
-            dataSource={billDataSource}
-            columns={columns}
-            pageSize={50}
-            width={width ?? 'max-content'}
-            dontLoadInitialData={dontLoadInitialData}
-            heightOffset={heightOffset || 0.37}
-            size="small"
-            rowSelection={{}}
-          />
+          {isMobileOnly ? (
+            <DatasourceInfiniteLoadingList
+              datasource={billDataSource}
+              onRenderItem={renderBillBlock}
+              canSearch={supportBuiltInSearch}
+              searchPlaceholder="Tìm theo bill hãng bay, bill con, tên/sđt người gởi, tên người nhận"
+              searchFields={[
+                'airlineBillId',
+                'childBillId',
+                'senderName',
+                'senderNameNonUnicode',
+                'senderPhone',
+                'receiverName',
+                'receiverNameNonUnicode',
+              ]}
+            />
+          ) : (
+            <DataGrid
+              dataSource={billDataSource}
+              columns={columns}
+              pageSize={50}
+              width={width ?? 'max-content'}
+              dontLoadInitialData={dontLoadInitialData}
+              heightOffset={heightOffset || 0.37}
+              size="small"
+              rowSelection={{}}
+              style={{ marginTop: 10 }}
+            />
+          )}
           <Modal
             visible={visibleBillView}
             onCancel={onCancelViewBill}
@@ -404,7 +442,7 @@ const BillList = ({
               <TabPane tab="Thông tin bill" key={1}>
                 <BillViewPage
                   bill={selectedBill}
-                  onActionExecuteCompleted={onBillViewActionsExecuteCompleted}
+                  onBillUpdatedOrDeleted={onBillViewActionsExecuteCompleted}
                 />
               </TabPane>
               <TabPane tab="Tình trạng hàng" key={2}>

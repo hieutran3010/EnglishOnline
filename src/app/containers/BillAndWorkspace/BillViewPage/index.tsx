@@ -15,90 +15,88 @@ import { selectIsSubmitting } from './selectors';
 
 interface Props {
   bill: Bill;
-  onActionExecuteCompleted?: () => void;
+  onBillUpdatedOrDeleted?: (bill?: Bill | string) => void;
 }
-export const BillViewPage = memo(
-  ({ bill, onActionExecuteCompleted }: Props) => {
-    const dispatch = useDispatch();
+export const BillViewPage = memo(({ bill, onBillUpdatedOrDeleted }: Props) => {
+  const dispatch = useDispatch();
 
-    const isSubmitting = useSelector(selectIsSubmitting);
+  const isSubmitting = useSelector(selectIsSubmitting);
 
-    const [selectedBill, setSelectedBill] = useState<Bill>(new Bill());
+  const [selectedBill, setSelectedBill] = useState<Bill>(new Bill());
 
-    useEffect(() => {
-      setSelectedBill(bill);
-    }, [bill]);
+  useEffect(() => {
+    setSelectedBill(bill);
+  }, [bill]);
 
-    const onArchiveBill = useCallback(
-      (billId: string) => {
-        dispatch(
-          actions.archiveBill({
-            billId,
-            succeededCallback: onActionExecuteCompleted,
-          }),
-        );
-      },
-      [dispatch, onActionExecuteCompleted],
-    );
+  const onArchiveBill = useCallback(
+    (billId: string) => {
+      dispatch(
+        actions.archiveBill({
+          billId,
+          succeededCallback: onBillUpdatedOrDeleted,
+        }),
+      );
+    },
+    [dispatch, onBillUpdatedOrDeleted],
+  );
 
-    const onPrintedVatBill = useCallback(
-      (billId: string) => {
-        dispatch(
-          actions.checkPrintedVatBill({
-            billId,
-            succeededCallback: onActionExecuteCompleted,
-          }),
-        );
-      },
-      [dispatch, onActionExecuteCompleted],
-    );
+  const onPrintedVatBill = useCallback(
+    (billId: string) => {
+      dispatch(
+        actions.checkPrintedVatBill({
+          billId,
+          succeededCallback: onBillUpdatedOrDeleted,
+        }),
+      );
+    },
+    [dispatch, onBillUpdatedOrDeleted],
+  );
 
-    const onRestoreArchivedBill = useCallback(
-      (billId: string) => {
-        dispatch(
-          actions.restoreArchivedBill({
-            billId,
-            succeededCallback: onActionExecuteCompleted,
-          }),
-        );
-      },
-      [dispatch, onActionExecuteCompleted],
-    );
+  const onRestoreArchivedBill = useCallback(
+    (billId: string) => {
+      dispatch(
+        actions.restoreArchivedBill({
+          billId,
+          succeededCallback: onBillUpdatedOrDeleted,
+        }),
+      );
+    },
+    [dispatch, onBillUpdatedOrDeleted],
+  );
 
-    const onReturnFinalBillToAccountant = useCallback(
-      (billId: string) => {
-        dispatch(
-          actions.returnFinalBillToAccountant({
-            billId,
-            succeededCallback: onActionExecuteCompleted,
-          }),
-        );
-      },
-      [dispatch, onActionExecuteCompleted],
-    );
+  const onReturnFinalBillToAccountant = useCallback(
+    (billId: string) => {
+      dispatch(
+        actions.returnFinalBillToAccountant({
+          billId,
+          succeededCallback: onBillUpdatedOrDeleted,
+        }),
+      );
+    },
+    [dispatch, onBillUpdatedOrDeleted],
+  );
 
-    const onForceDeleteBill = useCallback(
-      (billId: string) => {
-        dispatch(
-          actions.forceDeleteBill({
-            billId,
-            succeededCallback: onActionExecuteCompleted,
-          }),
-        );
-      },
-      [dispatch, onActionExecuteCompleted],
-    );
+  const onForceDeleteBill = useCallback(
+    (billId: string) => {
+      dispatch(
+        actions.forceDeleteBill({
+          billId,
+          succeededCallback: onBillUpdatedOrDeleted,
+        }),
+      );
+    },
+    [dispatch, onBillUpdatedOrDeleted],
+  );
 
-    return (
-      <BillView
-        bill={selectedBill}
-        onArchiveBill={onArchiveBill}
-        onPrintedVat={onPrintedVatBill}
-        onRestoreArchivedBill={onRestoreArchivedBill}
-        onReturnFinalBillToAccountant={onReturnFinalBillToAccountant}
-        onForceDeleteBill={onForceDeleteBill}
-        isSubmitting={isSubmitting}
-      />
-    );
-  },
-);
+  return (
+    <BillView
+      bill={selectedBill}
+      onArchiveBill={onArchiveBill}
+      onPrintedVat={onPrintedVatBill}
+      onRestoreArchivedBill={onRestoreArchivedBill}
+      onReturnFinalBillToAccountant={onReturnFinalBillToAccountant}
+      onForceDeleteBill={onForceDeleteBill}
+      isSubmitting={isSubmitting}
+    />
+  );
+});

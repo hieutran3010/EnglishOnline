@@ -8,10 +8,7 @@
 import React, { useEffect, useCallback, useState } from 'react';
 import { Route, Switch, useHistory, Redirect } from 'react-router-dom';
 import { Spin } from 'antd';
-import find from 'lodash/fp/find';
-import isEmpty from 'lodash/fp/isEmpty';
 
-import { MenuItem } from 'app/components/AppNavigation/index.d';
 import { AppLayout } from 'app/components/Layout';
 import { authService, authStorage } from 'app/services/auth';
 import { Role } from 'app/models/user';
@@ -61,11 +58,9 @@ export function HomePage() {
   const [isVerifiedAuth, setIsVerifiedAuth] = useState(false);
 
   const currentUserRole = authStorage.getRole();
-  const { authorizedMenus, selectedMenuIndex, onSelectedMenuChanged } = useMenu(
-    {
-      role: currentUserRole,
-    },
-  );
+  const { authorizedMenus, selectedMenuKeys, onSelectedMenuChanged } = useMenu({
+    role: currentUserRole,
+  });
 
   const onSizeChanged = useCallback(() => {
     dispatch(actions.setScreenMode(getScreenMode()));
@@ -99,18 +94,6 @@ export function HomePage() {
       logoutSubscriber.unsubscribe();
     };
   }, [history]);
-
-  const onRenderTopLeftMenu = useCallback(() => {
-    const menu = find((a: MenuItem) => a.index === selectedMenuIndex)(
-      authorizedMenus,
-    );
-
-    if (menu && menu.childMenu && !isEmpty(menu.childMenu)) {
-      return menu.childMenu;
-    }
-
-    return <></>;
-  }, [authorizedMenus, selectedMenuIndex]);
 
   const onRenderUser = useCallback(() => {
     return <UserNavigation />;
@@ -157,13 +140,12 @@ export function HomePage() {
       menus={authorizedMenus}
       logo={logo}
       logoSmall={logoSmall}
-      renderTopLeftComponent={onRenderTopLeftMenu}
       screenMode={screenMode}
       renderTopRightComponent={onRenderUser}
       isCollapsed={collapsedMenu}
       onCollapsed={onCollapsed}
       onSelectedMenuChanged={onSelectedMenuChanged}
-      selectedMenuKeys={[`${selectedMenuIndex}`]}
+      selectedMenuKeys={selectedMenuKeys}
     >
       <Switch>
         <Route exact path="/">

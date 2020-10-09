@@ -7,10 +7,7 @@ import type Vendor from 'app/models/vendor';
 import type User from 'app/models/user';
 
 import { ContainerState, SubmitBillAction } from './types';
-import {
-  PurchasePriceCountingParams,
-  PurchasePriceCountingResult,
-} from 'app/models/purchasePriceCounting';
+import { PurchasePriceCountingResult } from 'app/models/purchasePriceCounting';
 import Zone from 'app/models/zone';
 
 // The initial state of the BillCreateOrUpdate container
@@ -42,7 +39,7 @@ export const initialState: ContainerState = {
   relatedZones: [],
 };
 
-const extractBillInfo = (state: ContainerState, billInfo: any) => {
+const extractBillInfo = (state: ContainerState, billInfo?: any) => {
   const bill = new Bill(billInfo);
   state.billId = bill.id;
   state.purchasePriceInfo = bill.getPurchasePriceInfo();
@@ -57,9 +54,11 @@ const billCreateOrUpdateSlice = createSlice({
   name: 'billCreateOrUpdate',
   initialState,
   reducers: {
+    initNewBill(state) {
+      extractBillInfo(state);
+    },
     setBill(state, action: PayloadAction<Bill>) {
-      const bill = action.payload;
-      extractBillInfo(state, bill);
+      extractBillInfo(state, action.payload);
     },
     fetchVendor(state) {
       state.isFetchingVendor = true;
@@ -80,9 +79,16 @@ const billCreateOrUpdateSlice = createSlice({
     setIsSubmitting(state, action: PayloadAction<boolean>) {
       state.isSubmitting = action.payload;
     },
-    submitBill(state, action: PayloadAction<Bill>) {},
-    submitBillCompleted(state, action: PayloadAction<Bill>) {
-      extractBillInfo(state, action.payload);
+    submitBill(
+      state,
+      action: PayloadAction<{ bill: Bill | any; caller?: string }>,
+    ) {},
+    submitBillCompleted(
+      state,
+      action: PayloadAction<{ bill: Bill; isNew?: boolean }>,
+    ) {
+      const { bill } = action.payload;
+      extractBillInfo(state, bill);
     },
 
     fetchResponsibilityUsers(state) {
@@ -98,20 +104,15 @@ const billCreateOrUpdateSlice = createSlice({
     },
     assignToAccountant(state, action: PayloadAction<SubmitBillAction>) {},
     assignToAccountantCompleted(state, action: PayloadAction<Bill>) {
-      state.billStatus = BILL_STATUS.ACCOUNTANT;
+      extractBillInfo(state, action.payload);
     },
 
     setIsDeletingBill(state, action: PayloadAction<boolean>) {
       state.isDeletingBill = action.payload;
     },
     deleteBill() {},
-    deleteBillCompleted(state) {
-      state.oldWeightInKg = initialState.oldWeightInKg;
-      state.billStatus = initialState.billStatus;
-      state.purchasePriceInfo = initialState.purchasePriceInfo;
-      state.billId = initialState.billId;
-      state.senderId = initialState.senderId;
-      state.receiverId = initialState.receiverId;
+    deleteBillCompleted(state, action: PayloadAction<string>) {
+      extractBillInfo(state);
     },
 
     setIsCalculatingPurchasePrice(state, action: PayloadAction<boolean>) {

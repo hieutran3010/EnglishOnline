@@ -16,9 +16,9 @@ const LastBillDeliveryHistory = ({ histories }: Props) => {
     return <></>;
   }
 
-  const lastHistory = head(
-    orderBy(['date', 'time'], 'desc')(histories),
-  ) as BillDeliveryHistory;
+  const orderedDate = orderBy('date')('desc')(histories);
+  const orderedTime = orderBy('time')('desc')(orderedDate);
+  const lastHistory = head(orderedTime) as BillDeliveryHistory;
 
   return <Text>{lastHistory?.status || ''}</Text>;
 };

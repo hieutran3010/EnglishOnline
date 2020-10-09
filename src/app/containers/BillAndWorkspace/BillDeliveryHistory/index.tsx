@@ -4,7 +4,14 @@
  *
  */
 
-import React, { memo, useEffect, useState, useCallback, useMemo } from 'react';
+import React, {
+  memo,
+  useEffect,
+  useState,
+  useCallback,
+  useMemo,
+  CSSProperties,
+} from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { Typography, Space, Button, Tooltip, Alert, Spin } from 'antd';
 import {
@@ -36,30 +43,31 @@ import { useParams } from 'react-router-dom';
 import BillView from '../components/BillView';
 import Modal from 'antd/lib/modal/Modal';
 import DeliveryTimeline from './DeliveryTimeline';
+import BillTrackingId from '../components/BillTrackingId';
 
 const { Text } = Typography;
 
 interface Props {
   delegateControl?: boolean;
   size?: 'small' | 'default' | undefined;
-  inputBillId?: string;
   isReadOnly?: boolean;
   notAbleToViewBillInfo?: boolean;
+  bodyStyle?: CSSProperties;
 }
 export const BillDeliveryHistoryPage = memo(
   ({
     delegateControl,
     size,
-    inputBillId,
     isReadOnly,
     notAbleToViewBillInfo,
+    bodyStyle,
   }: Props) => {
     const dispatch = useDispatch();
     if (!delegateControl) {
       useBillDeliveryHistory();
     }
 
-    const { billId } = useParams();
+    const { billId } = useParams() as any;
     const airlineBillId = useSelector(selectAirlineBillId);
     const childBillId = useSelector(selectChildBillId);
 
@@ -81,12 +89,11 @@ export const BillDeliveryHistoryPage = memo(
     >();
 
     useEffect(() => {
-      if (inputBillId) {
-        dispatch(actions.fetchBillDeliveryHistories(inputBillId));
-      } else {
+      if (billId) {
         dispatch(actions.fetchBillDeliveryHistories(billId));
       }
-    }, [inputBillId, billId, dispatch]);
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [billId]);
 
     const isFetching = useSelector(selectIsFetchingHistories);
     const histories = useSelector(selectHistories);
@@ -160,13 +167,9 @@ export const BillDeliveryHistoryPage = memo(
 
     const onSave = useCallback(() => {
       if (isDirty) {
-        if (inputBillId) {
-          dispatch(actions.save(inputBillId));
-        } else {
-          dispatch(actions.save(billId));
-        }
+        dispatch(actions.save());
       }
-    }, [inputBillId, billId, dispatch, isDirty]);
+    }, [dispatch, isDirty]);
 
     const onViewBill = useCallback(() => {
       dispatch(actions.fetchBillToView(billId));
@@ -176,8 +179,6 @@ export const BillDeliveryHistoryPage = memo(
     const onCancelViewBill = useCallback(() => {
       setShowBillViewModal(false);
     }, []);
-
-    const maxHeight = window.innerHeight - window.innerHeight * 0.3;
 
     const mainActions = useMemo(() => {
       return isReadOnly === true
@@ -207,17 +208,17 @@ export const BillDeliveryHistoryPage = memo(
 
     return (
       <ContentContainer
+        bodyStyle={bodyStyle}
         title={
           <Space>
-            <Text>Tình trạng hàng của bill</Text>
+            <Text>Tình trạng bill</Text>
             {isFetching ? (
               <Spin size="small" />
             ) : (
-              <Text strong>
-                {airlineBillId ||
-                  childBillId ||
-                  '<Chưa có bill hãng bay/bill con>'}
-              </Text>
+              <BillTrackingId
+                airlineBillId={airlineBillId}
+                childBillId={childBillId}
+              />
             )}
             <Space>
               {!isReadOnly && (
@@ -258,16 +259,14 @@ export const BillDeliveryHistoryPage = memo(
         loading={isFetching}
         actions={mainActions}
       >
-        <div style={{ maxHeight, overflow: 'auto' }}>
-          <DeliveryTimeline
-            isReadOnly={isReadOnly}
-            onAddNewAtADate={onAddNewAtADate}
-            onEdit={onEdit}
-            onDelete={onDelete}
-            histories={histories}
-            isSaving={isSaving}
-          />
-        </div>
+        <DeliveryTimeline
+          isReadOnly={isReadOnly}
+          onAddNewAtADate={onAddNewAtADate}
+          onEdit={onEdit}
+          onDelete={onDelete}
+          histories={histories}
+          isSaving={isSaving}
+        />
         <DeliveryHistoryModal
           visible={visibleCreateOrEditModal}
           onClose={onCloseModal}

@@ -11,7 +11,7 @@ import { Button, Table, Checkbox } from 'antd';
 import toString from 'lodash/fp/toString';
 
 import { useInjectReducer, useInjectSaga } from 'utils/redux-injectors';
-import { RootContainer } from 'app/components/Layout';
+import { ContentContainer } from 'app/components/Layout';
 
 import { actions, reducer, sliceKey } from './slice';
 import { selectIsFetchingUsers, selectUsers } from './selectors';
@@ -115,9 +115,9 @@ export const UserList = memo(() => {
   }, [onUpdateUser]);
 
   return (
-    <RootContainer
+    <ContentContainer
       title="Danh sách Người Dùng"
-      rightComponents={[
+      extra={[
         <Button key="1" type="primary" onClick={onCreateNewUser}>
           Thêm mới
         </Button>,
@@ -131,6 +131,6 @@ export const UserList = memo(() => {
         pagination={false}
         rowKey={(record: any) => record.id}
       />
-    </RootContainer>
+    </ContentContainer>
   );
 });

@@ -1,31 +1,33 @@
 import React, { memo } from 'react';
-import { Layout } from 'antd';
-import { MenuUnfoldOutlined, MenuFoldOutlined } from '@ant-design/icons';
-import MobileMenu from './MobileMenu';
-import { MenuItem } from './index.d';
+import { Button, Layout } from 'antd';
+import {
+  MenuUnfoldOutlined,
+  MenuFoldOutlined,
+  MenuOutlined,
+} from '@ant-design/icons';
 import { StyledLogoWrapper } from './styles/StyledTopNavigation';
-import { ScreenMode } from './types';
+import { ScreenMode, IMenuItem } from './types';
+import Logo from '../Logo';
 
 const { Header } = Layout;
 interface TopNavigation {
   isCollapsed: boolean;
   onCollapse: () => void;
-  menus: MenuItem[];
+  menus: IMenuItem[];
   logo: any;
   logoSmall: any;
   screenMode: ScreenMode;
-  renderLeftComponent?: () => React.Component;
   renderRightComponent?: () => React.Component;
+  onShowDrawer?: () => void;
 }
 const TopNavigation = ({
   isCollapsed,
   onCollapse,
-  menus,
   logoSmall,
   logo,
-  renderLeftComponent,
   renderRightComponent,
   screenMode,
+  onShowDrawer,
 }: TopNavigation) => {
   return (
     <Header
@@ -40,19 +42,25 @@ const TopNavigation = ({
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'flex-start',
-        position: 'fixed',
+        position: 'sticky',
+        top: 0,
       }}
     >
       <StyledLogoWrapper className="logo">
-        <img
-          src={isCollapsed ? logoSmall : logo}
-          height="40px"
-          style={{ marginLeft: 20 }}
-          alt=""
-        />
+        {screenMode === ScreenMode.MOBILE ? (
+          <Button
+            type="primary"
+            ghost
+            icon={<MenuOutlined />}
+            style={{ marginRight: 10 }}
+            onClick={onShowDrawer}
+          />
+        ) : (
+          <Logo isSmall={isCollapsed} logoSrc={logo} logoSmallSrc={logoSmall} />
+        )}
       </StyledLogoWrapper>
 
-      {screenMode === ScreenMode.FULL ? (
+      {screenMode === ScreenMode.FULL ??
         React.createElement(
           isCollapsed ? MenuUnfoldOutlined : MenuFoldOutlined,
           {
@@ -64,11 +72,7 @@ const TopNavigation = ({
               color: '#00a651',
             },
           },
-        )
-      ) : (
-        <MobileMenu menus={menus} />
-      )}
-      <div>{renderLeftComponent && renderLeftComponent()}</div>
+        )}
       <div
         style={{
           flex: 1,

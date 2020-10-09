@@ -4,17 +4,18 @@
  *
  */
 
-import React, { memo, useCallback, useEffect, useState, useMemo } from 'react';
-import { Button, Tabs, Tooltip } from 'antd';
-import { PlusCircleOutlined } from '@ant-design/icons';
+import React, { memo, useCallback, useEffect, useState } from 'react';
+import { Button, Drawer } from 'antd';
+import { PlusCircleOutlined, ContainerOutlined } from '@ant-design/icons';
 import { useDispatch, useSelector } from 'react-redux';
-import isEmpty from 'lodash/fp/isEmpty';
+import { SagaInjectionModes } from 'redux-injectors';
+import { isMobile } from 'react-device-detect';
 
 import { useInjectReducer, useInjectSaga } from 'utils/redux-injectors';
 import { ContentContainer } from 'app/components/Layout';
 import { authorizeHelper, authStorage } from 'app/services/auth';
 import { Role } from 'app/models/user';
-import Bill, { BILL_STATUS } from 'app/models/bill';
+import Bill, { BillDeliveryHistory } from 'app/models/bill';
 import {
   selectScreenMode,
   selectCollapsedMenu,
@@ -22,59 +23,41 @@ import {
 
 import { workspaceSaga } from './saga';
 import { actions, reducer, sliceKey } from './slice';
+import { actions as billCreateOrUpdateAction } from '../BillCreateOrUpdate/slice';
+import { BillDeliveryHistoryPage } from '../BillDeliveryHistory';
+import useBillDeliveryHistory from '../BillDeliveryHistory/hook';
 
 import {
   StyledContainer,
-  StyledLeftContainer,
   StyledRightContainer,
   StyledMainToolbar,
 } from './styles/StyledIndex';
 
 import {
-  selectBill,
   selectNumberOfUncheckedVatBills,
-  selectNeedToReloadWorkingBills,
+  selectMyBills,
+  selectIsLoadingMyBills,
+  selectTotalMyBills,
+  selectSelectedMonth,
+  selectTotalSelfCreatedBillsToday,
 } from './selectors';
 import BillBlock, { BILL_BLOCK_ACTION_TYPE } from '../components/BillBlock';
-import BillView from '../components/BillView';
 import VatPrintedChecking from '../components/VatPrintedChecking';
-import { MyBills, UnassignedBills } from './WorkingBills';
 import { BillCreateOrUpdate } from '../BillCreateOrUpdate';
-import { SagaInjectionModes } from 'redux-injectors';
-import { BillDeliveryHistoryPage } from '../BillDeliveryHistory';
-import useBillDeliveryHistory from '../BillDeliveryHistory/hook';
 import { checkCanEditHistory } from '../utils';
-
-enum SELECTED_BILL_AREA {
-  MY_BILLS = 0,
-  UNASSIGNED,
-}
-
-const { TabPane } = Tabs;
-
-const canEditBill = (role: Role, bill: Bill) => {
-  switch (role) {
-    case Role.LICENSE: {
-      return bill.status === BILL_STATUS.LICENSE || isEmpty(bill.id);
-    }
-    case Role.ACCOUNTANT: {
-      return bill.status === BILL_STATUS.ACCOUNTANT || isEmpty(bill.id);
-    }
-    case Role.ADMIN: {
-      return true;
-    }
-    case Role.SALE: {
-      return false;
-    }
-  }
-};
+import get from 'lodash/fp/get';
+import { ScreenMode } from 'app/components/AppNavigation/types';
+import MyBills from './MyBills';
 
 export const Workspace = memo(() => {
   const role = authStorage.getRole();
   const currentRole = authStorage.getRole();
+  const [isBusy, setIsBusy] = useState(false);
+  const [selectedBillId, setSelectedBillId] = useState<string | undefined>();
+  const [visibleBillListDrawer, setVisibleBillListDrawer] = useState(false);
 
   const dispatch = useDispatch();
-  useBillDeliveryHistory();
+  const { setHistories } = useBillDeliveryHistory();
 
   useInjectReducer({ key: sliceKey, reducer: reducer });
   useInjectSaga({
@@ -83,23 +66,30 @@ export const Workspace = memo(() => {
     mode: SagaInjectionModes.RESTART_ON_REMOUNT,
   });
 
+  useEffect(() => {
+    dispatch(actions.fetchMyBills());
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const screenMode = useSelector(selectScreenMode);
   const collapsedMenu = useSelector(selectCollapsedMenu);
 
-  const bill = useSelector(selectBill);
   const numberOfUncheckedVatBills = useSelector(
     selectNumberOfUncheckedVatBills,
   );
-  const needToReloadWorkingBills = useSelector(selectNeedToReloadWorkingBills);
-
-  const [isBusy, setIsBusy] = useState(false);
-  const [currentBillArea, setCurrentBillArea] = useState<
-    SELECTED_BILL_AREA | undefined
-  >();
+  const myBills = useSelector(selectMyBills);
+  const isLoadingMyBills = useSelector(selectIsLoadingMyBills);
+  const totalMyBills = useSelector(selectTotalMyBills);
+  const selectedMonth = useSelector(selectSelectedMonth);
+  const totalSelfCreatedBillsToday = useSelector(
+    selectTotalSelfCreatedBillsToday,
+  );
 
   const [billBlockActionType, setBillBlockActionType] = useState(
     BILL_BLOCK_ACTION_TYPE.EDIT_OR_VIEW,
   );
+
+  const [canEditHistory, setCanEditHistory] = useState(false);
 
   useEffect(() => {
     if (role === Role.ACCOUNTANT || role === Role.ADMIN) {
@@ -108,16 +98,10 @@ export const Workspace = memo(() => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  useEffect(() => {
-    return function cleanUp() {
-      dispatch(actions.resetState());
-    };
-  }, [dispatch]);
-
   const initNewBill = useCallback(() => {
-    dispatch(actions.initNewBill());
-    setCurrentBillArea(SELECTED_BILL_AREA.MY_BILLS);
+    dispatch(billCreateOrUpdateAction.initNewBill());
     setBillBlockActionType(BILL_BLOCK_ACTION_TYPE.EDIT_OR_VIEW);
+    setSelectedBillId(undefined);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -126,166 +110,209 @@ export const Workspace = memo(() => {
   }, [dispatch]);
 
   const onBillSelectionChanged = useCallback(
-    (billsArea: SELECTED_BILL_AREA) => (selectedBill: Bill) => {
-      dispatch(actions.selectBill(selectedBill));
-      setCurrentBillArea(billsArea);
+    (selectedBill: Bill) => {
+      dispatch(billCreateOrUpdateAction.setBill(selectedBill));
       setBillBlockActionType(BILL_BLOCK_ACTION_TYPE.EDIT_OR_VIEW);
+      setSelectedBillId(selectedBill.id);
+
+      if (screenMode !== ScreenMode.FULL) {
+        setVisibleBillListDrawer(false);
+      }
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [],
+    [screenMode],
   );
 
   const onSelectForDeliveryHistory = useCallback(
     (selectedBill: Bill) => {
-      dispatch(actions.selectBill(selectedBill));
-      setCurrentBillArea(SELECTED_BILL_AREA.MY_BILLS);
+      const { airlineBillId, childBillId } = selectedBill;
+      setHistories({
+        billId: selectedBill.id,
+        airlineBillId,
+        childBillId,
+        histories: (get('billDeliveryHistories')(selectedBill) ||
+          []) as BillDeliveryHistory[],
+      });
       setBillBlockActionType(BILL_BLOCK_ACTION_TYPE.HISTORY);
+      setSelectedBillId(selectedBill.id);
+
+      setCanEditHistory(checkCanEditHistory(role, selectedBill.saleUserId));
+
+      if (screenMode !== ScreenMode.FULL) {
+        setVisibleBillListDrawer(false);
+      }
     },
-    [dispatch],
+    [role, screenMode, setHistories],
   );
 
-  const canEdit = canEditBill(role, bill);
-
-  const renderMyBillBlock = (item: any) => {
-    return (
-      <BillBlock
-        bill={item}
-        onSelect={onBillSelectionChanged(SELECTED_BILL_AREA.MY_BILLS)}
-        selectedBillId={bill.id}
-        userRole={role}
-        onSelectForDeliveryHistory={onSelectForDeliveryHistory}
-      />
-    );
-  };
-
-  const renderUnassignedBillBlock = (item: any) => {
-    return (
-      <BillBlock
-        bill={item}
-        onSelect={onBillSelectionChanged(SELECTED_BILL_AREA.UNASSIGNED)}
-        selectedBillId={bill.id}
-        userRole={role}
-        onSelectForDeliveryHistory={onSelectForDeliveryHistory}
-      />
-    );
-  };
+  const renderMyBillBlock = useCallback(
+    (item: Bill & any) => {
+      return (
+        <BillBlock
+          key={item.id}
+          bill={item}
+          onView={onBillSelectionChanged}
+          selectedBillId={selectedBillId}
+          onViewOrEditDeliveryHistory={onSelectForDeliveryHistory}
+          dateBackgroundColor={item.dateGroupColor}
+          isBusy={isBusy}
+          bordered={isMobile}
+        />
+      );
+    },
+    [
+      isBusy,
+      onBillSelectionChanged,
+      onSelectForDeliveryHistory,
+      selectedBillId,
+    ],
+  );
 
   const onBillSubmitting = useCallback((isSubmitting: boolean) => {
     setIsBusy(isSubmitting);
   }, []);
 
-  const onDataReloaded = useCallback(() => {
-    dispatch(actions.setNeedToReloadWorkingBills(false));
-  }, [dispatch]);
+  const onFetchMoreMyBills = useCallback(() => {
+    dispatch(actions.fetchMoreMyBills());
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
-  const canEditHistory = useMemo(() => {
-    return checkCanEditHistory(role, bill.saleUserId);
-  }, [bill.saleUserId, role]);
+  const onMonthChanged = useCallback((month: number) => {
+    dispatch(actions.changeMonth(month));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const onSearchMyBills = useCallback((searchKey: string) => {
+    dispatch(actions.search(searchKey));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const onReloadMyBills = useCallback(() => {
+    dispatch(actions.fetchMyBills(true));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const onCountTotalMyBillsCreatedToday = useCallback(() => {
+    dispatch(actions.fetchTotalMyBillsCreatedToday());
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const onVisibleBillsInDrawer = useCallback(() => {
+    setVisibleBillListDrawer(true);
+  }, []);
+
+  const onCloseBillsDrawer = useCallback(() => {
+    setVisibleBillListDrawer(false);
+  }, []);
 
   return (
-    <>
-      <StyledContainer role={currentRole} {...{ screenMode, collapsedMenu }}>
-        <StyledLeftContainer>
-          <Tabs defaultActiveKey="1" size="small">
-            <TabPane
-              tab={
-                <Tooltip title="Bill có tôi là Sale hoặc là Chứng Từ hoặc là Kế Toán">
-                  <span>
-                    {/* <Badge count={25} /> */}
-                    Bill của tôi
-                  </span>
-                </Tooltip>
-              }
-              key="1"
-              disabled={isBusy}
-            >
-              <MyBills
-                renderBillBlock={renderMyBillBlock}
-                needToReload={
-                  needToReloadWorkingBills === true &&
-                  currentBillArea !== undefined
-                }
-                onReloaded={onDataReloaded}
-              />
-            </TabPane>
+    <StyledContainer role={currentRole} {...{ screenMode, collapsedMenu }}>
+      {!isMobile && (
+        <MyBills
+          renderMyBillBlock={renderMyBillBlock}
+          isLoadingMyBills={isLoadingMyBills}
+          myBills={myBills}
+          onCountTotalMyBillsCreatedToday={onCountTotalMyBillsCreatedToday}
+          onFetchMoreMyBills={onFetchMoreMyBills}
+          onMonthChanged={onMonthChanged}
+          onReloadMyBills={onReloadMyBills}
+          onSearchMyBills={onSearchMyBills}
+          selectedMonth={selectedMonth}
+          totalMyBills={totalMyBills}
+          totalSelfCreatedBillsToday={totalSelfCreatedBillsToday}
+          style={{ marginRight: 20, width: 400 }}
+          role={role}
+        />
+      )}
+      <StyledRightContainer>
+        {(isMobile || role !== Role.SALE) && (
+          <StyledMainToolbar>
+            {isMobile && (
+              <div>
+                <Button
+                  type="primary"
+                  ghost
+                  icon={<ContainerOutlined />}
+                  size="small"
+                  onClick={onVisibleBillsInDrawer}
+                  style={{ border: 0, boxShadow: 'none' }}
+                >
+                  DS Bills
+                </Button>
+                <Drawer
+                  placement="right"
+                  onClose={onCloseBillsDrawer}
+                  visible={visibleBillListDrawer}
+                  width={320}
+                  bodyStyle={{ padding: 10 }}
+                  closable={false}
+                >
+                  <MyBills
+                    renderMyBillBlock={renderMyBillBlock}
+                    isLoadingMyBills={isLoadingMyBills}
+                    myBills={myBills}
+                    onCountTotalMyBillsCreatedToday={
+                      onCountTotalMyBillsCreatedToday
+                    }
+                    onFetchMoreMyBills={onFetchMoreMyBills}
+                    onMonthChanged={onMonthChanged}
+                    onReloadMyBills={onReloadMyBills}
+                    onSearchMyBills={onSearchMyBills}
+                    selectedMonth={selectedMonth}
+                    totalMyBills={totalMyBills}
+                    totalSelfCreatedBillsToday={totalSelfCreatedBillsToday}
+                    role={role}
+                  />
+                </Drawer>
+              </div>
+            )}
+
+            {authorizeHelper.canRenderWithRole(
+              [Role.ACCOUNTANT, Role.LICENSE],
+              <Button
+                type="dashed"
+                icon={<PlusCircleOutlined />}
+                size="small"
+                onClick={initNewBill}
+                style={{ border: 0, boxShadow: 'none' }}
+              >
+                Tạo Bill Mới
+              </Button>,
+            )}
+
             {authorizeHelper.canRenderWithRole(
               [Role.ACCOUNTANT],
-              <TabPane
-                tab={
-                  <Tooltip title="Bill chưa có Kế Toán làm">
-                    <span>
-                      {/* <Badge count={25} /> */}
-                      Bill chờ xử lý
-                    </span>
-                  </Tooltip>
-                }
-                key="2"
-                disabled={isBusy}
-              >
-                <UnassignedBills
-                  renderBillBlock={renderUnassignedBillBlock}
-                  needToReload={
-                    needToReloadWorkingBills === true &&
-                    currentBillArea === SELECTED_BILL_AREA.UNASSIGNED
-                  }
-                  onReloaded={onDataReloaded}
+              <div style={{ marginBottom: 2 }}>
+                <VatPrintedChecking
+                  numberOfBills={numberOfUncheckedVatBills}
+                  onCheckNumberOfVatBill={onCheckNumberOfVatBill}
                 />
-              </TabPane>,
+              </div>,
             )}
-          </Tabs>
-        </StyledLeftContainer>
-        <StyledRightContainer>
-          {authorizeHelper.willRenderIfNot(
-            [Role.SALE],
-            <StyledMainToolbar>
-              {authorizeHelper.canRenderWithRole(
-                [Role.ACCOUNTANT, Role.LICENSE],
-                <Button
-                  type="dashed"
-                  icon={<PlusCircleOutlined />}
-                  size="small"
-                  onClick={initNewBill}
-                  style={{ border: 0 }}
-                >
-                  Tạo Bill Mới
-                </Button>,
-              )}
-              {authorizeHelper.canRenderWithRole(
-                [Role.ACCOUNTANT],
-                <div style={{ marginBottom: 2 }}>
-                  <VatPrintedChecking
-                    numberOfBills={numberOfUncheckedVatBills}
-                    onCheckNumberOfVatBill={onCheckNumberOfVatBill}
-                  />
-                </div>,
-              )}
-            </StyledMainToolbar>,
-          )}
-          {currentRole !== Role.SALE && <div style={{ marginTop: 54 }}></div>}
-          {billBlockActionType === BILL_BLOCK_ACTION_TYPE.EDIT_OR_VIEW && (
-            <ContentContainer style={{ marginBottom: canEdit ? 112 : 0 }}>
-              {canEdit && (
-                <BillCreateOrUpdate
-                  inputBill={bill}
-                  canDelete
-                  onSubmitting={onBillSubmitting}
-                  isFixedCommandBar
-                />
-              )}
-              {!canEdit && <BillView bill={bill} />}
-            </ContentContainer>
-          )}
-          {billBlockActionType === BILL_BLOCK_ACTION_TYPE.HISTORY && (
-            <BillDeliveryHistoryPage
-              size="small"
-              inputBillId={bill.id}
-              isReadOnly={!canEditHistory}
-              delegateControl
-              notAbleToViewBillInfo
+          </StyledMainToolbar>
+        )}
+
+        {billBlockActionType === BILL_BLOCK_ACTION_TYPE.EDIT_OR_VIEW && (
+          <ContentContainer
+            size="small"
+            bodyStyle={{ paddingBottom: 0, height: 'unset' }}
+          >
+            <BillCreateOrUpdate
+              canDelete
+              onSubmitting={onBillSubmitting}
+              billViewStyle={{ marginBottom: 10 }}
             />
-          )}
-        </StyledRightContainer>
-      </StyledContainer>
-    </>
+          </ContentContainer>
+        )}
+        {billBlockActionType === BILL_BLOCK_ACTION_TYPE.HISTORY && (
+          <BillDeliveryHistoryPage
+            size="small"
+            isReadOnly={!canEditHistory}
+            delegateControl
+            notAbleToViewBillInfo
+          />
+        )}
+      </StyledRightContainer>
+    </StyledContainer>
   );
 });

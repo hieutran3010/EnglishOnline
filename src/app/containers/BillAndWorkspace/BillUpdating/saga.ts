@@ -9,26 +9,21 @@ import { actions as billCreateOrUpdateActions } from '../BillCreateOrUpdate/slic
 const billFetcher = new BillFetcher();
 
 export function* fetchBillTask(action: PayloadAction<string>) {
+  yield put(actions.setIsFetchingBill(true));
+
   const billId = action.payload;
 
   let bill: Bill | undefined = undefined;
   try {
     bill = yield call(billFetcher.queryOneAsync, { query: `Id = "${billId}"` });
+    yield put(billCreateOrUpdateActions.setBill(bill || new Bill()));
   } catch (error) {
     Sentry.captureException(error);
   }
 
-  yield put(actions.fetchBillCompleted(bill));
-}
-
-export function* onFinalBillTask(action: PayloadAction<Bill>) {
-  yield put(actions.showBillReview(action.payload));
+  yield put(actions.setIsFetchingBill(false));
 }
 
 export function* billUpdatingSaga() {
   yield takeLatest(actions.fetchBill.type, fetchBillTask);
-  yield takeLatest(
-    billCreateOrUpdateActions.finalBillCompleted,
-    onFinalBillTask,
-  );
 }

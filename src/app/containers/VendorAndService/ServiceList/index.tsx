@@ -12,7 +12,7 @@ import {
   COLUMN_TYPES,
   ColumnDefinition,
 } from 'app/components/collection/DataGrid';
-import { RootContainer } from 'app/components/Layout';
+import { ContentContainer } from 'app/components/Layout';
 import ParcelService from 'app/models/parcelService';
 import { showConfirm } from 'app/components/Modal/utils';
 import { sliceKey, actions, reducer } from './slice';
@@ -111,9 +111,9 @@ export const ServiceList = memo(() => {
 
   return (
     <>
-      <RootContainer
+      <ContentContainer
         title="Danh sách dịch vụ"
-        rightComponents={[
+        extra={[
           <Button key="1" type="primary" onClick={onCreateNew}>
             Thêm mới
           </Button>,
@@ -131,7 +131,7 @@ export const ServiceList = memo(() => {
           service={selectedService}
           onClose={onClose}
         />
-      </RootContainer>
+      </ContentContainer>
     </>
   );
 });

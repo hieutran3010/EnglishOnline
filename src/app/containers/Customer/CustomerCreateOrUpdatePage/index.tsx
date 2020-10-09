@@ -9,7 +9,6 @@ import { useSelector, useDispatch } from 'react-redux';
 import { Form, Input, Space, Button } from 'antd';
 import { useHistory, useParams } from 'react-router-dom';
 import toUpper from 'lodash/fp/toUpper';
-import capitalize from 'lodash/fp/capitalize';
 import isEmpty from 'lodash/fp/isEmpty';
 import { Store } from 'antd/lib/form/interface';
 
@@ -27,6 +26,7 @@ import { customerCreateOrUpdatePageSaga } from './saga';
 import { authStorage } from 'app/services/auth';
 import { formatPhoneNumber } from 'utils/numberFormat';
 import { trimStart } from 'lodash';
+import trim from 'lodash/fp/trim';
 
 export const CustomerCreateOrUpdatePage = memo(() => {
   useInjectReducer({ key: sliceKey, reducer: reducer });
@@ -37,7 +37,7 @@ export const CustomerCreateOrUpdatePage = memo(() => {
   const history = useHistory();
   const dispatch = useDispatch();
   const [customerForm] = Form.useForm();
-  const { customerId } = useParams();
+  const { customerId } = useParams() as any;
 
   const isSubmitting = useSelector(selectIsSubmitting);
   const isFetchingCustomer = useSelector(selectIsFetchingCustomer);
@@ -67,7 +67,8 @@ export const CustomerCreateOrUpdatePage = memo(() => {
   const onSubmitCustomer = useCallback(
     customer => {
       customer.code = toUpper(customer.code);
-      customer.name = capitalize(customer.name);
+      customer.name = trim(customer.name);
+      customer.phone = trim(customer.phone);
 
       if (isEditMode) {
         dispatch(actions.updateCustomer(customer));
@@ -121,10 +122,7 @@ export const CustomerCreateOrUpdatePage = memo(() => {
               rules={customerValidator.name}
               normalize={onNormalizeNameAndAddress}
             >
-              <Input
-                disabled={isSubmitting}
-                style={{ textTransform: 'capitalize' }}
-              />
+              <Input disabled={isSubmitting} />
             </Form.Item>
             <Form.Item
               label="Số điện thoại"
@@ -140,10 +138,7 @@ export const CustomerCreateOrUpdatePage = memo(() => {
               rules={customerValidator.address}
               normalize={onNormalizeNameAndAddress}
             >
-              <Input
-                disabled={isSubmitting}
-                style={{ textTransform: 'capitalize' }}
-              />
+              <Input disabled={isSubmitting} />
             </Form.Item>
             <Form.Item label="Thông tin gợi nhớ" name="hint">
               <Input />

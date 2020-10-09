@@ -1,5 +1,5 @@
 import React, { memo, useState, useEffect } from 'react';
-import { Popover, Avatar, Spin, Typography } from 'antd';
+import { Popover, Avatar, Spin, Typography, Descriptions } from 'antd';
 import { UserOutlined } from '@ant-design/icons';
 import isEmpty from 'lodash/fp/isEmpty';
 import { PopoverProps } from 'antd/lib/popover';
@@ -13,7 +13,7 @@ const { Text } = Typography;
 interface Props {
   title?: string;
   userId?: string;
-  type?: 'avatar' | 'displayName';
+  type?: 'avatar' | 'displayName' | 'displayNameWithLabel';
 }
 const UserAvatar = ({
   title,
@@ -47,6 +47,20 @@ const UserAvatar = ({
       didCancel = true;
     };
   }, [userId]);
+
+  if (type === 'displayNameWithLabel') {
+    return (
+      <Descriptions column={1} size="small">
+        <Descriptions.Item label={title}>
+          {loading ? (
+            <Spin size="small" />
+          ) : (
+            <Text>{user?.displayName ?? '<Chưa có>'}</Text>
+          )}
+        </Descriptions.Item>
+      </Descriptions>
+    );
+  }
 
   return (
     <Popover

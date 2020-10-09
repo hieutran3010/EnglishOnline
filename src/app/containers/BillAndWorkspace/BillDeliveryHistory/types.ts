@@ -24,6 +24,12 @@ export interface FetchHistoriesCompletedAction {
   histories: BillDeliveryHistory[];
   airlineBillId?: string;
   childBillId?: string;
+  billId?: string;
 }
+
+export type BillDeliveryHistoriesUpdatedEventArgs = {
+  billId: string;
+  histories: BillDeliveryHistory[];
+};
 
 export type ContainerState = BillDeliveryHistoryState;
