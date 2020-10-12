@@ -37,7 +37,6 @@ const RootContainer = ({
   return (
     <StyledContainer>
       <PageHeader
-        className="site-page-header"
         title={title}
         subTitle={subTitle}
         style={{ margin: 10, marginBottom: 0 }}
