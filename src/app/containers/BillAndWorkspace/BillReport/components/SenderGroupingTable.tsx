@@ -16,11 +16,15 @@ import { BILL_LIST_DEFAULT_ORDER } from '../../constants';
 const columns = [
   {
     title: 'Tên Khách Gởi',
-    dataIndex: 'senderName',
     key: 'senderName',
     width: 250,
     fixed: true,
     ...getLocalColumnSearchProps('senderName'),
+    render: (record: CustomerStatistic) => (
+      <span style={{ color: record.totalDebt > 0 ? 'red' : 'inherit' }}>
+        {record.senderName}
+      </span>
+    ),
   },
   {
     title: 'SĐT Khách Gởi',
@@ -72,7 +76,11 @@ const columns = [
     dataIndex: 'totalDebt',
     key: 'totalDebt',
     width: 150,
-    render: value => <span>{toCurrency(value)}</span>,
+    render: value => (
+      <span style={{ color: value > 0 ? 'red' : 'inherit' }}>
+        {toCurrency(value)}
+      </span>
+    ),
   },
   {
     title: 'Lợi nhuận thô sau/trước thuế',
