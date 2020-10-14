@@ -353,6 +353,17 @@ export class CustomerStatistic {
   totalRawProfitBeforeTax!: number;
 }
 
+export class SaleReport {
+  saleUserId!: string;
+  saleName!: string;
+  totalSalePrice: number = 0;
+  totalRawProfit: number = 0;
+  totalRawProfitBeforeTax: number = 0;
+  totalProfit: number = 0;
+  totalBill: number = 0;
+  totalPurchase?: number;
+}
+
 export class BillDeliveryHistory {
   id?: string;
   date?: any;

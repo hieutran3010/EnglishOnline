@@ -23,6 +23,7 @@ import BillList from '../components/BillList';
 import { toFullString } from 'utils/numberFormat';
 import { useBillView } from '../BillViewPage/hook';
 import BillsInMonthSelection from '../components/BillsInMonthSelection';
+import { BILL_LIST_DEFAULT_ORDER } from '../constants';
 
 const { Text } = Typography;
 
@@ -57,7 +58,7 @@ export const BillsInMonth = memo(() => {
     const billDataSource = getDataSource(FETCHER_KEY.BILL, [
       'billDeliveryHistories {date time status}',
     ]);
-    billDataSource.orderByFields = 'date desc, createdOn desc';
+    billDataSource.orderByFields = BILL_LIST_DEFAULT_ORDER;
     billDataSource.query = getQuery();
 
     return billDataSource;

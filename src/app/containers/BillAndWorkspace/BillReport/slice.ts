@@ -3,7 +3,11 @@ import moment from 'moment';
 import { PayloadAction } from '@reduxjs/toolkit';
 import { createSlice } from 'utils/@reduxjs/toolkit';
 import { ContainerState, TotalCustomerPayment } from './types';
-import { CustomerStatistic, VendorStatistic } from 'app/models/bill';
+import {
+  CustomerStatistic,
+  SaleReport,
+  VendorStatistic,
+} from 'app/models/bill';
 import ExportSession from 'app/models/exportSession';
 
 // The initial state of the BillReport container
@@ -28,6 +32,9 @@ export const initialState: ContainerState = {
 
   isFetchingCustomerGroupingList: false,
   billsGroupedByCustomer: [],
+
+  isFetchingSaleGroupingList: false,
+  billsGroupedBySale: [],
 
   isFetchingVendorGroupingList: false,
   billsGroupedByVendor: [],
@@ -144,6 +151,17 @@ const billReportSlice = createSlice({
     ) {
       state.billsGroupedByCustomer = action.payload;
       state.isFetchingCustomerGroupingList = false;
+    },
+
+    fetchBillsGroupedBySale(state, action: PayloadAction<string>) {
+      state.isFetchingSaleGroupingList = true;
+    },
+    fetchBillsGroupedBySaleCompleted(
+      state,
+      action: PayloadAction<SaleReport[]>,
+    ) {
+      state.billsGroupedBySale = action.payload;
+      state.isFetchingSaleGroupingList = false;
     },
 
     checkExportSession(state, action: PayloadAction<string>) {

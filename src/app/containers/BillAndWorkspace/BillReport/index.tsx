@@ -11,7 +11,6 @@ import {
   DatePicker,
   Button,
   Form,
-  Radio,
   Space,
   Spin,
   Popover,
@@ -64,22 +63,21 @@ import {
   selectDateRange,
   selectIsFetchingTotalCustomerPayment,
   selectTotalCustomerPayment,
+  selectBillsGroupedBySale,
+  selectIsFetchingSaleGroupingList,
 } from './selectors';
 import BillList from '../components/BillList';
-import BillStatistic, { BillStatisticProps } from './BillStatistic';
-import VendorGroupingTable from './VendorGroupingTable';
-import SenderGroupingTable from './SenderGroupingTable';
+import BillStatistic, { BillStatisticProps } from './components/BillStatistic';
+import VendorGroupingTable from './components/VendorGroupingTable';
+import SenderGroupingTable from './components/SenderGroupingTable';
 import { getDefaultReportQueryCriteria, getAdminCols } from './utils';
 import { EXPORT_SESSION_STATUS } from 'app/models/exportSession';
 import { useBillView } from '../BillViewPage/hook';
+import { BillListType } from './types';
+import AdminTools from './components/AdminTools';
+import SaleGroupingTable from './components/SaleGroupingTable';
 
 const { Text } = Typography;
-
-enum BillListType {
-  Normal = 1,
-  GroupByVendor,
-  GroupByCustomer,
-}
 
 const getQuery = (user: User, dateRange: any[]) => {
   const criteria: QueryCriteria[] = getDefaultReportQueryCriteria(dateRange);
@@ -162,6 +160,11 @@ export const BillReport = memo((props: Props) => {
     selectIsFetchingCustomerGroupingList,
   );
   const billsCustomerGrouping = useSelector(selectBillsGroupedByCustomer);
+
+  const isFetchingBillsSaleGrouping = useSelector(
+    selectIsFetchingSaleGroupingList,
+  );
+  const billsSaleGrouping = useSelector(selectBillsGroupedBySale);
 
   const isFetchingTotalCustomerPayment = useSelector(
     selectIsFetchingTotalCustomerPayment,
@@ -262,6 +265,10 @@ export const BillReport = memo((props: Props) => {
           dispatch(actions.fetchBillsGroupedByCustomer(query));
           break;
         }
+        case BillListType.GroupBySales: {
+          dispatch(actions.fetchBillsGroupedBySale(query));
+          break;
+        }
       }
     },
     [adminBillListType, billDataSource, dispatch],
@@ -307,9 +314,12 @@ export const BillReport = memo((props: Props) => {
     dispatch(actions.setDateRange(_dateRange));
   }, [dispatch, getFilter]);
 
-  const onAdminBillListTypeChanged = useCallback(e => {
-    setAdminBillListType(e.target.value);
-  }, []);
+  const onAdminBillListTypeChanged = useCallback(
+    (billListType: BillListType) => {
+      setAdminBillListType(billListType);
+    },
+    [],
+  );
 
   const onExportBills = useCallback(async () => {
     try {
@@ -495,23 +505,10 @@ export const BillReport = memo((props: Props) => {
 
       {authorizeHelper.canRenderWithRole(
         [Role.ADMIN],
-        <Radio.Group
+        <AdminTools
           style={{ marginLeft: 20, marginBottom: 10 }}
-          onChange={onAdminBillListTypeChanged}
-          options={[
-            { label: 'Danh sách Bill', value: BillListType.Normal },
-            {
-              label: 'Nhóm theo Nhà cung cấp',
-              value: BillListType.GroupByVendor,
-            },
-            {
-              label: 'Nhóm theo Khách Gởi',
-              value: BillListType.GroupByCustomer,
-            },
-          ]}
-          optionType="button"
-          buttonStyle="solid"
-          value={adminBillListType}
+          onBillListTypeChanged={onAdminBillListTypeChanged}
+          billListType={adminBillListType}
         />,
       )}
       {!isEmpty(dateRange) && (
@@ -543,6 +540,7 @@ export const BillReport = memo((props: Props) => {
           )}
         </div>
       )}
+
       {(adminBillListType === BillListType.Normal || isReset) && (
         <BillList
           billDataSource={billDataSource}
@@ -552,6 +550,7 @@ export const BillReport = memo((props: Props) => {
           heightOffset={user.role === Role.ADMIN ? 0.51 : 0.47}
         />
       )}
+
       {adminBillListType === BillListType.GroupByVendor && !isReset && (
         <VendorGroupingTable
           loading={isFetchingBillsVendorGrouping}
@@ -559,10 +558,19 @@ export const BillReport = memo((props: Props) => {
           dateRange={dateRange}
         />
       )}
+
       {adminBillListType === BillListType.GroupByCustomer && !isReset && (
         <SenderGroupingTable
           loading={isFetchingBillsCustomerGrouping}
           dataSource={billsCustomerGrouping}
+          dateRange={dateRange}
+        />
+      )}
+
+      {adminBillListType === BillListType.GroupBySales && !isReset && (
+        <SaleGroupingTable
+          loading={isFetchingBillsSaleGrouping}
+          dataSource={billsSaleGrouping}
           dateRange={dateRange}
         />
       )}

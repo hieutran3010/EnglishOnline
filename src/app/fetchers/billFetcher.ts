@@ -3,6 +3,7 @@ import Bill, {
   VendorStatistic,
   CustomerStatistic,
   BillDeliveryHistory,
+  SaleReport,
 } from 'app/models/bill';
 import type {
   PurchasePriceCountingParams,
@@ -207,6 +208,27 @@ export default class BillFetcher extends GraphQLFetcherBase<Bill> {
           }
         }
       }`,
+      { query },
+    );
+  };
+
+  getSaleReport = (query: string): Promise<SaleReport[]> => {
+    return this.executeAsync<SaleReport[]>(
+      'getSaleReports',
+      `query($query: String!) {
+      bill {
+        getSaleReports(query: $query) {
+          saleUserId
+          saleName
+          totalSalePrice
+          totalRawProfit
+          totalRawProfitBeforeTax
+          totalProfit
+          totalBill
+          totalPurchase
+        }
+      }
+    }`,
       { query },
     );
   };

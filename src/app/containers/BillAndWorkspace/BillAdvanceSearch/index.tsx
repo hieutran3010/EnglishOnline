@@ -24,6 +24,7 @@ import { billAdvanceSearchSaga } from './saga';
 import { selectNeedToReload } from './selectors';
 import BillList from '../components/BillList';
 import { useBillView } from '../BillViewPage/hook';
+import { BILL_LIST_DEFAULT_ORDER } from '../constants';
 
 const { RangePicker } = DatePicker;
 
@@ -40,7 +41,7 @@ export const BillAdvanceSearch = memo(() => {
 
   const billDataSource = useMemo(() => {
     const billDataSource = getDataSource(FETCHER_KEY.BILL);
-    billDataSource.orderByFields = 'date desc, createdOn desc';
+    billDataSource.orderByFields = BILL_LIST_DEFAULT_ORDER;
 
     return billDataSource;
   }, []);

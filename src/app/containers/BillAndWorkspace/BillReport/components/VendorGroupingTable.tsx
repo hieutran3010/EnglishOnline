@@ -14,6 +14,7 @@ import {
 } from 'app/containers/BillAndWorkspace/BillReport/utils';
 import { GRAPHQL_QUERY_OPERATOR } from 'app/collection-datasource/graphql/constants';
 import { parseQueryCriteriaToGraphQLDoorQuery } from 'app/collection-datasource/graphql/utils';
+import { BILL_LIST_DEFAULT_ORDER } from '../../constants';
 
 const columns = [
   {
@@ -108,7 +109,7 @@ const VendorGroupingTable = ({
 
       if (!isClear) {
         const { vendorId } = record;
-        billDataSource.orderByFields = 'Date descending';
+        billDataSource.orderByFields = BILL_LIST_DEFAULT_ORDER;
 
         const queryCriteria = getDefaultReportQueryCriteria(dateRange);
         queryCriteria.push({

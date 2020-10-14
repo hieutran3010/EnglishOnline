@@ -8,6 +8,7 @@ import {
   CustomerStatistic,
   BILL_STATUS,
   PAYMENT_TYPE,
+  SaleReport,
 } from 'app/models/bill';
 import ExportSessionFetcher from 'app/fetchers/exportSessionFetcher';
 import ExportFetcher from 'app/fetchers/exportFetcher';
@@ -164,6 +165,17 @@ export function* fetchBillsGroupedByCustomerTask(
   yield put(actions.fetchBillsGroupedByCustomerCompleted(result || []));
 }
 
+export function* fetchBillsGroupedBySaleTask(action: PayloadAction<string>) {
+  const query = action.payload;
+
+  let result: SaleReport[] = [];
+  try {
+    result = yield call(billFetcher.getSaleReport, query);
+  } catch (error) {}
+
+  yield put(actions.fetchBillsGroupedBySaleCompleted(result || []));
+}
+
 export function* requestBillExportTask(
   action: PayloadAction<{ query: string; note: string }>,
 ) {
@@ -232,6 +244,12 @@ export function* billReportSaga() {
     actions.fetchBillsGroupedByCustomer.type,
     fetchBillsGroupedByCustomerTask,
   );
+
+  yield takeLatest(
+    actions.fetchBillsGroupedBySale.type,
+    fetchBillsGroupedBySaleTask,
+  );
+
   yield takeLatest(
     actions.fetchTotalCustomerPayment.type,
     fetchTotalCustomerPayment,

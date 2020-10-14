@@ -7,10 +7,11 @@ import { CustomerStatistic } from 'app/models/bill';
 import { toCurrency } from 'utils/numberFormat';
 import { getLocalColumnSearchProps } from 'app/components/collection/DataGrid/SearchControls';
 import getDataSource, { FETCHER_KEY } from 'app/collection-datasource';
-import { getDefaultReportQueryCriteria, getAdminCols } from './utils';
+import { getDefaultReportQueryCriteria, getAdminCols } from '../utils';
 import { GRAPHQL_QUERY_OPERATOR } from 'app/collection-datasource/graphql/constants';
 import { parseQueryCriteriaToGraphQLDoorQuery } from 'app/collection-datasource/graphql/utils';
-import BillList from '../components/BillList';
+import BillList from '../../components/BillList';
+import { BILL_LIST_DEFAULT_ORDER } from '../../constants';
 
 const columns = [
   {
@@ -112,7 +113,7 @@ const SenderGroupingTable = ({
 
       if (!isClear) {
         const { senderName, senderPhone } = record;
-        billDataSource.orderByFields = 'Date descending';
+        billDataSource.orderByFields = BILL_LIST_DEFAULT_ORDER;
 
         const queryCriteria = getDefaultReportQueryCriteria(dateRange);
         queryCriteria.push(
