@@ -119,6 +119,15 @@ export const VendorList = memo(() => {
             >
               Chi tiết
             </Button>
+            {authorizeHelper.canRenderWithRole(
+              [Role.ADMIN],
+              <>
+                <Divider type="vertical" />
+                <Button size="small" type="link" danger>
+                  Xóa
+                </Button>
+              </>,
+            )}
           </Space>
         ),
         width: 50,
