@@ -3,43 +3,33 @@ import { Table } from 'antd';
 import { TableProps } from 'antd/lib/table';
 import isEmpty from 'lodash/fp/isEmpty';
 
-import { CustomerStatistic } from 'app/models/bill';
-import { toCurrency } from 'utils/numberFormat';
+import { SaleReport } from 'app/models/bill';
 import { getLocalColumnSearchProps } from 'app/components/collection/DataGrid/SearchControls';
+import { toCurrency } from 'utils/numberFormat';
+import BillList from 'app/containers/BillAndWorkspace/components/BillList';
 import getDataSource, { FETCHER_KEY } from 'app/collection-datasource';
-import { getDefaultReportQueryCriteria, getAdminCols } from './utils';
+import {
+  getDefaultReportQueryCriteria,
+  getAdminCols,
+} from 'app/containers/BillAndWorkspace/BillReport/utils';
 import { GRAPHQL_QUERY_OPERATOR } from 'app/collection-datasource/graphql/constants';
 import { parseQueryCriteriaToGraphQLDoorQuery } from 'app/collection-datasource/graphql/utils';
-import BillList from '../components/BillList';
+import { BILL_LIST_DEFAULT_ORDER } from '../../constants';
 
 const columns = [
   {
-    title: 'Tên Khách Gởi',
-    dataIndex: 'senderName',
-    key: 'senderName',
-    width: 250,
+    title: 'Sale',
+    dataIndex: 'saleName',
+    key: 'saleName',
+    width: 200,
     fixed: true,
-    ...getLocalColumnSearchProps('senderName'),
-  },
-  {
-    title: 'SĐT Khách Gởi',
-    dataIndex: 'senderPhone',
-    key: 'senderPhone',
-    width: 150,
-    ...getLocalColumnSearchProps('senderPhone'),
+    ...getLocalColumnSearchProps('saleName'),
   },
   {
     title: 'Tổng Bill',
     dataIndex: 'totalBill',
     key: 'totalBill',
     width: 100,
-  },
-  {
-    title: 'Tổng Giá Mua',
-    dataIndex: 'totalPurchase',
-    key: 'totalPurchase',
-    width: 150,
-    render: value => <span>{toCurrency(value)}</span>,
   },
   {
     title: 'Tổng Giá Bán',
@@ -49,27 +39,9 @@ const columns = [
     render: value => <span>{toCurrency(value)}</span>,
   },
   {
-    title: 'Đã Trả',
-    key: 'totalPayment',
-    width: 450,
-    render: record => {
-      const {
-        totalPayment,
-        totalCashPayment,
-        totalBankTransferPayment,
-      } = record;
-      return (
-        <span>
-          {toCurrency(totalPayment)} (TM: {toCurrency(totalCashPayment)} - CK:{' '}
-          {toCurrency(totalBankTransferPayment)})
-        </span>
-      );
-    },
-  },
-  {
-    title: 'Còn Nợ',
-    dataIndex: 'totalDebt',
-    key: 'totalDebt',
+    title: 'Tổng Giá Mua',
+    dataIndex: 'totalPurchase',
+    key: 'totalPurchase',
     width: 150,
     render: value => <span>{toCurrency(value)}</span>,
   },
@@ -77,7 +49,7 @@ const columns = [
     title: 'Lợi nhuận thô sau/trước thuế',
     key: 'rawProfit',
     width: 350,
-    render: (record: CustomerStatistic) => {
+    render: (record: SaleReport) => {
       const { totalRawProfit, totalRawProfitBeforeTax } = record;
       return (
         <span>
@@ -90,7 +62,7 @@ const columns = [
     title: 'Lợi nhuận thực',
     key: 'profit',
     width: 200,
-    render: (record: CustomerStatistic) => {
+    render: (record: SaleReport) => {
       const { totalProfit } = record;
       return <span>{toCurrency(totalProfit)}</span>;
     },
@@ -100,35 +72,26 @@ const columns = [
 interface Props {
   dateRange: any[];
 }
-const SenderGroupingTable = ({
+const SaleGroupingTable = ({
   dateRange,
   ...restProps
-}: Props & TableProps<CustomerStatistic>) => {
-  const NestedBillsCustomerGrouping = useCallback(
-    (record: CustomerStatistic) => {
+}: Props & TableProps<SaleReport>) => {
+  const NestedBillsSaleGrouping = useCallback(
+    (record: SaleReport) => {
       const isClear = isEmpty(dateRange);
 
       const billDataSource = getDataSource(FETCHER_KEY.BILL);
 
       if (!isClear) {
-        const { senderName, senderPhone } = record;
-        billDataSource.orderByFields = 'Date descending';
+        const { saleUserId } = record;
+        billDataSource.orderByFields = BILL_LIST_DEFAULT_ORDER;
 
         const queryCriteria = getDefaultReportQueryCriteria(dateRange);
-        queryCriteria.push(
-          ...[
-            {
-              field: 'SenderName',
-              operator: GRAPHQL_QUERY_OPERATOR.EQUALS,
-              value: senderName,
-            },
-            {
-              field: 'SenderPhone',
-              operator: GRAPHQL_QUERY_OPERATOR.EQUALS,
-              value: senderPhone,
-            },
-          ],
-        );
+        queryCriteria.push({
+          field: 'SaleUserId',
+          operator: GRAPHQL_QUERY_OPERATOR.EQUALS,
+          value: saleUserId,
+        });
         billDataSource.query = parseQueryCriteriaToGraphQLDoorQuery(
           queryCriteria,
         );
@@ -140,7 +103,7 @@ const SenderGroupingTable = ({
             excludeFields={[
               'isArchived',
               'billDeliveryHistories',
-              'senderName',
+              'vendorName',
             ]}
             extendCols={getAdminCols()}
             heightOffset={0.7}
@@ -161,12 +124,12 @@ const SenderGroupingTable = ({
       size="small"
       className="components-table-demo-nested"
       columns={columns}
-      expandable={{ expandedRowRender: NestedBillsCustomerGrouping }}
-      rowKey={(record: any) => record.senderPhone}
+      expandable={{ expandedRowRender: NestedBillsSaleGrouping }}
+      rowKey={(record: any) => record.vendorId}
       scroll={{ x: 1300, y: getMaxHeight() }}
       {...restProps}
     />
   );
 };
 
-export default memo(SenderGroupingTable);
+export default memo(SaleGroupingTable);

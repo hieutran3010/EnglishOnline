@@ -14,15 +14,30 @@ import {
 } from 'app/containers/BillAndWorkspace/BillReport/utils';
 import { GRAPHQL_QUERY_OPERATOR } from 'app/collection-datasource/graphql/constants';
 import { parseQueryCriteriaToGraphQLDoorQuery } from 'app/collection-datasource/graphql/utils';
+import { BILL_LIST_DEFAULT_ORDER } from '../../constants';
 
 const columns = [
   {
     title: 'Tên NCC',
-    dataIndex: 'vendorName',
     key: 'vendorName',
     width: 200,
     fixed: true,
     ...getLocalColumnSearchProps('vendorName'),
+    render: (record: VendorStatistic) => (
+      <span
+        style={{
+          color:
+            record.totalDebt > 0 ||
+            record.totalRawProfit < 0 ||
+            record.totalRawProfitBeforeTax < 0 ||
+            record.totalProfit < 0
+              ? 'red'
+              : 'inherit',
+        }}
+      >
+        {record.vendorName}
+      </span>
+    ),
   },
   {
     title: 'Tổng Bill',
@@ -67,7 +82,11 @@ const columns = [
     dataIndex: 'totalDebt',
     key: 'totalDebt',
     width: 150,
-    render: value => <span>{toCurrency(value)}</span>,
+    render: value => (
+      <span style={{ color: value > 0 ? 'red' : 'inherit' }}>
+        {toCurrency(value)}
+      </span>
+    ),
   },
   {
     title: 'Lợi nhuận thô sau/trước thuế',
@@ -76,7 +95,14 @@ const columns = [
     render: (record: VendorStatistic) => {
       const { totalRawProfit, totalRawProfitBeforeTax } = record;
       return (
-        <span>
+        <span
+          style={{
+            color:
+              totalRawProfit < 0 || totalRawProfitBeforeTax < 0
+                ? 'red'
+                : 'inherit',
+          }}
+        >
           {toCurrency(totalRawProfit)} / {toCurrency(totalRawProfitBeforeTax)}
         </span>
       );
@@ -88,7 +114,11 @@ const columns = [
     width: 200,
     render: (record: VendorStatistic) => {
       const { totalProfit } = record;
-      return <span>{toCurrency(totalProfit)}</span>;
+      return (
+        <span style={{ color: totalProfit < 0 ? 'red' : 'inherit' }}>
+          {toCurrency(totalProfit)}
+        </span>
+      );
     },
   },
 ];
@@ -108,7 +138,7 @@ const VendorGroupingTable = ({
 
       if (!isClear) {
         const { vendorId } = record;
-        billDataSource.orderByFields = 'Date descending';
+        billDataSource.orderByFields = BILL_LIST_DEFAULT_ORDER;
 
         const queryCriteria = getDefaultReportQueryCriteria(dateRange);
         queryCriteria.push({

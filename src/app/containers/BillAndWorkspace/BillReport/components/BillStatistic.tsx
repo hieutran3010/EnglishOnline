@@ -5,7 +5,7 @@ import { toCurrency } from 'utils/numberFormat';
 import { authStorage } from 'app/services/auth';
 import { Role } from 'app/models/user';
 import { StatisticProps } from 'antd/lib/statistic/Statistic';
-import { TotalCustomerPayment } from './types';
+import { TotalCustomerPayment } from '../types';
 
 export interface BillStatisticProps {
   isFetchingTotalSalePrice: boolean;

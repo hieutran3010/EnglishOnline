@@ -1,4 +1,8 @@
-import { VendorStatistic, CustomerStatistic } from 'app/models/bill';
+import {
+  VendorStatistic,
+  CustomerStatistic,
+  SaleReport,
+} from 'app/models/bill';
 import ExportSession from 'app/models/exportSession';
 
 /* --- STATE --- */
@@ -31,6 +35,9 @@ export interface BillReportState {
   isFetchingCustomerGroupingList: boolean;
   billsGroupedByCustomer: CustomerStatistic[];
 
+  isFetchingSaleGroupingList: boolean;
+  billsGroupedBySale: SaleReport[];
+
   checkingExportSession: boolean;
   exportSession?: ExportSession;
 
@@ -50,3 +57,10 @@ export type TotalCustomerPayment = {
 };
 
 export type ContainerState = BillReportState;
+
+export enum BillListType {
+  Normal = 1,
+  GroupByVendor,
+  GroupByCustomer,
+  GroupBySales,
+}

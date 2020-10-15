@@ -33,7 +33,7 @@ const getWeightValueString = (vendorQuotation: VendorQuotation): string => {
   return weightValue;
 };
 
-const MIN_ROW_COUNT = 100;
+const MIN_ROW_COUNT = 60;
 
 interface SelectionRowRange {
   startRow?: number;

@@ -21,6 +21,7 @@ import {
 import { size, toLower } from 'lodash';
 import isEmpty from 'lodash/fp/isEmpty';
 import { BillDeliveryHistoriesUpdatedEventArgs } from '../BillDeliveryHistory/types';
+import { BILL_LIST_DEFAULT_ORDER } from '../constants';
 
 const billFetcher = new BillFetcher();
 
@@ -192,7 +193,7 @@ function* fetchBills(query: string, page: number) {
 
   const bills = yield call(billFetcher.queryManyAsync, {
     query,
-    orderBy: 'date desc, createdOn desc',
+    orderBy: BILL_LIST_DEFAULT_ORDER,
     page,
     pageSize,
   });

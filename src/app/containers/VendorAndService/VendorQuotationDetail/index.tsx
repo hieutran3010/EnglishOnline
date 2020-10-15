@@ -7,11 +7,11 @@
 import React, { memo, useCallback, useEffect, useState, useRef } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { useHistory, useParams } from 'react-router-dom';
-import { Button, Space, Alert } from 'antd';
+import { Button, Space, Alert, Card } from 'antd';
 import isEmpty from 'lodash/fp/isEmpty';
 
 import { useInjectReducer, useInjectSaga } from 'utils/redux-injectors';
-import { RootContainer, ContentContainer } from 'app/components/Layout';
+import { RootContainer } from 'app/components/Layout';
 
 import { reducer, sliceKey, actions } from './slice';
 import {
@@ -23,8 +23,7 @@ import {
 import { vendorQuotationDetailSaga } from './saga';
 import QuotationSheet from './QuotationSheet';
 
-interface Props {}
-export const VendorQuotationDetail = memo((props: Props) => {
+export const VendorQuotationDetail = memo(() => {
   useInjectReducer({ key: sliceKey, reducer: reducer });
   useInjectSaga({ key: sliceKey, saga: vendorQuotationDetailSaga });
 
@@ -36,7 +35,7 @@ export const VendorQuotationDetail = memo((props: Props) => {
   const [hasChanged, setHasChanged] = useState(false);
 
   const dispatch = useDispatch();
-  const { vendorId } = useParams();
+  const { vendorId } = useParams<any>();
   const history = useHistory();
   const sheetRef = useRef();
 
@@ -70,7 +69,7 @@ export const VendorQuotationDetail = memo((props: Props) => {
       subTitle="Cập nhật thông tin Báo giá"
       canBack
     >
-      <ContentContainer loading={isFetchingVendor}>
+      <Card size="small" loading={isFetchingVendor} bordered={false}>
         {!canUpdate && (
           <Space>
             <Alert
@@ -129,7 +128,7 @@ export const VendorQuotationDetail = memo((props: Props) => {
             )}
           </>
         )}
-      </ContentContainer>
+      </Card>
     </RootContainer>
   );
 });

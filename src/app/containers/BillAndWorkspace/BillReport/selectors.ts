@@ -111,6 +111,16 @@ export const selectBillsGroupedByCustomer = createSelector(
   billReportState => billReportState.billsGroupedByCustomer,
 );
 
+export const selectIsFetchingSaleGroupingList = createSelector(
+  [selectDomain],
+  billReportState => billReportState.isFetchingSaleGroupingList,
+);
+
+export const selectBillsGroupedBySale = createSelector(
+  [selectDomain],
+  billReportState => billReportState.billsGroupedBySale,
+);
+
 export const selectBillExportStatus = createSelector(
   [selectDomain],
   billReportState => {

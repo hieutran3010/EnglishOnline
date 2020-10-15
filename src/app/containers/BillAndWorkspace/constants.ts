@@ -23,3 +23,5 @@ export const BILL_STATUS_ROLE_EDITABLE_MATRIX = {
     [BILL_STATUS.DONE]: false,
   },
 };
+
+export const BILL_LIST_DEFAULT_ORDER = 'date desc, createdOn desc';
