@@ -132,7 +132,7 @@ export const VendorList = memo(() => {
             >
               Chi tiết
             </Button>
-            {authorizeHelper.canRenderWithRole(
+            {/* {authorizeHelper.canRenderWithRole(
               [Role.ADMIN],
               <>
                 <Divider type="vertical" />
@@ -145,13 +145,13 @@ export const VendorList = memo(() => {
                   Xóa
                 </Button>
               </>,
-            )}
+            )} */}
           </Space>
         ),
         width: 50,
       },
     ];
-  }, [currentUserRole, getMenu, onDelete, onViewDetailVendor]);
+  }, [currentUserRole, getMenu, onViewDetailVendor]);
 
   const actions =
     currentUserRole !== Role.SALE
