@@ -389,7 +389,7 @@ function* getCustomer(
   }
 
   const formattedPhone = formatPhoneNumber(phone);
-  const query = `Phone = "${formattedPhone}"`;
+  const query = `Phone.Contains("${formattedPhone}")`;
   let customer = yield call(customerFetcher.queryOneAsync, {
     query,
   });
@@ -408,7 +408,15 @@ function* getCustomer(
           customer,
         )}] - caller = [${caller}]. Error: ${JSON.stringify(error)}`,
       );
-      customer = undefined;
+      //retry to get again
+      customer = yield call(customerFetcher.queryOneAsync, {
+        query,
+      });
+      if (!customer) {
+        Sentry.captureException(
+          '[getCustomer]Retry get customer failed. Customer is stil undefined',
+        );
+      }
     }
   }
 
