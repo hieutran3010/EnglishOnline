@@ -1,4 +1,5 @@
 import { ReactElement } from 'react';
+import { OrderOption, QueryCriteria } from '../types';
 
 export interface ColumnDefinition {
   title: string;
@@ -13,4 +14,11 @@ export interface ColumnDefinition {
   sorter?: any;
   fixed?: 'left' | 'right' | true;
   editable?: boolean;
+}
+
+export interface TableChangedEventArgs {
+  queryCriteria?: QueryCriteria[];
+  order?: OrderOption;
+  pageSize?: number;
+  page?: number;
 }

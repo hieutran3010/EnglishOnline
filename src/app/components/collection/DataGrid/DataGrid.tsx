@@ -36,6 +36,9 @@ interface DataGrid {
   heightOffset?: number;
   locale?: TableLocale;
   dontLoadInitialData?: boolean;
+  onTotalCountChanged?: (count: number) => void;
+  onLoadingTotalCount?: (isLoading: boolean) => void;
+  onLoading?: (isLoading: boolean) => void;
 }
 export default function DataGrid({
   dataSource,
@@ -47,6 +50,9 @@ export default function DataGrid({
   heightOffset,
   locale,
   dontLoadInitialData,
+  onTotalCountChanged,
+  onLoadingTotalCount,
+  onLoading,
   ...restProps
 }: DataGrid & any) {
   const [items, setItems] = useState<any[]>([]);
@@ -102,6 +108,8 @@ export default function DataGrid({
    */
   const fetchTotalCount = useCallback(
     async (tableFilter?: Record<string, React.Key[] | null>) => {
+      onLoadingTotalCount && onLoadingTotalCount(true);
+
       const _filter = tableFilter || antTableFilter;
       // if (isEmpty(_filter) || all(v => isNil(v))(values(_filter))) {
       //   if (dontLoadInitialData === true) {
@@ -114,8 +122,16 @@ export default function DataGrid({
 
       const totalItem = await dataSource.countAsync(queryCriteria);
       setTotal(totalItem);
+      onTotalCountChanged && onTotalCountChanged(totalItem);
+      onLoadingTotalCount && onLoadingTotalCount(false);
     },
-    [antTableFilter, dataSource, getQueryCriteria],
+    [
+      antTableFilter,
+      dataSource,
+      getQueryCriteria,
+      onTotalCountChanged,
+      onLoadingTotalCount,
+    ],
   );
 
   /**

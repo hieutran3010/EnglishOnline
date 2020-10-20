@@ -1,27 +1,35 @@
-import React, { memo, useCallback, useMemo } from 'react';
+import React, {
+  memo,
+  useCallback,
+  useLayoutEffect,
+  useMemo,
+  useState,
+} from 'react';
 import { Button, Modal, Space, Typography } from 'antd';
-import Bill from 'app/models/bill';
+import BillList from 'app/containers/BillAndWorkspace/components/BillList';
+import { BILL_LIST_DEFAULT_ORDER } from 'app/containers/BillAndWorkspace/constants';
+import getDataSource, { FETCHER_KEY } from 'app/collection-datasource';
 
 const { Title } = Typography;
 
 interface Props {
-  onCheckingAssociatedBills?: () => void;
-  isChecking?: boolean;
   visible?: boolean;
-  associatedBills?: Bill[];
-  totalBills?: number;
   onClose?: () => void;
+  vendorId?: string;
+  vendorName?: string;
 }
 const VendorDeletion = memo(
-  ({
-    onCheckingAssociatedBills,
-    visible,
-    associatedBills,
-    totalBills,
-    isChecking,
-    onClose,
-  }: Props) => {
-    const hasAssociatedBills = totalBills && totalBills > 0;
+  ({ visible, onClose, vendorId, vendorName }: Props) => {
+    const [totalBills, setTotalBills] = useState(0);
+    const [isChecking, setIsChecking] = useState(false);
+    const [isLoadingTotalCount, setIsLoadingTotalCount] = useState(false);
+
+    useLayoutEffect(() => {
+      setTimeout(() => {
+        billDataSource.onReloadData();
+      }, 300);
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [vendorId]);
 
     const renderActions = useCallback(() => {
       if (isChecking) {
@@ -30,7 +38,7 @@ const VendorDeletion = memo(
 
       return (
         <Space style={{ width: '100%', justifyContent: 'center' }}>
-          {hasAssociatedBills ? (
+          {totalBills > 0 ? (
             <>
               <Button type="primary" danger ghost>
                 Xóa NCC và các Bill liên quan
@@ -46,20 +54,52 @@ const VendorDeletion = memo(
           )}
         </Space>
       );
-    }, [hasAssociatedBills, isChecking]);
+    }, [totalBills, isChecking]);
+
+    const billDataSource = useMemo(() => {
+      const billDataSource = getDataSource(FETCHER_KEY.BILL);
+      billDataSource.orderByFields = BILL_LIST_DEFAULT_ORDER;
+      billDataSource.query = `VendorId = "${vendorId}"`;
+
+      return billDataSource;
+    }, [vendorId]);
+
+    const onBillsLoading = useCallback((isLoading: boolean) => {
+      setIsChecking(isLoading);
+    }, []);
+
+    const onTotalBillChanged = useCallback((totalBill: number) => {
+      setTotalBills(totalBill);
+    }, []);
+
+    const onLoadingTotalCount = useCallback((isLoading: boolean) => {
+      setIsLoadingTotalCount(isLoading);
+    }, []);
 
     return (
       <Modal visible={visible} onCancel={onClose} width="100%" footer={false}>
         <Space style={{ width: '100%', justifyContent: 'center' }}>
           <Title level={4}>
-            {isChecking
-              ? 'Đang kiểm tra bill liên quan tới NCC này...'
-              : hasAssociatedBills
-              ? `Có ${totalBills} bill liên quan tới NCC này. Vui lòng chọn các lựa chọn bên dưới để tiếp tục.`
-              : 'Không có bill nào liên quan tới NCC này. Bấm XÁC NHẬN XÓA để tiếp tục'}
+            {isLoadingTotalCount
+              ? `Đang kiểm tra bill liên quan tới NCC ${vendorName}...`
+              : totalBills > 0
+              ? `Có ${totalBills} bill liên quan tới NCC ${vendorName}. Vui lòng chọn các lựa chọn bên dưới để tiếp tục.`
+              : `Không có bill nào liên quan tới NCC ${vendorName}. Bấm XÁC NHẬN XÓA để tiếp tục`}
           </Title>
         </Space>
         {renderActions()}
+        <BillList
+          billDataSource={billDataSource}
+          onLoading={onBillsLoading}
+          onTotalCountChanged={onTotalBillChanged}
+          onLoadingTotalCount={onLoadingTotalCount}
+          hideActions
+          excludeFields={[
+            'billDeliveryHistories',
+            'licenseUserId',
+            'vendorName',
+          ]}
+        />
       </Modal>
     );
   },

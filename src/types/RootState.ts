@@ -19,6 +19,7 @@ import { BillUpdatingState } from 'app/containers/BillAndWorkspace/BillUpdating/
 import { BillDeliveryHistoryState } from 'app/containers/BillAndWorkspace/BillDeliveryHistory/types';
 import { BillViewState } from 'app/containers/BillAndWorkspace/BillViewPage/types';
 import { ServiceListState } from 'app/containers/VendorAndService/ServiceList/types';
+import { VendorListState } from 'app/containers/VendorAndService/VendorList/types';
 import { ServiceCreateOrUpdateState } from 'app/containers/VendorAndService/ServiceCreateOrUpdate/types';
 import { QuickQuotationState } from 'app/containers/BillAndWorkspace/QuickQuotation/types';
 // [IMPORT NEW CONTAINERSTATE ABOVE] < Needed for generating containers seamlessly
@@ -48,6 +49,7 @@ export interface RootState {
   billUpdating?: BillUpdatingState;
   billDeliveryHistory?: BillDeliveryHistoryState;
   billView?: BillViewState;
+  vendorList?: VendorListState;
   serviceList?: ServiceListState;
   serviceCreateOrUpdate?: ServiceCreateOrUpdateState;
   quickQuotation?: QuickQuotationState;

@@ -77,6 +77,10 @@ interface Props {
   width?: number;
   disableFilterFields?: string[];
   supportBuiltInSearch?: boolean;
+  onTotalCountChanged?: (count: number) => void;
+  onLoadingTotalCount?: (isLoading: boolean) => void;
+  onLoading?: (isLoading: boolean) => void;
+  hideActions?: boolean;
 }
 const BillList = ({
   billDataSource,
@@ -88,6 +92,10 @@ const BillList = ({
   width,
   disableFilterFields,
   supportBuiltInSearch,
+  onTotalCountChanged,
+  onLoadingTotalCount,
+  onLoading,
+  hideActions,
 }: Props) => {
   const user = authStorage.getUser();
 
@@ -206,7 +214,7 @@ const BillList = ({
 
   const columns = useMemo((): ColumnDefinition[] => {
     const moreCols = extendCols ? extendCols : [];
-    const result: ColumnDefinition[] = [
+    let result: ColumnDefinition[] = [
       {
         title: 'Bill hãng bay',
         dataIndex: 'airlineBillId',
@@ -365,9 +373,13 @@ const BillList = ({
     ];
 
     if (excludeFields && !isEmpty(excludeFields)) {
-      return filter(
+      result = filter(
         (col: ColumnDefinition) => !excludeFields.includes(col.dataIndex || ''),
       )(result);
+    }
+
+    if (hideActions) {
+      result.pop();
     }
 
     return result;
@@ -376,6 +388,7 @@ const BillList = ({
     excludeFields,
     extendCols,
     getUpdateMenuItems,
+    hideActions,
     onViewBill,
   ]);
 
@@ -424,6 +437,9 @@ const BillList = ({
               size="small"
               rowSelection={{}}
               style={{ marginTop: 10 }}
+              onTotalCountChanged={onTotalCountChanged}
+              onLoadingTotalCount={onLoadingTotalCount}
+              onLoading={onLoading}
             />
           )}
           <Modal

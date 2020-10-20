@@ -28,6 +28,9 @@ export const VendorList = memo(() => {
   const history = useHistory();
   const currentUserRole = authStorage.getRole();
   const [visibleDeletionModal, setVisibleDeletionModal] = useState(false);
+  const [selectedVendorForDeletion, setSelectedVendorForDeletion] = useState<
+    Vendor | undefined
+  >();
 
   const onCreateNewVendor = useCallback(() => {
     history.push('/vendorCreation');
@@ -42,6 +45,7 @@ export const VendorList = memo(() => {
 
   const onDelete = useCallback(
     (vendor: Vendor) => () => {
+      setSelectedVendorForDeletion(vendor);
       setVisibleDeletionModal(true);
     },
     [],
@@ -132,7 +136,7 @@ export const VendorList = memo(() => {
             >
               Chi tiết
             </Button>
-            {/* {authorizeHelper.canRenderWithRole(
+            {authorizeHelper.canRenderWithRole(
               [Role.ADMIN],
               <>
                 <Divider type="vertical" />
@@ -145,13 +149,13 @@ export const VendorList = memo(() => {
                   Xóa
                 </Button>
               </>,
-            )} */}
+            )}
           </Space>
         ),
         width: 50,
       },
     ];
-  }, [currentUserRole, getMenu, onViewDetailVendor]);
+  }, [currentUserRole, getMenu, onDelete, onViewDetailVendor]);
 
   const actions =
     currentUserRole !== Role.SALE
@@ -175,9 +179,9 @@ export const VendorList = memo(() => {
         [Role.ADMIN],
         <VendorDeletion
           visible={visibleDeletionModal}
-          isChecking={false}
           onClose={onCancelDeletion}
-          totalBills={10}
+          vendorId={selectedVendorForDeletion?.id}
+          vendorName={selectedVendorForDeletion?.name}
         />,
       )}
     </ContentContainer>
