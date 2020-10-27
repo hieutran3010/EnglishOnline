@@ -125,7 +125,7 @@ const SaleGroupingTable = ({
       className="components-table-demo-nested"
       columns={columns}
       expandable={{ expandedRowRender: NestedBillsSaleGrouping }}
-      rowKey={(record: any) => record.vendorId}
+      rowKey={(record: any) => record.saleUserId}
       scroll={{ x: 1300, y: getMaxHeight() }}
       {...restProps}
     />

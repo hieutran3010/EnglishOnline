@@ -232,7 +232,9 @@ export const BillReport = memo((props: Props) => {
   useEffect(() => {
     if (
       adminBillListType !== BillListType.Normal &&
-      (isEmpty(billsVendorGrouping) || isEmpty(billsCustomerGrouping))
+      (isEmpty(billsVendorGrouping) ||
+        isEmpty(billsCustomerGrouping) ||
+        isEmpty(billsSaleGrouping))
     ) {
       const query = getQuery(user, dateRange);
       refreshBillList(query);

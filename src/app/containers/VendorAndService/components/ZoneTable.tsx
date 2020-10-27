@@ -5,7 +5,6 @@ import { getLocalColumnSearchProps } from 'app/components/collection/DataGrid/Se
 import { ColumnDefinition } from 'app/components/collection/DataGrid';
 import { showConfirm } from 'app/components/Modal/utils';
 import { ParcelServiceZone } from 'app/models/parcelService';
-import { ZONE_VENDOR_ASSOCIATION_SEPARATOR } from '../constants';
 
 const { Text } = Typography;
 
@@ -16,6 +15,8 @@ interface Props {
   onDeleteZone?: (zone: Zone | ParcelServiceZone) => void;
   onRenderZoneName?: (zoneName: string) => ReactElement;
   isReadOnly?: boolean;
+  canUpdateZone?: (zone: Zone | ParcelServiceZone) => boolean;
+  canDeleteZone?: (zone: Zone | ParcelServiceZone) => boolean;
 }
 const ZoneTable = ({
   zones,
@@ -24,6 +25,8 @@ const ZoneTable = ({
   onDeleteZone,
   onRenderZoneName,
   isReadOnly,
+  canUpdateZone,
+  canDeleteZone,
 }: Props) => {
   const _onUpdateZone = useCallback(
     (zone: Zone | ParcelServiceZone) => () => {
@@ -83,24 +86,34 @@ const ZoneTable = ({
         title: 'Tác Vụ',
         key: 'action',
         render: (record: Zone | ParcelServiceZone) => {
-          if (record.name.includes(ZONE_VENDOR_ASSOCIATION_SEPARATOR)) {
+          if (isReadOnly) {
             return <></>;
           }
 
           return (
             <Space size={1}>
-              <Button size="small" type="link" onClick={_onUpdateZone(record)}>
-                Sửa
-              </Button>
-              <Divider type="vertical" />
-              <Button
-                size="small"
-                type="link"
-                danger
-                onClick={onConfirmDeleteZone(record)}
-              >
-                Xóa
-              </Button>
+              {(!canUpdateZone || (canUpdateZone && canUpdateZone(record))) && (
+                <Button
+                  size="small"
+                  type="link"
+                  onClick={_onUpdateZone(record)}
+                >
+                  Sửa
+                </Button>
+              )}
+              {(!canDeleteZone || (canDeleteZone && canDeleteZone(record))) && (
+                <>
+                  <Divider type="vertical" />
+                  <Button
+                    size="small"
+                    type="link"
+                    danger
+                    onClick={onConfirmDeleteZone(record)}
+                  >
+                    Xóa
+                  </Button>
+                </>
+              )}
             </Space>
           );
         },
@@ -113,7 +126,14 @@ const ZoneTable = ({
     }
 
     return result;
-  }, [_onUpdateZone, isReadOnly, onConfirmDeleteZone, onRenderZoneName]);
+  }, [
+    _onUpdateZone,
+    canDeleteZone,
+    canUpdateZone,
+    isReadOnly,
+    onConfirmDeleteZone,
+    onRenderZoneName,
+  ]);
 
   return (
     <Table

@@ -4,7 +4,7 @@
  *
  */
 
-import React, { memo, useCallback, useMemo, useState } from 'react';
+import React, { memo, useCallback, useMemo } from 'react';
 import { Button, Space, Divider, Dropdown, Menu } from 'antd';
 import { DownOutlined } from '@ant-design/icons';
 import { useHistory, Link } from 'react-router-dom';
@@ -19,7 +19,6 @@ import getDataSource, { FETCHER_KEY } from 'app/collection-datasource';
 import Vendor from 'app/models/vendor';
 import { authStorage, authorizeHelper } from 'app/services/auth';
 import { Role } from 'app/models/user';
-import VendorDeletion from './VendorDeletion';
 
 const vendorDataSource = getDataSource(FETCHER_KEY.VENDOR);
 vendorDataSource.orderByFields = 'name';
@@ -27,7 +26,6 @@ vendorDataSource.orderByFields = 'name';
 export const VendorList = memo(() => {
   const history = useHistory();
   const currentUserRole = authStorage.getRole();
-  const [visibleDeletionModal, setVisibleDeletionModal] = useState(false);
 
   const onCreateNewVendor = useCallback(() => {
     history.push('/vendorCreation');
@@ -39,17 +37,6 @@ export const VendorList = memo(() => {
     },
     [history],
   );
-
-  const onDelete = useCallback(
-    (vendor: Vendor) => () => {
-      setVisibleDeletionModal(true);
-    },
-    [],
-  );
-
-  const onCancelDeletion = useCallback(() => {
-    setVisibleDeletionModal(false);
-  }, []);
 
   const getMenu = useCallback(
     (vendor: Vendor) => (
@@ -132,20 +119,6 @@ export const VendorList = memo(() => {
             >
               Chi tiết
             </Button>
-            {/* {authorizeHelper.canRenderWithRole(
-              [Role.ADMIN],
-              <>
-                <Divider type="vertical" />
-                <Button
-                  size="small"
-                  type="link"
-                  danger
-                  onClick={onDelete(record)}
-                >
-                  Xóa
-                </Button>
-              </>,
-            )} */}
           </Space>
         ),
         width: 50,
@@ -171,15 +144,6 @@ export const VendorList = memo(() => {
         locale={{ emptyText: 'Không tìm thấy nhà cung cấp nào :(' }}
         heightOffset={0.3}
       />
-      {authorizeHelper.canRenderWithRole(
-        [Role.ADMIN],
-        <VendorDeletion
-          visible={visibleDeletionModal}
-          isChecking={false}
-          onClose={onCancelDeletion}
-          totalBills={10}
-        />,
-      )}
     </ContentContainer>
   );
 });

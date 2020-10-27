@@ -35,7 +35,7 @@ export const ServiceCreateOrUpdate = memo(() => {
 
   const dispatch = useDispatch();
   const [serviceForm] = Form.useForm();
-  const { serviceId } = useParams();
+  const { serviceId } = useParams() as any;
   const { search } = useLocation();
   const history = useHistory();
 

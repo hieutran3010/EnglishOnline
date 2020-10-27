@@ -43,6 +43,7 @@ export function* fetchZonesTask(action: PayloadAction<string>) {
   const vendorId = action.payload;
   const zones = yield call(zoneFetcher.queryManyAsync, {
     query: `VendorId = "${vendorId}"`,
+    orderBy: 'name',
   });
   yield put(actions.fetchZonesCompleted(zones));
 

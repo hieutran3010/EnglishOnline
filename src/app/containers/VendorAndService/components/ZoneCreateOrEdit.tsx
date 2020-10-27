@@ -41,6 +41,8 @@ interface Props {
   extendActions?: ReactNode[];
   onRenderZoneName?: (zoneName: string) => ReactElement;
   isVendorZone?: boolean;
+  canUpdateZone?: (zone: Zone | ParcelServiceZone) => boolean;
+  canDeleteZone?: (zone: Zone | ParcelServiceZone) => boolean;
 }
 const ZoneCreateOrEdit = ({
   isFetchingZones,
@@ -57,6 +59,8 @@ const ZoneCreateOrEdit = ({
   extendActions,
   onRenderZoneName,
   isVendorZone,
+  canUpdateZone,
+  canDeleteZone,
 }: Props) => {
   const [visibleZoneCreationModal, setVisibleZoneCreationModal] = useState(
     false,
@@ -139,6 +143,8 @@ const ZoneCreateOrEdit = ({
         onUpdateZone={_onUpdateZone}
         onDeleteZone={onDeleteZone}
         onRenderZoneName={onRenderZoneName}
+        canUpdateZone={canUpdateZone}
+        canDeleteZone={canDeleteZone}
       />
       <ZoneCreationModal
         validator={validator}
