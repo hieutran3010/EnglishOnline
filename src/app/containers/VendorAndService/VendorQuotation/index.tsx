@@ -40,8 +40,9 @@ import { Role } from 'app/models/user';
 import ZoneCreateOrEdit from '../components/ZoneCreateOrEdit';
 import getZoneValidator from 'app/models/validators/zoneValidator';
 import ServiceSelectionModal from './ServiceSelectionModal';
-import ParcelService from 'app/models/parcelService';
+import ParcelService, { ParcelServiceZone } from 'app/models/parcelService';
 import { ZONE_VENDOR_ASSOCIATION_SEPARATOR } from '../constants';
+import isNil from 'lodash/fp/isNil';
 
 const { Text } = Typography;
 
@@ -152,16 +153,32 @@ export const VendorQuotation = memo(() => {
         const service = find((s: ParcelService) => s.name === serviceName)(
           parcelServices,
         );
-        return (
-          <Link
-            to={`/serviceUpdating/${service?.id}?zoneName=${serviceZoneName}`}
-          >
-            {zoneName}
-          </Link>
-        );
+        if (service) {
+          return (
+            <Link
+              to={`/serviceUpdating/${service.id}?zoneName=${serviceZoneName}`}
+            >
+              {zoneName}
+            </Link>
+          );
+        }
       }
 
       return <Text>{zoneName}</Text>;
+    },
+    [parcelServices],
+  );
+
+  const canActionOnZoneTable = useCallback(
+    (checkingZone: Zone | ParcelServiceZone) => {
+      const { name } = checkingZone;
+      const fragments = name.split(ZONE_VENDOR_ASSOCIATION_SEPARATOR);
+      const [serviceName] = fragments;
+      const service = find((s: ParcelService) => s.name === serviceName)(
+        parcelServices,
+      );
+
+      return !service;
     },
     [parcelServices],
   );
@@ -263,6 +280,8 @@ export const VendorQuotation = memo(() => {
           ]}
           note="Không sửa, xóa được trên các Zone của Dịch Vụ tại đây. Nếu có nhu cầu này, click vào Tên Zone theo dịch vụ tương ứng, dữ liệu tại đây sẽ tự động được cập nhật theo."
           isVendorZone
+          canDeleteZone={canActionOnZoneTable}
+          canUpdateZone={canActionOnZoneTable}
         />
         <ServiceSelectionModal
           visible={visibleServiceSelectionModal}
