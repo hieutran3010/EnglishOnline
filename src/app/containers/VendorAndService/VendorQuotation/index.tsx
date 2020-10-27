@@ -42,7 +42,6 @@ import getZoneValidator from 'app/models/validators/zoneValidator';
 import ServiceSelectionModal from './ServiceSelectionModal';
 import ParcelService, { ParcelServiceZone } from 'app/models/parcelService';
 import { ZONE_VENDOR_ASSOCIATION_SEPARATOR } from '../constants';
-import isNil from 'lodash/fp/isNil';
 
 const { Text } = Typography;
 
