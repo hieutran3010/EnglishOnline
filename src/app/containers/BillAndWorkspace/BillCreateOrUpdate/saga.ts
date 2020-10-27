@@ -403,18 +403,15 @@ function* getCustomer(
         address: trim(address),
       });
     } catch (error) {
-      Sentry.captureException(
-        `[getCustomer] Cannot auto insert new customer - Update Mode = ${isUpdate} - Query = [${query}] - Received customer data: [${JSON.stringify(
-          customer,
-        )}] - caller = [${caller}]. Error: ${JSON.stringify(error)}`,
-      );
       //retry to get again
       customer = yield call(customerFetcher.queryOneAsync, {
         query,
       });
       if (!customer) {
         Sentry.captureException(
-          '[getCustomer]Retry get customer failed. Customer is stil undefined',
+          `[getCustomer]Auto insert and Retry get customer failed. Customer is still undefined - Update Mode = ${isUpdate} - Query = [${query}] - Received customer data: [${JSON.stringify(
+            customer,
+          )}] - caller = [${caller}]. Error: ${JSON.stringify(error)}`,
         );
       }
     }
