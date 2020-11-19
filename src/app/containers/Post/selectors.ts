@@ -5,7 +5,12 @@ import { initialState } from './slice';
 
 const selectDomain = (state: RootState) => state.post || initialState;
 
-export const selectPost = createSelector(
+export const selectPosts = createSelector(
   [selectDomain],
-  postState => postState,
+  postState => postState.posts,
+);
+
+export const selectIsFetchingPosts = createSelector(
+  [selectDomain],
+  postState => postState.isFetchingPosts,
 );

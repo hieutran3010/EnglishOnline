@@ -11,6 +11,7 @@ const Logo = ({ isSmall, logoSmallSrc, logoSrc, height }: Props) => {
     <img
       src={isSmall ? logoSmallSrc : logoSrc}
       height={`${height ?? 40}px`}
+      width="auto"
       alt=""
     />
   );
