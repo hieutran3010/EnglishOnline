@@ -6,7 +6,6 @@ import toString from 'lodash/fp/toString';
 
 import { authService, authStorage } from 'app/services/auth';
 import { showConfirm } from 'app/components/Modal/utils';
-import RoleBadge from 'app/containers/Auth/components/RoleBadge';
 
 const UserNavigation = () => {
   const user = authStorage.getUser();
@@ -42,7 +41,6 @@ const UserNavigation = () => {
       <Dropdown overlay={menu}>
         <Space>
           <div style={{ display: 'flex' }}>
-            <RoleBadge type="Text" role={toString(user.role)} />
             <span>&nbsp;-&nbsp;</span>
             <span>{user.displayName}</span>
           </div>

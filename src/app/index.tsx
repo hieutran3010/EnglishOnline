@@ -21,11 +21,8 @@ initializeFirebase();
 export function App() {
   return (
     <BrowserRouter>
-      <Helmet titleTemplate="Helen Express" defaultTitle="Helen Express">
-        <meta
-          name="description"
-          content="Quản lý vận hành Công Ty TNHH Vận Chuyển Helen Express"
-        />
+      <Helmet titleTemplate="English Zone" defaultTitle="English Zone">
+        <meta name="description" content="English Zone" />
       </Helmet>
 
       <Switch>

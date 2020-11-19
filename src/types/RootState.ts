@@ -1,27 +1,8 @@
-import { VendorCreationState } from 'app/containers/VendorAndService/VendorCreation/types';
-import { VendorQuotationState } from 'app/containers/VendorAndService/VendorQuotation/types';
-import { VendorQuotationDetailState } from 'app/containers/VendorAndService/VendorQuotationDetail/types';
-import { VendorDetailState } from 'app/containers/VendorAndService/VendorDetail/types';
-import { CustomerCreateOrUpdatePageState } from 'app/containers/Customer/CustomerCreateOrUpdatePage/types';
-import { WorkspaceState } from 'app/containers/BillAndWorkspace/Workspace/types';
-import { BillAdvanceSearchState } from 'app/containers/BillAndWorkspace/BillAdvanceSearch/types';
-import { UserListState } from 'app/containers/Auth/UserList/types';
-import { UserCreateOrUpdatePageState } from 'app/containers/Auth/UserCreateOrUpdatePage/types';
 import { LoginState } from 'app/containers/Auth/Login/types';
-import { BillsInMonthState } from 'app/containers/BillAndWorkspace/BillsInMonth/types';
-import { BillReportState } from 'app/containers/BillAndWorkspace/BillReport/types';
 import { UserProfileState } from 'app/containers/Auth/UserProfile/types';
-import { CustomerListState } from 'app/containers/Customer/CustomerList/types';
-import { SettingState } from 'app/containers/Setting/types';
 import { HomepageState } from 'app/containers/HomePage/types';
-import { BillCreateOrUpdateState } from 'app/containers/BillAndWorkspace/BillCreateOrUpdate/types';
-import { BillUpdatingState } from 'app/containers/BillAndWorkspace/BillUpdating/types';
-import { BillDeliveryHistoryState } from 'app/containers/BillAndWorkspace/BillDeliveryHistory/types';
-import { BillViewState } from 'app/containers/BillAndWorkspace/BillViewPage/types';
-import { ServiceListState } from 'app/containers/VendorAndService/ServiceList/types';
-import { VendorListState } from 'app/containers/VendorAndService/VendorList/types';
-import { ServiceCreateOrUpdateState } from 'app/containers/VendorAndService/ServiceCreateOrUpdate/types';
-import { QuickQuotationState } from 'app/containers/BillAndWorkspace/QuickQuotation/types';
+import { PostState } from 'app/containers/Post/types';
+import { CoursesState } from 'app/containers/Courses/types';
 // [IMPORT NEW CONTAINERSTATE ABOVE] < Needed for generating containers seamlessly
 
 /* 
@@ -30,28 +11,9 @@ import { QuickQuotationState } from 'app/containers/BillAndWorkspace/QuickQuotat
 */
 export interface RootState {
   homepage?: HomepageState;
-  vendorCreation?: VendorCreationState;
-  vendorQuotation?: VendorQuotationState;
-  vendorQuotationDetail?: VendorQuotationDetailState;
-  vendorDetail?: VendorDetailState;
-  customerCreateOrUpdatePage?: CustomerCreateOrUpdatePageState;
-  workspace?: WorkspaceState;
-  billAdvanceSearch?: BillAdvanceSearchState;
-  userList?: UserListState;
-  userCreateOrUpdatePage?: UserCreateOrUpdatePageState;
   login?: LoginState;
-  billsInMonth?: BillsInMonthState;
-  billReport?: BillReportState;
   userProfile?: UserProfileState;
-  customerList?: CustomerListState;
-  setting?: SettingState;
-  billCreateOrUpdate?: BillCreateOrUpdateState;
-  billUpdating?: BillUpdatingState;
-  billDeliveryHistory?: BillDeliveryHistoryState;
-  billView?: BillViewState;
-  vendorList?: VendorListState;
-  serviceList?: ServiceListState;
-  serviceCreateOrUpdate?: ServiceCreateOrUpdateState;
-  quickQuotation?: QuickQuotationState;
+  post?: PostState;
+  courses?: CoursesState;
   // [INSERT NEW REDUCER KEY ABOVE] < Needed for generating containers seamlessly
 }

@@ -1,4 +1,4 @@
-import User, { Role } from 'app/models/user';
+import User from 'app/models/user';
 import { isEmpty } from 'lodash';
 
 const CACHE_KEY = {
@@ -15,12 +15,6 @@ class AuthStorage {
       return JSON.parse(userStr) as User;
     }
     return new User();
-  };
-
-  getRole = (): Role => {
-    const user = this.getUser();
-    const { role } = user;
-    return role as Role;
   };
 
   clear = () => {

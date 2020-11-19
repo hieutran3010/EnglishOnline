@@ -1,4 +1,3 @@
-import { Role } from 'app/models/user';
 import { ReactElement } from 'react';
 
 export enum ScreenMode {
@@ -13,7 +12,6 @@ export interface IMenuItem {
   icon: ReactElement;
   path?: string;
   displayName: string;
-  allowRoles?: Role[];
   activePaths?: string[];
   childMenu?: IMenuItem[];
   canShow?: () => boolean;
