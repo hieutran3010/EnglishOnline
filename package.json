@@ -21,7 +21,7 @@
     "@types/testing-library__jest-dom": "5.0.2",
     "@types/webpack-env": "1.15.1",
     "antd": "4.4.0",
-    "axios": "0.19.2",
+    "axios": "0.21.1",
     "cross-env": "7.0.2",
     "customize-cra": "1.0.0",
     "eslint-config-prettier": "6.10.1",
